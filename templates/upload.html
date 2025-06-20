@@ -2,6 +2,83 @@
 
 {% block title %}Upload de Arquivos - NFe XML Processor{% endblock %}
 
+{% block extra_head %}
+<style>
+.file-item {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.file-item:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transform: translateY(-1px);
+}
+
+.file-item .btn-danger {
+    opacity: 0.8;
+    transition: all 0.2s ease;
+}
+
+.file-item:hover .btn-danger {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.file-item .btn-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+.upload-zone {
+    border: 2px dashed #6c757d;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.upload-zone.dragover {
+    border-style: solid;
+    transform: scale(1.02);
+}
+
+.file-list-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.file-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.file-list-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.file-list-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.file-list-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.feather-trash-2 {
+    width: 16px;
+    height: 16px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
     <div class="row mb-4">
@@ -34,7 +111,14 @@
                         
                         <!-- File List -->
                         <div id="fileList" class="mb-4" style="display: none;">
-                            <h5>Arquivos Selecionados:</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">
+                                    <i class="feather-file-text me-2"></i>Arquivos Selecionados:
+                                </h5>
+                                <small class="text-muted">
+                                    <i class="feather-info me-1"></i>Clique em "Remover" para excluir arquivos
+                                </small>
+                            </div>
                             <div class="file-list-container">
                                 <!-- Files will be listed here -->
                             </div>
@@ -150,17 +234,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = fileList.querySelector('.file-list-container');
         
         container.innerHTML = selectedFiles.map((file, index) => `
-            <div class="file-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
-                <div>
-                    <i class="feather-file-text me-2"></i>
-                    <strong>${file.name}</strong>
-                    <small class="text-muted ms-2">(${formatFileSize(file.size)})</small>
+            <div class="file-item d-flex justify-content-between align-items-center p-3 border rounded mb-2 bg-light">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <i class="feather-file-text me-3 text-primary"></i>
+                    <div>
+                        <strong class="text-dark">${file.name}</strong>
+                        <small class="text-muted d-block">${formatFileSize(file.size)}</small>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">
-                    <i class="feather-x"></i>
+                <button type="button" 
+                        class="btn btn-sm btn-danger" 
+                        onclick="removeFile(${index})"
+                        title="Remover arquivo da lista"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top">
+                    <i class="feather-trash-2 me-1"></i>
+                    <span class="d-none d-sm-inline">Remover</span>
                 </button>
             </div>
         `).join('');
+        
+        // Initialize tooltips for new content
+        initializeTooltips();
     }
     
     function updateUploadButton() {
@@ -176,15 +271,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     window.removeFile = function(index) {
-        selectedFiles.splice(index, 1);
-        updateFileList();
-        updateUploadButton();
-        
-        // Update file input
-        const dt = new DataTransfer();
-        selectedFiles.forEach(file => dt.items.add(file));
-        fileInput.files = dt.files;
+        // Add animation before removing
+        const fileItem = document.querySelectorAll('.file-item')[index];
+        if (fileItem) {
+            fileItem.style.transition = 'all 0.3s ease';
+            fileItem.style.transform = 'translateX(100%)';
+            fileItem.style.opacity = '0';
+            
+            setTimeout(() => {
+                selectedFiles.splice(index, 1);
+                updateFileList();
+                updateUploadButton();
+                
+                // Update file input
+                const dt = new DataTransfer();
+                selectedFiles.forEach(file => dt.items.add(file));
+                fileInput.files = dt.files;
+                
+                // Initialize tooltips for new content
+                initializeTooltips();
+            }, 300);
+        }
     };
+    
+    function initializeTooltips() {
+        // Dispose existing tooltips
+        const existingTooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        existingTooltips.forEach(el => {
+            const tooltip = bootstrap.Tooltip.getInstance(el);
+            if (tooltip) {
+                tooltip.dispose();
+            }
+        });
+        
+        // Initialize new tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
     
     // Form submission
     uploadForm.addEventListener('submit', function(e) {
