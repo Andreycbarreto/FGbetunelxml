@@ -538,7 +538,7 @@ def admin_register_user():
             last_name=last_name,
             phone=phone,
             company=company,
-            role=UserRole(role),
+            role=UserRole(role.lower()),
             active=active,
             created_at=datetime.now(),
             updated_at=datetime.now()
