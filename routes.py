@@ -174,7 +174,7 @@ def processing_queue():
     return render_template('processing.html', files=files)
 
 @app.route('/process_all', methods=['POST'])
-@require_login
+@login_required_hybrid
 def process_all_files():
     """Process all pending XML files."""
     # Get all pending files for the user
@@ -257,7 +257,7 @@ def process_all_files():
     })
 
 @app.route('/process_next', methods=['POST'])
-@require_login
+@login_required_hybrid
 def process_next_file():
     """Process the next pending XML file."""
     # Get the next pending file
@@ -633,13 +633,13 @@ def admin_edit_user(user_id):
     return render_template('admin/edit_user.html', user=user, roles=UserRole)
 
 @app.route('/profile')
-@require_login
+@login_required_hybrid
 def user_profile():
     """User profile page."""
     return render_template('profile.html', user=current_user)
 
 @app.route('/profile/edit', methods=['GET', 'POST'])
-@require_login
+@login_required_hybrid
 def edit_profile():
     """Edit user profile."""
     if request.method == 'POST':
@@ -655,7 +655,7 @@ def edit_profile():
     return render_template('edit_profile.html', user=current_user)
 
 @app.route('/data/<int:record_id>')
-@require_login
+@login_required_hybrid
 def view_record(record_id):
     """View detailed NFe record with items."""
     record = NFERecord.query.filter_by(
@@ -666,7 +666,7 @@ def view_record(record_id):
     return render_template('record_detail.html', record=record)
 
 @app.route('/delete_file/<int:file_id>', methods=['POST'])
-@require_login
+@login_required_hybrid
 def delete_file(file_id):
     """Delete an uploaded file and its associated records."""
     uploaded_file = UploadedFile.query.filter_by(
@@ -700,7 +700,7 @@ def delete_file(file_id):
     return redirect(url_for('processing_queue'))
 
 @app.route('/api/processing_status')
-@require_login
+@login_required_hybrid
 def api_processing_status():
     """API endpoint to get current processing status."""
     total_files = UploadedFile.query.filter_by(user_id=current_user.id).count()
