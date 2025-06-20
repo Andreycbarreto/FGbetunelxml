@@ -26,6 +26,9 @@
                     <h5 class="mb-0">Lista de Usuários</h5>
                 </div>
                 <div class="col-auto">
+                    <a href="{{ url_for('admin_register_user') }}" class="btn btn-primary me-2">
+                        <i class="feather-user-plus me-2"></i>Cadastrar Usuário
+                    </a>
                     <small class="text-muted">Total: {{ users.total }} usuários</small>
                 </div>
             </div>
