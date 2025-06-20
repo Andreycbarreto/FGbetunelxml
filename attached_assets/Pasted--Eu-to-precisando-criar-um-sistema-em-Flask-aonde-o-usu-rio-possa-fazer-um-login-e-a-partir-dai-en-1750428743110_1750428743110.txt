@@ -1,0 +1,268 @@
+
+
+
+Eu to precisando criar um sistema em Flask aonde o usuário possa fazer um login e a partir dai entrar numa plataforma aonde ele pode subir vários xml`s e o sistema vai processar um xml por vez e fazer um lançamento para cada xml. 
+
+
+Abaixo eu coloco a estrutura principal dos xml’s:  1. ESTRUTURA PRINCIPAL DO DOCUMENTO
+1.1 Elemento Raiz
+•nfeProc - Elemento raiz que encapsula toda a NFe processada
+•Atributos: versao (versão do layout)
+•Namespace: http://www.portalfiscal.inf.br/nfe
+1.2 Componentes Principais
+•NFe - Nota Fiscal Eletrônica propriamente dita
+•protNFe - Protocolo de autorização da NFe
+•Signature - Assinatura digital do documento
+
+
+2. IDENTIFICAÇÃO DO DOCUMENTO (IDE)
+2.1 Campos de Identificação Básica
+•cUF - Código da UF do emitente
+•cNF - Código numérico que compõe a chave de acesso
+•natOp - Descrição da natureza da operação
+•mod - Código do modelo do documento fiscal (55 para NFe)
+•serie - Série do documento fiscal
+•nNF - Número do documento fiscal
+•cDV - Dígito verificador da chave de acesso
+2.2 Campos de Data e Hora
+•dhEmi - Data e hora de emissão do documento fiscal
+•dhSaiEnt - Data e hora de saída ou entrada da mercadoria/produto
+2.3 Campos de Tipo e Finalidade
+•tpNF - Tipo de operação (0=Entrada, 1=Saída)
+•idDest - Identificador de local de destino da operação
+•finNFe - Finalidade de emissão da NFe
+•indFinal - Indica operação com consumidor final
+•indPres - Indicador de presença do comprador no estabelecimento comercial
+2.4 Campos Técnicos
+•cMunFG - Código do município de ocorrência do fato gerador
+•tpImp - Formato de impressão do DANFE
+•tpEmis - Tipo de emissão da NFe
+•tpAmb - Identificação do ambiente (1=Produção, 2=Homologação)
+•procEmi - Processo de emissão da NFe
+•verProc - Versão do processo de emissão da NFe
+
+
+3. DADOS DO EMITENTE (EMIT)
+3.1 Identificação do Emitente
+•CNPJ - CNPJ do emitente
+•xNome - Razão social ou nome do emitente
+•xFant - Nome fantasia do emitente
+•IE - Inscrição Estadual do emitente
+•IM - Inscrição Municipal do emitente
+•CNAE - Código de atividade econômica do emitente
+•CRT - Código de regime tributário do emitente
+3.2 Endereço do Emitente (enderEmit)
+•xLgr - Logradouro do emitente
+•nro - Número do endereço do emitente
+•xBairro - Bairro do emitente
+•cMun - Código do município do emitente
+•xMun - Nome do município do emitente
+•UF - Sigla da UF do emitente
+•CEP - CEP do emitente
+•cPais - Código do país do emitente
+•xPais - Nome do país do emitente
+•fone - Telefone do emitente
+
+
+4. DADOS DO DESTINATÁRIO (DEST)
+4.1 Identificação do Destinatário
+•CNPJ - CNPJ do destinatário
+•xNome - Razão social ou nome do destinatário
+•IE - Inscrição Estadual do destinatário
+•IM - Inscrição Municipal do destinatário
+•indIEDest - Indicador da IE do destinatário
+•email - Email do destinatário
+4.2 Endereço do Destinatário (enderDest)
+•xLgr - Logradouro do destinatário
+•nro - Número do endereço do destinatário
+•xBairro - Bairro do destinatário
+•cMun - Código do município do destinatário
+•xMun - Nome do município do destinatário
+•UF - Sigla da UF do destinatário
+•CEP - CEP do destinatário
+•cPais - Código do país do destinatário
+•xPais - Nome do país do destinatário
+•fone - Telefone do destinatário
+
+
+5. AUTORIZAÇÃO PARA DOWNLOAD DO XML (AUTXML)
+•CNPJ - CNPJ do terceiro autorizado a fazer download do XML
+
+
+6. DETALHAMENTO DOS PRODUTOS/SERVIÇOS (DET)
+6.1 Atributos do Detalhamento
+•nItem - Número sequencial do item (atributo)
+6.2 Dados do Produto (PROD)
+•cProd - Código do produto ou serviço
+•cEAN - GTIN (Global Trade Item Number) do produto
+•xProd - Descrição do produto ou serviço
+•NCM - Código NCM (Nomenclatura Comum do Mercosul)
+•CFOP - Código Fiscal de Operações e Prestações
+•uCom - Unidade comercial
+•qCom - Quantidade comercial
+•vUnCom - Valor unitário de comercialização
+•vProd - Valor total bruto dos produtos ou serviços
+•cEANTrib - GTIN da unidade tributável
+•uTrib - Unidade tributável
+•qTrib - Quantidade tributável
+•vUnTrib - Valor unitário de tributação
+•indTot - Indica se valor do item compõe valor total da NFe
+6.3 Informações Adicionais do Produto
+•infAdProd - Informações adicionais do produto
+
+
+7. TRIBUTOS E IMPOSTOS (IMPOSTO)
+7.1 Valor Total dos Tributos
+•vTotTrib - Valor aproximado total de tributos federais, estaduais e municipais
+7.2 ICMS (Imposto sobre Circulação de Mercadorias e Serviços)
+7.2.1 Grupo ICMS
+•ICMS - Grupo de informações do ICMS
+7.2.2 ICMS00 (Tributado integralmente)
+•orig - Origem da mercadoria
+•CST - Código de Situação Tributária
+•modBC - Modalidade de determinação da BC do ICMS
+•vBC - Valor da BC do ICMS
+•pICMS - Alíquota do imposto
+•vICMS - Valor do ICMS
+7.3 IPI (Imposto sobre Produtos Industrializados)
+7.3.1 Grupo IPI
+•cEnq - Código de enquadramento legal do IPI
+7.3.2 IPINT (IPI não tributado)
+•CST - Código de Situação Tributária do IPI
+7.4 PIS (Programa de Integração Social)
+7.4.1 PISAliq (PIS com alíquota)
+•CST - Código de Situação Tributária do PIS
+•vBC - Valor da base de cálculo do PIS
+•pPIS - Alíquota do PIS (em percentual)
+•vPIS - Valor do PIS
+7.4.2 PISNT (PIS não tributado)
+•CST - Código de Situação Tributária do PIS
+7.5 COFINS (Contribuição para o Financiamento da Seguridade Social)
+7.5.1 COFINSAliq (COFINS com alíquota)
+•CST - Código de Situação Tributária do COFINS
+•vBC - Valor da base de cálculo do COFINS
+•pCOFINS - Alíquota do COFINS (em percentual)
+•vCOFINS - Valor do COFINS
+7.5.2 COFINSNT (COFINS não tributado)
+•CST - Código de Situação Tributária do COFINS
+
+
+8. TOTAIS DA NOTA FISCAL (TOTAL)
+8.1 Totais do ICMS (ICMSTot)
+•vBC - Base de cálculo do ICMS
+•vICMS - Valor total do ICMS
+•vICMSDeson - Valor total do ICMS desonerado
+•vFCP - Valor total do Fundo de Combate à Pobreza (FCP)
+•vBCST - Base de cálculo do ICMS ST
+•vST - Valor total do ICMS ST
+•vFCPST - Valor total do FCP retido por substituição tributária
+•vFCPSTRet - Valor total do FCP retido anteriormente por ST
+•qBCMono - Quantidade total na unidade de medida do produto
+•vICMSMono - Valor total do ICMS próprio do remetente
+•qBCMonoRet - Quantidade total na unidade de medida do produto sujeita à retenção
+•vICMSMonoRet - Valor total do ICMS próprio do remetente retido
+•vProd - Valor total dos produtos e serviços
+•vFrete - Valor total do frete
+•vSeg - Valor total do seguro
+•vDesc - Valor total do desconto
+•vII - Valor total do II (Imposto de Importação)
+•vIPI - Valor total do IPI
+•vIPIDevol - Valor total do IPI devolvido
+•vPIS - Valor total do PIS
+•vCOFINS - Valor total do COFINS
+•vOutro - Outras despesas acessórias
+•vNF - Valor total da NFe
+•vTotTrib - Valor aproximado total de tributos
+
+
+9. TRANSPORTE (TRANSP)
+9.1 Modalidade de Frete
+•modFrete - Modalidade do frete
+9.2 Dados da Transportadora (transporta)
+•CNPJ - CNPJ da transportadora
+•xNome - Razão social ou nome da transportadora
+•IE - Inscrição Estadual da transportadora
+•xEnder - Endereço completo da transportadora
+•xMun - Nome do município da transportadora
+•UF - Sigla da UF da transportadora
+9.3 Veículo de Transporte (veicTransp)
+•placa - Placa do veículo
+•UF - UF de licenciamento do veículo
+9.4 Volumes Transportados (vol)
+•qVol - Quantidade de volumes transportados
+•esp - Espécie dos volumes transportados
+•marca - Marca dos volumes transportados
+•pesoL - Peso líquido (em kg)
+•pesoB - Peso bruto (em kg)
+
+
+10. COBRANÇA (COBR)
+10.1 Dados da Fatura (fat)
+•nFat - Número da fatura
+•vOrig - Valor original da fatura
+•vDesc - Valor do desconto da fatura
+•vLiq - Valor líquido da fatura
+10.2 Dados das Duplicatas (dup)
+•nDup - Número da duplicata
+•dVenc - Data de vencimento da duplicata
+•vDup - Valor da duplicata
+
+
+11. PAGAMENTO (PAG)
+11.1 Detalhamento do Pagamento (detPag)
+•indPag - Indicador da forma de pagamento
+•tPag - Forma de pagamento
+•vPag - Valor do pagamento
+
+
+12. INFORMAÇÕES ADICIONAIS (INFADIC)
+12.1 Informações Complementares
+•infCpl - Informações complementares de interesse do contribuinte
+
+
+13. RESPONSÁVEL TÉCNICO (INFRESPTECH)
+13.1 Dados do Responsável Técnico
+•CNPJ - CNPJ da pessoa jurídica responsável técnica
+•xContato - Nome da pessoa a ser contatada
+•email - Email da pessoa jurídica responsável técnica
+•fone - Telefone da pessoa jurídica responsável técnica
+
+
+14. ASSINATURA DIGITAL (SIGNATURE)
+14.1 Estrutura da Assinatura
+•Signature - Elemento raiz da assinatura digital
+•Namespace: http://www.w3.org/2000/09/xmldsig#
+14.2 Informações Assinadas (SignedInfo)
+•CanonicalizationMethod - Método de canonicalização
+•Atributo: Algorithm
+•SignatureMethod - Método de assinatura
+•Atributo: Algorithm
+14.3 Referência (Reference)
+•Reference - Referência ao elemento assinado
+•Atributo: URI
+•Transforms - Transformações aplicadas
+•Transform - Transformação específica
+•Atributo: Algorithm
+•DigestMethod - Método de digest
+•Atributo: Algorithm
+•DigestValue - Valor do digest
+14.4 Valor da Assinatura
+•SignatureValue - Valor da assinatura digital
+14.5 Informações da Chave (KeyInfo)
+•KeyInfo - Informações sobre a chave de assinatura
+•X509Data - Dados do certificado X.509
+•X509Certificate - Certificado digital X.509
+
+
+15. PROTOCOLO DE AUTORIZAÇÃO (PROTNFE)
+15.1 Informações do Protocolo (infProt)
+•Id - Identificador único do protocolo (atributo)
+•tpAmb - Tipo de ambiente (1=Produção, 2=Homologação)
+•verAplic - Versão da aplicação que processou a NFe
+•chNFe - Chave de acesso da NFe
+•dhRecbto - Data e hora de recebimento
+•nProt - Número do protocolo de autorização
+•digVal - Digest value da NFe processada
+•cStat - Código do status da resposta
+•xMotivo - Descrição literal do status da resposta
+  A ideia é usar a AI para classificar todos esses campos de cada xml e depois fazer o lançamento de cada dado e campo do xml numa tabela que o usuário vai poder visualizar. Consegue criar esse sistema inteiro pra mim? Vamos criar um pool de agentes, para analisar, extrair e validar e lançar a informação correta. Podemos usar o langgroph pra isso. E vamos usar o modelo da Openai. Consegue criar esse projeto de forma completa pra mim?
