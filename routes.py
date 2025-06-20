@@ -52,7 +52,7 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for('login'))
-        if not current_user.is_admin():
+        if not current_user.is_admin:
             flash('Acesso negado. Apenas administradores podem acessar esta página.', 'error')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
@@ -494,9 +494,6 @@ def data_view():
 @admin_required
 def admin_dashboard():
     """Admin dashboard."""
-    if not current_user.is_admin:
-        flash('Acesso negado. Apenas administradores podem acessar esta área.', 'error')
-        return redirect(url_for('index'))
     
     # Get statistics
     total_users = User.query.count()
@@ -520,9 +517,6 @@ def admin_dashboard():
 @admin_required
 def admin_users():
     """Manage users."""
-    if not current_user.is_admin:
-        flash('Acesso negado.', 'error')
-        return redirect(url_for('index'))
     
     page = request.args.get('page', 1, type=int)
     users = User.query.order_by(desc(User.created_at))\
@@ -534,9 +528,6 @@ def admin_users():
 @admin_required
 def admin_register_user():
     """Register a new user."""
-    if not current_user.is_admin:
-        flash('Acesso negado.', 'error')
-        return redirect(url_for('index'))
     
     if request.method == 'POST':
         first_name = request.form.get('first_name')
@@ -593,8 +584,6 @@ def admin_register_user():
 @admin_required
 def admin_toggle_user_status(user_id):
     """Toggle user active status."""
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Acesso negado'})
     
     user = User.query.get_or_404(user_id)
     user.active = not user.active
@@ -611,9 +600,6 @@ def admin_toggle_user_status(user_id):
 @admin_required
 def admin_edit_user(user_id):
     """Edit user."""
-    if not current_user.is_admin:
-        flash('Acesso negado.', 'error')
-        return redirect(url_for('index'))
     
     user = User.query.get_or_404(user_id)
     
