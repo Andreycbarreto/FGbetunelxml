@@ -4,9 +4,14 @@
 
 {% block extra_css %}
 <style>
+    /* Remove all white backgrounds for dark theme compatibility */
+    .card, .card-body, .card-header {
+        background-color: transparent !important;
+    }
+    
     /* Force table header visibility */
     #filesTable thead th {
-        background-color: #212529 !important;
+        background-color: #343a40 !important;
         color: #ffffff !important;
         border-color: #495057 !important;
         font-weight: 600 !important;
@@ -17,14 +22,24 @@
     }
     
     .table-dark th {
-        background-color: #212529 !important;
+        background-color: #343a40 !important;
         color: #ffffff !important;
         border-bottom: 2px solid #495057 !important;
     }
     
-    /* Ensure text is always white in dark header */
-    .table-dark > :not(caption) > * > * {
-        color: #ffffff !important;
+    /* Ensure table body also respects dark theme */
+    #filesTable tbody tr {
+        background-color: transparent !important;
+        border-color: #495057 !important;
+    }
+    
+    #filesTable tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    /* Make table responsive container transparent */
+    .table-responsive {
+        background-color: transparent !important;
     }
     
     .stats-card {
@@ -171,8 +186,8 @@
     <!-- Files Section -->
     <div class="row">
         <div class="col">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom">
+            <div class="card border-0 shadow-sm bg-transparent">
+                <div class="card-header bg-transparent border-bottom border-secondary">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <h5 class="mb-0">
@@ -216,7 +231,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 bg-transparent">
                     {% if files %}
                     <div class="table-responsive">
                         <table class="table table-hover mb-0 align-middle" id="filesTable">
