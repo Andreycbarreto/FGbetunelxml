@@ -142,38 +142,54 @@
                             </h5>
                             <small class="text-muted">{{ files|length }} arquivo{{ 's' if files|length != 1 else '' }} total</small>
                         </div>
-                        <div class="d-flex align-items-center">
-                            <button class="btn btn-outline-secondary btn-sm me-2" onclick="refreshTable()">
-                                <i class="feather-refresh-cw me-1"></i>Atualizar
-                            </button>
+                        <div class="btn-toolbar" role="toolbar">
                             {% if files %}
-                            <div class="dropdown">
-                                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    <i class="feather-filter me-1"></i>Filtrar
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item filter-option" href="#" data-filter="all">Todos</a></li>
-                                    <li><a class="dropdown-item filter-option" href="#" data-filter="pending">Pendentes</a></li>
-                                    <li><a class="dropdown-item filter-option" href="#" data-filter="completed">Processados</a></li>
-                                    <li><a class="dropdown-item filter-option" href="#" data-filter="error">Com Erro</a></li>
-                                </ul>
+                            <div class="btn-group me-2" role="group">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary btn-sm dropdown-toggle rounded-pill px-3" 
+                                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="feather-filter me-1"></i>Filtros
+                                    </button>
+                                    <ul class="dropdown-menu shadow-sm border-0">
+                                        <li><h6 class="dropdown-header">Filtrar por Status</h6></li>
+                                        <li><a class="dropdown-item filter-option d-flex align-items-center" href="#" data-filter="all">
+                                            <i class="feather-list me-2 text-muted"></i>Todos os arquivos
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item filter-option d-flex align-items-center" href="#" data-filter="pending">
+                                            <i class="feather-clock me-2 text-warning"></i>Pendentes
+                                        </a></li>
+                                        <li><a class="dropdown-item filter-option d-flex align-items-center" href="#" data-filter="completed">
+                                            <i class="feather-check-circle me-2 text-success"></i>Processados
+                                        </a></li>
+                                        <li><a class="dropdown-item filter-option d-flex align-items-center" href="#" data-filter="error">
+                                            <i class="feather-x-circle me-2 text-danger"></i>Com Erro
+                                        </a></li>
+                                    </ul>
+                                </div>
                             </div>
                             {% endif %}
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="refreshTable()" 
+                                        title="Atualizar lista" data-bs-toggle="tooltip">
+                                    <i class="feather-refresh-cw me-1"></i>Atualizar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
                     {% if files %}
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="filesTable">
+                        <table class="table table-hover mb-0 align-middle" id="filesTable">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="border-0 ps-4">Arquivo</th>
-                                    <th class="border-0">Status</th>
-                                    <th class="border-0">Tamanho</th>
-                                    <th class="border-0">Upload</th>
-                                    <th class="border-0">Processamento</th>
-                                    <th class="border-0 text-end pe-4">Ações</th>
+                                    <th class="border-0 ps-4" style="width: 35%;">Arquivo</th>
+                                    <th class="border-0 text-center" style="width: 12%;">Status</th>
+                                    <th class="border-0 text-center" style="width: 10%;">Tamanho</th>
+                                    <th class="border-0 text-center" style="width: 12%;">Upload</th>
+                                    <th class="border-0 text-center" style="width: 12%;">Processamento</th>
+                                    <th class="border-0 text-center" style="width: 19%;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -196,40 +212,40 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <span class="status-badge" data-status="{{ file.status.value }}">
                                             {% if file.status.value == 'completed' %}
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
                                                     <i class="feather-check-circle me-1"></i>Processado
                                                 </span>
                                             {% elif file.status.value == 'processing' %}
-                                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3">
                                                     <i class="feather-clock me-1"></i>Processando
                                                 </span>
                                             {% elif file.status.value == 'pending' %}
-                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3">
                                                     <i class="feather-clock me-1"></i>Pendente
                                                 </span>
                                             {% else %}
-                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">
                                                     <i class="feather-x-circle me-1"></i>Erro
                                                 </span>
                                             {% endif %}
                                         </span>
                                     </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center align-items-center">
                                             <i class="feather-hard-drive me-2 text-muted"></i>
                                             <span class="fw-medium">{{ "%.1f"|format(file.file_size / 1024) }} KB</span>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <div>
                                             <span class="fw-medium">{{ file.created_at.strftime('%d/%m/%Y') }}</span>
                                             <br><small class="text-muted">{{ file.created_at.strftime('%H:%M') }}</small>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         {% if file.processing_completed_at %}
                                             <div>
                                                 <span class="fw-medium text-success">{{ file.processing_completed_at.strftime('%d/%m/%Y') }}</span>
@@ -244,24 +260,33 @@
                                             <span class="text-muted">-</span>
                                         {% endif %}
                                     </td>
-                                    <td class="text-end pe-4">
-                                        <div class="btn-group btn-group-sm" role="group">
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
                                             {% if file.status.value == 'completed' %}
                                                 {% set nfe_record = file.nfe_records|first if file.nfe_records else none %}
                                                 {% if nfe_record %}
                                                 <a href="{{ url_for('view_record', record_id=nfe_record.id) }}" 
-                                                   class="btn btn-outline-primary" 
-                                                   title="Visualizar dados da NFe"
+                                                   class="btn btn-sm btn-outline-primary rounded-pill px-3" 
+                                                   title="Visualizar dados"
                                                    data-bs-toggle="tooltip">
-                                                    <i class="feather-eye"></i>
+                                                    <i class="feather-eye me-1"></i>Ver
                                                 </a>
+                                                {% else %}
+                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" disabled>
+                                                    <i class="feather-eye-off me-1"></i>N/A
+                                                </button>
                                                 {% endif %}
+                                            {% else %}
+                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" disabled>
+                                                    <i class="feather-eye-off me-1"></i>N/A
+                                                </button>
                                             {% endif %}
                                             
-                                            <button class="btn btn-outline-danger" 
-                                                    onclick="deleteFile({{ file.id }})" 
-                                                    title="Excluir">
-                                                <i class="feather-trash-2"></i>
+                                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                                                    onclick="confirmDelete({{ file.id }}, '{{ file.original_filename }}')" 
+                                                    title="Excluir arquivo"
+                                                    data-bs-toggle="tooltip">
+                                                <i class="feather-trash-2 me-1"></i>Excluir
                                             </button>
                                         </div>
                                     </td>
