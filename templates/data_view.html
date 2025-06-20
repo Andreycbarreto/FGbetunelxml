@@ -6,6 +6,108 @@
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
+<!-- Custom CSS for enhanced styling -->
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+    transition: background-color 0.15s ease-in-out;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.btn-group-sm .btn:not(:last-child) {
+    border-right: none;
+}
+
+.btn-group-sm .btn:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.btn-group-sm .btn:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.btn-group-sm .btn:not(:first-child):not(:last-child) {
+    border-radius: 0;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: rgba(var(--bs-primary-rgb), 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table-dark th {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(var(--bs-secondary-rgb), 0.05);
+}
+
+.dropdown-menu {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .btn-group-sm .btn span {
+        display: none !important;
+    }
+    
+    .table-responsive {
+        border: 1px solid rgba(0, 0, 0, 0.125);
+        border-radius: 0.375rem;
+    }
+    
+    .card-body {
+        padding: 1rem 0.5rem;
+    }
+}
+
+/* Tooltip styling */
+.tooltip {
+    font-size: 0.875rem;
+}
+
+.tooltip-inner {
+    max-width: 200px;
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-radius: 0.375rem;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -158,17 +260,33 @@
                 <div class="card-body">
                     {% if records.items %}
                     <div class="table-responsive">
-                        <table class="table table-hover" id="nfeTable">
-                            <thead>
+                        <table class="table table-hover table-striped" id="nfeTable">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>NFe</th>
-                                    <th>Data Emissão</th>
-                                    <th>Emitente</th>
-                                    <th>Destinatário</th>
-                                    <th>Valor Total</th>
-                                    <th>Confiança IA</th>
-                                    <th>Processado</th>
-                                    <th>Ações</th>
+                                    <th scope="col">
+                                        <i class="feather-hash me-1"></i>NFe
+                                    </th>
+                                    <th scope="col">
+                                        <i class="feather-calendar me-1"></i>Data Emissão
+                                    </th>
+                                    <th scope="col">
+                                        <i class="feather-user me-1"></i>Emitente
+                                    </th>
+                                    <th scope="col">
+                                        <i class="feather-users me-1"></i>Destinatário
+                                    </th>
+                                    <th scope="col">
+                                        <i class="feather-dollar-sign me-1"></i>Valor Total
+                                    </th>
+                                    <th scope="col">
+                                        <i class="feather-cpu me-1"></i>Confiança IA
+                                    </th>
+                                    <th scope="col">
+                                        <i class="feather-clock me-1"></i>Processado
+                                    </th>
+                                    <th scope="col" class="text-center">
+                                        <i class="feather-settings me-1"></i>Ações
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -238,17 +356,49 @@
                                             {{ record.created_at.strftime('%d/%m/%Y %H:%M') }}
                                         </small>
                                     </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ url_for('view_record', record_id=record.id) }}" 
-                                               class="btn btn-outline-primary" title="Ver Detalhes">
+                                               class="btn btn-outline-primary btn-sm" 
+                                               title="Ver Detalhes Completos"
+                                               data-bs-toggle="tooltip">
                                                 <i class="feather-eye"></i>
+                                                <span class="d-none d-lg-inline ms-1">Ver</span>
                                             </a>
-                                            <button class="btn btn-outline-secondary" 
+                                            <button class="btn btn-outline-info btn-sm" 
                                                     onclick="showXmlModal({{ record.id }})" 
-                                                    title="Ver XML">
+                                                    title="Visualizar XML Original"
+                                                    data-bs-toggle="tooltip">
                                                 <i class="feather-code"></i>
+                                                <span class="d-none d-lg-inline ms-1">XML</span>
                                             </button>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                                        type="button" 
+                                                        data-bs-toggle="dropdown" 
+                                                        aria-expanded="false"
+                                                        title="Mais opções">
+                                                    <i class="feather-more-horizontal"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="downloadPDF({{ record.id }})">
+                                                            <i class="feather-file-text me-2 text-danger"></i>Baixar PDF
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="exportExcel({{ record.id }})">
+                                                            <i class="feather-download me-2 text-success"></i>Exportar Excel
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="shareRecord({{ record.id }})">
+                                                            <i class="feather-share-2 me-2 text-info"></i>Compartilhar
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -464,5 +614,86 @@ function copyXmlToClipboard() {
         }, 2000);
     });
 }
+
+// New functions for enhanced action buttons
+function downloadPDF(recordId) {
+    // Show feedback
+    showActionFeedback('Preparando PDF para download...');
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.href = `/api/record/${recordId}/pdf`;
+    link.download = `nfe_${recordId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function exportExcel(recordId) {
+    showActionFeedback('Exportando dados para Excel...');
+    
+    const link = document.createElement('a');
+    link.href = `/api/record/${recordId}/excel`;
+    link.download = `nfe_${recordId}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function shareRecord(recordId) {
+    const shareUrl = `${window.location.origin}/record/${recordId}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `NFe #${recordId}`,
+            text: 'Compartilhar dados da NFe',
+            url: shareUrl
+        });
+    } else {
+        // Fallback - copy to clipboard
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            showActionFeedback('Link copiado para área de transferência!');
+        });
+    }
+}
+
+function showActionFeedback(message) {
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = 'toast align-items-center text-white bg-primary border-0';
+    toast.setAttribute('role', 'alert');
+    toast.style.position = 'fixed';
+    toast.style.top = '20px';
+    toast.style.right = '20px';
+    toast.style.zIndex = '9999';
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="feather-info me-2"></i>${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove from DOM after hiding
+    toast.addEventListener('hidden.bs.toast', () => {
+        document.body.removeChild(toast);
+    });
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    // Enable Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
 </script>
 {% endblock %}
