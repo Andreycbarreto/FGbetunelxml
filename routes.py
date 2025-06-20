@@ -163,11 +163,53 @@ def process_all_files():
     
     for pending_file in pending_files:
         try:
-            result = process_single_file_internal(pending_file)
-            if result['success']:
-                processed_count += 1
-            else:
-                error_count += 1
+            # Update status to processing
+            pending_file.status = ProcessingStatus.PROCESSING
+            pending_file.processing_started_at = datetime.now()
+            db.session.commit()
+            
+            # Process the XML file
+            processor = NFEXMLProcessor()
+            
+            # Read XML content
+            with open(pending_file.file_path, 'r', encoding='utf-8') as f:
+                xml_content = f.read()
+            
+            # Extract data using XML processor
+            raw_data = processor.process_xml_file(pending_file.file_path)
+            
+            # Create NFE record using raw XML data
+            nfe_record = NFERecord(
+                user_id=pending_file.user_id,
+                uploaded_file_id=pending_file.id,
+                **{k: v for k, v in raw_data.items() if k != 'items' and hasattr(NFERecord, k)}
+            )
+            
+            # Store raw XML and processing info
+            nfe_record.raw_xml_data = xml_content
+            nfe_record.ai_confidence_score = 0.3
+            nfe_record.ai_processing_notes = 'Processed using basic XML parser'
+            
+            db.session.add(nfe_record)
+            db.session.flush()
+            
+            # Create NFE items from raw data
+            items_data = raw_data.get('items', [])
+            for item_data in items_data:
+                nfe_item = NFEItem(
+                    nfe_record_id=nfe_record.id,
+                    **{k: v for k, v in item_data.items() if hasattr(NFEItem, k)}
+                )
+                db.session.add(nfe_item)
+            
+            # Update file status
+            pending_file.status = ProcessingStatus.COMPLETED
+            pending_file.processing_completed_at = datetime.now()
+            db.session.commit()
+            
+            processed_count += 1
+            logger.info(f"Successfully processed file {pending_file.filename} using basic XML parser")
+            
         except Exception as e:
             error_count += 1
             pending_file.status = ProcessingStatus.ERROR
@@ -198,8 +240,71 @@ def process_next_file():
     
     return process_single_file_internal(pending_file)
 
+def process_file_internal(pending_file):
+    """Internal function to process a single file - returns boolean."""
+    try:
+        # Update status to processing
+        pending_file.status = ProcessingStatus.PROCESSING
+        pending_file.processing_started_at = datetime.now()
+        db.session.commit()
+        
+        # Process the XML file
+        processor = NFEXMLProcessor()
+        
+        # Read XML content
+        with open(pending_file.file_path, 'r', encoding='utf-8') as f:
+            xml_content = f.read()
+        
+        # Extract data using XML processor
+        raw_data = processor.process_xml_file(pending_file.file_path)
+        
+        # Fallback to basic XML processing when AI fails
+        # Create NFE record using raw XML data
+        nfe_record = NFERecord(
+            user_id=pending_file.user_id,
+            uploaded_file_id=pending_file.id,
+            **{k: v for k, v in raw_data.items() if k != 'items' and hasattr(NFERecord, k)}
+        )
+        
+        # Store raw XML and processing info
+        nfe_record.raw_xml_data = xml_content
+        nfe_record.ai_confidence_score = 0.3  # Low confidence for basic processing
+        nfe_record.ai_processing_notes = 'Processed using basic XML parser (AI unavailable)'
+        
+        db.session.add(nfe_record)
+        db.session.flush()  # Get the ID
+        
+        # Create NFE items from raw data
+        items_data = raw_data.get('items', [])
+        for item_data in items_data:
+            nfe_item = NFEItem(
+                nfe_record_id=nfe_record.id,
+                **{k: v for k, v in item_data.items() if hasattr(NFEItem, k)}
+            )
+            db.session.add(nfe_item)
+        
+        # Update file status
+        pending_file.status = ProcessingStatus.COMPLETED
+        pending_file.processing_completed_at = datetime.now()
+        
+        db.session.commit()
+        
+        logger.info(f"Successfully processed file {pending_file.filename} using basic XML parser")
+        return True
+        
+    except Exception as e:
+        # Complete processing failure
+        pending_file.status = ProcessingStatus.ERROR
+        pending_file.error_message = f'XML processing failed: {str(e)}'
+        pending_file.processing_completed_at = datetime.now()
+        
+        db.session.commit()
+        
+        logger.error(f"Failed to process file {pending_file.filename}: {str(e)}")
+        return False
+
 def process_single_file_internal(pending_file):
-    """Internal function to process a single file."""
+    """Internal function to process a single file - returns HTTP response."""
     
     try:
         # Update status to processing

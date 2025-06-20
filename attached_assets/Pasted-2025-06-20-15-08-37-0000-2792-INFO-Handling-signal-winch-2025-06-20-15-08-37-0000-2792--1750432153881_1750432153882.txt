@@ -1,0 +1,26 @@
+2025-06-20 15:08:37 +0000] [2792] [INFO] Handling signal: winch
+[2025-06-20 15:08:37 +0000] [2792] [INFO] Handling signal: winch
+[2025-06-20 15:08:37 +0000] [2792] [INFO] Handling signal: winch
+[2025-06-20 15:08:37 +0000] [2792] [INFO] Handling signal: winch
+INFO:routes:Successfully processed file 20250620_143825_17240401593821000303550020000202221377983677.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143825_17240401593821000303550020000202221377983677.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143825_17240401593821000303550020000202211354772397.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143825_17240401593821000303550020000202211354772397.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143825_17240401593821000303550020000202181143621920.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143825_17240401593821000303550020000202181143621920.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143825_17240401593821000303550020000202161274756212.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143825_17240401593821000303550020000202161274756212.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143826_17240401593821000303550020000202141148832512.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143826_17240401593821000303550020000202141148832512.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143826_17240401593821000303550020000202121215225711.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143826_17240401593821000303550020000202121215225711.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143826_17240401593821000303550020000202091240177045.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143826_17240401593821000303550020000202091240177045.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143826_17240401593821000303550020000202071425258390.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143826_17240401593821000303550020000202071425258390.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143826_17240401593821000303550020000202061313355000.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143826_17240401593821000303550020000202061313355000.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143826_17240401593821000303550020000201991707135917.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143826_17240401593821000303550020000201991707135917.xml: 'Response' object is not subscriptable
+INFO:routes:Successfully processed file 20250620_143826_17240401593821000303550020000201981834241123.xml using basic XML parser
+ERROR:routes:Erro ao processar arquivo 20250620_143826_17240401593821000303550020000201981834241123.xml: 'Response' object is not subscriptable
