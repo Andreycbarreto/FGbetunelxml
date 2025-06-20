@@ -499,6 +499,55 @@ def admin_users():
     
     return render_template('admin/users.html', users=users)
 
+@app.route('/admin/users/register', methods=['GET', 'POST'])
+@require_login
+def admin_register_user():
+    """Register a new user."""
+    if not current_user.is_admin:
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        company = request.form.get('company')
+        role = request.form.get('role')
+        active = bool(request.form.get('active'))
+        
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash('Já existe um usuário com este email.', 'error')
+            return render_template('admin/register_user.html')
+        
+        # Create new user with a generated ID (since we don't have the actual Replit user ID yet)
+        import uuid
+        new_user = User(
+            id=str(uuid.uuid4()),  # Temporary ID, will be replaced when user first logs in
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            company=company,
+            role=UserRole(role),
+            active=active,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            flash(f'Usuário {first_name} {last_name} cadastrado com sucesso! O usuário pode fazer login quando tiver uma conta Replit com o email {email}.', 'success')
+            return redirect(url_for('admin_users'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao cadastrar usuário: {str(e)}', 'error')
+    
+    return render_template('admin/register_user.html')
+
 @app.route('/admin/users/<user_id>/toggle_status', methods=['POST'])
 @require_login
 def admin_toggle_user_status(user_id):

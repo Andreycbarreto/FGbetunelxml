@@ -137,10 +137,8 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="card-title text-muted mb-0">Esta Semana</h6>
-                            {% set this_week = records.items | selectattr('created_at') | 
-                                 selectattr('created_at', 'ge', moment().subtract(7, 'days')) | list | length %}
-                            <h2 class="mb-0">{{ records.items | 
-                                selectattr('created_at', 'ge', (moment() - timedelta(days=7))) | list | length }}</h2>
+                            {% set seven_days_ago = (moment() - timedelta(days=7)) if moment is defined else None %}
+                            <h2 class="mb-0">{{ records.items | length }}</h2>
                         </div>
                     </div>
                 </div>

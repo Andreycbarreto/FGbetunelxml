@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastrar Usuário - NFe Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="row mb-4">
+                <div class="col">
+                    <h1 class="h2">
+                        <i class="feather-user-plus me-2"></i>Cadastrar Novo Usuário
+                    </h1>
+                    <p class="text-muted">Criar uma nova conta de usuário no sistema</p>
+                </div>
+                <div class="col-auto">
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">
+                        <i class="feather-arrow-left me-2"></i>Voltar à Lista
+                    </a>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-user me-2"></i>Informações do Usuário
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">Nome <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ request.form.first_name }}" placeholder="Nome do usuário" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Sobrenome <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ request.form.last_name }}" placeholder="Sobrenome do usuário" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ request.form.email }}" placeholder="usuario@exemplo.com" required>
+                                <div class="form-text">
+                                    <i class="feather-info me-1"></i>
+                                    O usuário deve ter uma conta Replit com este email para fazer login.
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Telefone</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ request.form.phone }}" placeholder="(11) 99999-9999">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="company" class="form-label">Empresa</label>
+                                <input type="text" class="form-control" id="company" name="company" 
+                                       value="{{ request.form.company }}" placeholder="Nome da empresa">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="role" class="form-label">Permissão <span class="text-danger">*</span></label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="">Selecione uma permissão</option>
+                                    <option value="USER" {{ 'selected' if request.form.role == 'USER' else '' }}>Usuário</option>
+                                    <option value="ADMIN" {{ 'selected' if request.form.role == 'ADMIN' else '' }}>Administrador</option>
+                                    <option value="VIEWER" {{ 'selected' if request.form.role == 'VIEWER' else '' }}>Visualizador</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="active" name="active" 
+                                       {{ 'checked' if request.form.active else 'checked' }}>
+                                <label class="form-check-label" for="active">
+                                    Conta ativa (usuário pode fazer login)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="feather-info-circle me-2"></i>
+                            <strong>Importante:</strong> O usuário precisará ter uma conta Replit com o email informado 
+                            para conseguir fazer login no sistema. Após o cadastro, instrua o usuário a acessar 
+                            o sistema através do link de login.
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <small class="text-muted">
+                                    <i class="feather-shield me-1"></i>
+                                    Campos marcados com * são obrigatórios
+                                </small>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary me-2">
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="feather-user-plus me-2"></i>Cadastrar Usuário
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- How it works -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-help-circle me-2"></i>Como Funciona o Cadastro
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="bg-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="feather-user-plus text-white"></i>
+                            </div>
+                            <h6>1. Cadastro no Sistema</h6>
+                            <p class="text-muted mb-0">Admin cadastra o usuário com email e permissões.</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="bg-success rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="feather-mail text-white"></i>
+                            </div>
+                            <h6>2. Conta Replit</h6>
+                            <p class="text-muted mb-0">Usuário deve ter uma conta Replit com o mesmo email.</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="bg-info rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="feather-log-in text-white"></i>
+                            </div>
+                            <h6>3. Login Automático</h6>
+                            <p class="text-muted mb-0">Sistema reconhece automaticamente o usuário no primeiro login.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Format phone number input
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 11) {
+        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (value.length >= 7) {
+        value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+    } else if (value.length >= 3) {
+        value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    }
+    e.target.value = value;
+});
+
+// Role change warning for admin
+document.getElementById('role').addEventListener('change', function(e) {
+    if (e.target.value === 'ADMIN') {
+        if (!confirm('Tem certeza que deseja dar permissões de administrador para este usuário? Isso dará acesso completo ao sistema.')) {
+            e.target.value = 'USER';
+        }
+    }
+});
+</script>
+{% endblock %}
