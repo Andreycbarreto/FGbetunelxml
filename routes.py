@@ -105,7 +105,7 @@ def upload_page():
     return render_template('upload.html')
 
 @app.route('/upload', methods=['POST'])
-@require_login
+@login_required_hybrid
 def upload_files():
     """Handle multiple XML file uploads."""
     if 'files' not in request.files:
@@ -163,7 +163,7 @@ def upload_files():
     return redirect(url_for('processing_queue'))
 
 @app.route('/processing')
-@require_login
+@login_required_hybrid
 def processing_queue():
     """Show processing queue and start processing."""
     # Get all user's files ordered by status and creation date
@@ -472,7 +472,7 @@ def process_single_file_internal(pending_file):
         })
 
 @app.route('/data')
-@require_login
+@login_required_hybrid
 def data_view():
     """View processed NFe data."""
     page = request.args.get('page', 1, type=int)
@@ -491,7 +491,7 @@ def data_view():
 
 # Admin routes for user management
 @app.route('/admin')
-@require_login
+@admin_required
 def admin_dashboard():
     """Admin dashboard."""
     if not current_user.is_admin:
@@ -517,7 +517,7 @@ def admin_dashboard():
     return render_template('admin/dashboard.html', stats=stats, recent_users=recent_users)
 
 @app.route('/admin/users')
-@require_login
+@admin_required
 def admin_users():
     """Manage users."""
     if not current_user.is_admin:
@@ -531,7 +531,7 @@ def admin_users():
     return render_template('admin/users.html', users=users)
 
 @app.route('/admin/users/register', methods=['GET', 'POST'])
-@require_login
+@admin_required
 def admin_register_user():
     """Register a new user."""
     if not current_user.is_admin:
@@ -590,7 +590,7 @@ def admin_register_user():
     return render_template('admin/register_user.html')
 
 @app.route('/admin/users/<user_id>/toggle_status', methods=['POST'])
-@require_login
+@admin_required
 def admin_toggle_user_status(user_id):
     """Toggle user active status."""
     if not current_user.is_admin:
@@ -608,7 +608,7 @@ def admin_toggle_user_status(user_id):
     })
 
 @app.route('/admin/users/<user_id>/edit', methods=['GET', 'POST'])
-@require_login
+@admin_required
 def admin_edit_user(user_id):
     """Edit user."""
     if not current_user.is_admin:
