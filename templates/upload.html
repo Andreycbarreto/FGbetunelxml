@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Upload de Arquivos - NFe XML Processor{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 mb-0">
+                <i class="feather-upload me-2"></i>Upload de Arquivos XML
+            </h1>
+            <p class="text-muted">Selecione um ou múltiplos arquivos XML de NFe para processamento</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                        <div class="upload-area mb-4">
+                            <div class="upload-zone" id="uploadZone">
+                                <div class="upload-content text-center py-5">
+                                    <i class="feather-upload display-1 text-muted mb-3"></i>
+                                    <h4>Arraste arquivos XML aqui</h4>
+                                    <p class="text-muted mb-3">ou clique para selecionar arquivos</p>
+                                    <input type="file" name="files" id="fileInput" multiple accept=".xml" class="d-none">
+                                    <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                                        <i class="feather-folder me-2"></i>Selecionar Arquivos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- File List -->
+                        <div id="fileList" class="mb-4" style="display: none;">
+                            <h5>Arquivos Selecionados:</h5>
+                            <div class="file-list-container">
+                                <!-- Files will be listed here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Upload Button -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">
+                                    <i class="feather-info me-1"></i>
+                                    Apenas arquivos XML são aceitos. Tamanho máximo: 50MB por arquivo.
+                                </small>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-success" id="uploadBtn" disabled>
+                                    <i class="feather-upload me-2"></i>Fazer Upload
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Instructions Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="feather-help-circle me-2"></i>Instruções
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Tipos de arquivo aceitos:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="feather-check text-success me-2"></i>Arquivos XML de NFe</li>
+                                <li><i class="feather-check text-success me-2"></i>Múltiplos arquivos por vez</li>
+                                <li><i class="feather-check text-success me-2"></i>Máximo 50MB por arquivo</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Após o upload:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="feather-arrow-right text-info me-2"></i>Arquivos serão enfileirados</li>
+                                <li><i class="feather-arrow-right text-info me-2"></i>Processamento será sequencial</li>
+                                <li><i class="feather-arrow-right text-info me-2"></i>IA extrairá todos os campos</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    
+    let selectedFiles = [];
+    
+    // Drag and drop functionality
+    uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+    
+    uploadZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+    });
+    
+    uploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        
+        const files = Array.from(e.dataTransfer.files);
+        handleFiles(files);
+    });
+    
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        handleFiles(files);
+    });
+    
+    function handleFiles(files) {
+        // Filter XML files
+        const xmlFiles = files.filter(file => file.name.toLowerCase().endsWith('.xml'));
+        
+        if (xmlFiles.length !== files.length) {
+            alert('Apenas arquivos XML são aceitos.');
+        }
+        
+        selectedFiles = xmlFiles;
+        updateFileList();
+        updateUploadButton();
+    }
+    
+    function updateFileList() {
+        if (selectedFiles.length === 0) {
+            fileList.style.display = 'none';
+            return;
+        }
+        
+        fileList.style.display = 'block';
+        const container = fileList.querySelector('.file-list-container');
+        
+        container.innerHTML = selectedFiles.map((file, index) => `
+            <div class="file-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                <div>
+                    <i class="feather-file-text me-2"></i>
+                    <strong>${file.name}</strong>
+                    <small class="text-muted ms-2">(${formatFileSize(file.size)})</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">
+                    <i class="feather-x"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    function updateUploadButton() {
+        uploadBtn.disabled = selectedFiles.length === 0;
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    window.removeFile = function(index) {
+        selectedFiles.splice(index, 1);
+        updateFileList();
+        updateUploadButton();
+        
+        // Update file input
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+    };
+    
+    // Form submission
+    uploadForm.addEventListener('submit', function(e) {
+        if (selectedFiles.length === 0) {
+            e.preventDefault();
+            alert('Selecione pelo menos um arquivo XML.');
+            return;
+        }
+        
+        // Update file input with selected files
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+        
+        // Show loading
+        uploadBtn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Enviando...';
+        uploadBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

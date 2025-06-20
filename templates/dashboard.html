@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - NFe XML Processor{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 mb-0">
+                <i class="feather-home me-2"></i>Dashboard
+            </h1>
+            <p class="text-muted">Bem-vindo de volta, {{ current_user.first_name or current_user.email }}!</p>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="feather-file display-4 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-0">Total de Arquivos</h6>
+                            <h2 class="mb-0">{{ stats.total_files }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="feather-check-circle display-4 text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-0">Processados</h6>
+                            <h2 class="mb-0">{{ stats.processed_files }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="feather-clock display-4 text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-0">Pendentes</h6>
+                            <h2 class="mb-0">{{ stats.pending_files }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="feather-alert-circle display-4 text-danger"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-0">Com Erro</h6>
+                            <h2 class="mb-0">{{ stats.error_files }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Processing Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="feather-bar-chart-2 me-2"></i>Status de Processamento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="processingChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="feather-zap me-2"></i>Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('upload_page') }}" class="btn btn-primary">
+                            <i class="feather-upload me-2"></i>Upload de Arquivos
+                        </a>
+                        {% if stats.pending_files > 0 %}
+                        <a href="{{ url_for('processing_queue') }}" class="btn btn-warning">
+                            <i class="feather-play me-2"></i>Processar Pendentes
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('data_view') }}" class="btn btn-info">
+                            <i class="feather-database me-2"></i>Ver Dados
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Records Summary -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="feather-database me-2"></i>Registros NFe
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ stats.total_records }}</h3>
+                    <p class="text-muted mb-0">NFes processadas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Files -->
+    {% if stats.recent_files %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="feather-clock me-2"></i>Arquivos Recentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Arquivo</th>
+                                    <th>Status</th>
+                                    <th>Data Upload</th>
+                                    <th>Processamento</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in stats.recent_files %}
+                                <tr>
+                                    <td>
+                                        <i class="feather-file-text me-2"></i>
+                                        {{ file.original_filename }}
+                                    </td>
+                                    <td>
+                                        {% if file.status.value == 'completed' %}
+                                            <span class="badge bg-success">
+                                                <i class="feather-check me-1"></i>Processado
+                                            </span>
+                                        {% elif file.status.value == 'processing' %}
+                                            <span class="badge bg-warning">
+                                                <i class="feather-clock me-1"></i>Processando
+                                            </span>
+                                        {% elif file.status.value == 'pending' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="feather-clock me-1"></i>Pendente
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                <i class="feather-x me-1"></i>Erro
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ file.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if file.processing_completed_at %}
+                                            <small class="text-muted">
+                                                {{ file.processing_completed_at.strftime('%d/%m/%Y %H:%M') }}
+                                            </small>
+                                        {% else %}
+                                            <small class="text-muted">-</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Processing Status Chart
+const ctx = document.getElementById('processingChart').getContext('2d');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Processados', 'Pendentes', 'Com Erro'],
+        datasets: [{
+            data: [{{ stats.processed_files }}, {{ stats.pending_files }}, {{ stats.error_files }}],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(220, 53, 69, 0.8)'
+            ],
+            borderColor: [
+                'rgba(40, 167, 69, 1)',
+                'rgba(255, 193, 7, 1)',
+                'rgba(220, 53, 69, 1)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

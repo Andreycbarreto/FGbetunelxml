@@ -1,0 +1,349 @@
+import os
+import logging
+from datetime import datetime
+from flask import session, render_template, request, redirect, url_for, flash, jsonify
+from flask_login import current_user
+from werkzeug.utils import secure_filename
+from sqlalchemy import desc
+
+from app import app, db
+from replit_auth import require_login, make_replit_blueprint
+from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus
+from xml_processor import NFEXMLProcessor
+from ai_agents import process_nfe_with_ai
+
+app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
+
+logger = logging.getLogger(__name__)
+
+# Make session permanent
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'xml'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/')
+def index():
+    """Landing page - shows login for anonymous users, dashboard for logged-in users."""
+    if not current_user.is_authenticated:
+        return render_template('index.html')
+    
+    # Get user's processing statistics
+    total_files = UploadedFile.query.filter_by(user_id=current_user.id).count()
+    processed_files = UploadedFile.query.filter_by(
+        user_id=current_user.id, 
+        status=ProcessingStatus.COMPLETED
+    ).count()
+    pending_files = UploadedFile.query.filter_by(
+        user_id=current_user.id, 
+        status=ProcessingStatus.PENDING
+    ).count()
+    error_files = UploadedFile.query.filter_by(
+        user_id=current_user.id, 
+        status=ProcessingStatus.ERROR
+    ).count()
+    
+    total_records = NFERecord.query.filter_by(user_id=current_user.id).count()
+    
+    # Get recent files
+    recent_files = UploadedFile.query.filter_by(user_id=current_user.id)\
+        .order_by(desc(UploadedFile.created_at))\
+        .limit(5)\
+        .all()
+    
+    stats = {
+        'total_files': total_files,
+        'processed_files': processed_files,
+        'pending_files': pending_files,
+        'error_files': error_files,
+        'total_records': total_records,
+        'recent_files': recent_files
+    }
+    
+    return render_template('dashboard.html', stats=stats)
+
+@app.route('/upload')
+@require_login
+def upload_page():
+    """File upload page."""
+    return render_template('upload.html')
+
+@app.route('/upload', methods=['POST'])
+@require_login
+def upload_files():
+    """Handle multiple XML file uploads."""
+    if 'files' not in request.files:
+        flash('No files selected', 'error')
+        return redirect(request.url)
+    
+    files = request.files.getlist('files')
+    
+    if not files or all(file.filename == '' for file in files):
+        flash('No files selected', 'error')
+        return redirect(request.url)
+    
+    uploaded_count = 0
+    error_count = 0
+    
+    for file in files:
+        if file and file.filename and allowed_file(file.filename):
+            try:
+                filename = secure_filename(file.filename)
+                # Add timestamp to avoid conflicts
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"{timestamp}_{filename}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                
+                # Save file
+                file.save(file_path)
+                
+                # Create database record
+                uploaded_file = UploadedFile(
+                    user_id=current_user.id,
+                    filename=filename,
+                    original_filename=file.filename,
+                    file_path=file_path,
+                    file_size=os.path.getsize(file_path),
+                    status=ProcessingStatus.PENDING
+                )
+                
+                db.session.add(uploaded_file)
+                db.session.commit()
+                
+                uploaded_count += 1
+                logger.info(f"File uploaded successfully: {filename} by user {current_user.id}")
+                
+            except Exception as e:
+                error_count += 1
+                logger.error(f"Error uploading file {file.filename}: {str(e)}")
+        else:
+            error_count += 1
+    
+    if uploaded_count > 0:
+        flash(f'Successfully uploaded {uploaded_count} file(s)', 'success')
+    if error_count > 0:
+        flash(f'Failed to upload {error_count} file(s)', 'error')
+    
+    return redirect(url_for('processing_queue'))
+
+@app.route('/processing')
+@require_login
+def processing_queue():
+    """Show processing queue and start processing."""
+    # Get all user's files ordered by status and creation date
+    files = UploadedFile.query.filter_by(user_id=current_user.id)\
+        .order_by(UploadedFile.status.asc(), UploadedFile.created_at.asc())\
+        .all()
+    
+    return render_template('processing.html', files=files)
+
+@app.route('/process_next', methods=['POST'])
+@require_login
+def process_next_file():
+    """Process the next pending XML file."""
+    # Get the next pending file
+    pending_file = UploadedFile.query.filter_by(
+        user_id=current_user.id,
+        status=ProcessingStatus.PENDING
+    ).order_by(UploadedFile.created_at.asc()).first()
+    
+    if not pending_file:
+        return jsonify({'success': False, 'message': 'No pending files to process'})
+    
+    try:
+        # Update status to processing
+        pending_file.status = ProcessingStatus.PROCESSING
+        pending_file.processing_started_at = datetime.now()
+        db.session.commit()
+        
+        # Process the XML file
+        processor = NFEXMLProcessor()
+        
+        # Read XML content
+        with open(pending_file.file_path, 'r', encoding='utf-8') as f:
+            xml_content = f.read()
+        
+        # Extract data using XML processor
+        raw_data = processor.process_xml_file(pending_file.file_path)
+        
+        # Process with AI agents
+        ai_result = process_nfe_with_ai(xml_content, raw_data)
+        
+        if ai_result.success and ai_result.data:
+            # Create NFE record
+            nfe_record = NFERecord(
+                user_id=current_user.id,
+                uploaded_file_id=pending_file.id,
+                **{k: v for k, v in ai_result.data.items() if k != 'items' and k != 'raw_xml'}
+            )
+            
+            # Store raw XML
+            nfe_record.raw_xml_data = ai_result.data.get('raw_xml', xml_content)
+            nfe_record.ai_confidence_score = ai_result.confidence_score
+            nfe_record.ai_processing_notes = '\n'.join(ai_result.processing_notes)
+            
+            db.session.add(nfe_record)
+            db.session.flush()  # Get the ID
+            
+            # Create NFE items
+            items_data = ai_result.data.get('items', [])
+            for item_data in items_data:
+                nfe_item = NFEItem(
+                    nfe_record_id=nfe_record.id,
+                    **{k: v for k, v in item_data.items() if hasattr(NFEItem, k)}
+                )
+                db.session.add(nfe_item)
+            
+            # Update file status
+            pending_file.status = ProcessingStatus.COMPLETED
+            pending_file.processing_completed_at = datetime.now()
+            
+            db.session.commit()
+            
+            logger.info(f"Successfully processed file {pending_file.filename} for user {current_user.id}")
+            
+            return jsonify({
+                'success': True,
+                'message': f'Successfully processed {pending_file.original_filename}',
+                'confidence_score': ai_result.confidence_score,
+                'processing_notes': ai_result.processing_notes
+            })
+        
+        else:
+            # Processing failed
+            pending_file.status = ProcessingStatus.ERROR
+            pending_file.error_message = '\n'.join(ai_result.errors) if ai_result.errors else 'Unknown processing error'
+            pending_file.processing_completed_at = datetime.now()
+            
+            db.session.commit()
+            
+            logger.error(f"Failed to process file {pending_file.filename}: {pending_file.error_message}")
+            
+            return jsonify({
+                'success': False,
+                'message': f'Failed to process {pending_file.original_filename}',
+                'errors': ai_result.errors
+            })
+    
+    except Exception as e:
+        # Handle unexpected errors
+        pending_file.status = ProcessingStatus.ERROR
+        pending_file.error_message = str(e)
+        pending_file.processing_completed_at = datetime.now()
+        
+        db.session.commit()
+        
+        logger.error(f"Unexpected error processing file {pending_file.filename}: {str(e)}")
+        
+        return jsonify({
+            'success': False,
+            'message': f'Unexpected error processing {pending_file.original_filename}',
+            'error': str(e)
+        })
+
+@app.route('/data')
+@require_login
+def data_view():
+    """View processed NFe data."""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    # Get user's NFe records with pagination
+    records = NFERecord.query.filter_by(user_id=current_user.id)\
+        .order_by(desc(NFERecord.created_at))\
+        .paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
+    
+    return render_template('data_view.html', records=records)
+
+@app.route('/data/<int:record_id>')
+@require_login
+def view_record(record_id):
+    """View detailed NFe record with items."""
+    record = NFERecord.query.filter_by(
+        id=record_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    return render_template('record_detail.html', record=record)
+
+@app.route('/delete_file/<int:file_id>', methods=['POST'])
+@require_login
+def delete_file(file_id):
+    """Delete an uploaded file and its associated records."""
+    uploaded_file = UploadedFile.query.filter_by(
+        id=file_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    try:
+        # Delete associated NFE records and items
+        nfe_records = NFERecord.query.filter_by(uploaded_file_id=uploaded_file.id).all()
+        for record in nfe_records:
+            # Delete items first
+            NFEItem.query.filter_by(nfe_record_id=record.id).delete()
+            db.session.delete(record)
+        
+        # Delete physical file
+        if os.path.exists(uploaded_file.file_path):
+            os.remove(uploaded_file.file_path)
+        
+        # Delete database record
+        db.session.delete(uploaded_file)
+        db.session.commit()
+        
+        flash(f'File {uploaded_file.original_filename} deleted successfully', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting file: {str(e)}', 'error')
+        logger.error(f"Error deleting file {file_id}: {str(e)}")
+    
+    return redirect(url_for('processing_queue'))
+
+@app.route('/api/processing_status')
+@require_login
+def api_processing_status():
+    """API endpoint to get current processing status."""
+    total_files = UploadedFile.query.filter_by(user_id=current_user.id).count()
+    processed_files = UploadedFile.query.filter_by(
+        user_id=current_user.id, 
+        status=ProcessingStatus.COMPLETED
+    ).count()
+    pending_files = UploadedFile.query.filter_by(
+        user_id=current_user.id, 
+        status=ProcessingStatus.PENDING
+    ).count()
+    processing_files = UploadedFile.query.filter_by(
+        user_id=current_user.id, 
+        status=ProcessingStatus.PROCESSING
+    ).count()
+    error_files = UploadedFile.query.filter_by(
+        user_id=current_user.id, 
+        status=ProcessingStatus.ERROR
+    ).count()
+    
+    return jsonify({
+        'total_files': total_files,
+        'processed_files': processed_files,
+        'pending_files': pending_files,
+        'processing_files': processing_files,
+        'error_files': error_files
+    })
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('500.html'), 500

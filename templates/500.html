@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Erro Interno - NFe XML Processor{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 text-center">
+            <div class="error-page">
+                <div class="error-icon mb-4">
+                    <i class="feather-alert-triangle display-1 text-danger"></i>
+                </div>
+                
+                <h1 class="display-4 fw-bold text-danger mb-3">500</h1>
+                <h2 class="h3 mb-4">Erro Interno do Servidor</h2>
+                
+                <p class="lead text-muted mb-4">
+                    Ops! Algo deu errado no nosso servidor. Nossa equipe foi notificada e está trabalhando para resolver o problema.
+                </p>
+                
+                <div class="alert alert-warning mb-4">
+                    <i class="feather-clock me-2"></i>
+                    <strong>O que fazer agora?</strong> Tente recarregar a página em alguns minutos ou volte à página inicial.
+                </div>
+                
+                <div class="d-flex justify-content-center gap-3">
+                    <button onclick="location.reload()" class="btn btn-primary">
+                        <i class="feather-refresh-cw me-2"></i>Recarregar Página
+                    </button>
+                    
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                        <i class="feather-home me-2"></i>Voltar ao Início
+                    </a>
+                </div>
+                
+                <div class="mt-5">
+                    <details class="text-start">
+                        <summary class="btn btn-sm btn-outline-secondary">
+                            <i class="feather-info me-2"></i>Detalhes Técnicos
+                        </summary>
+                        <div class="mt-3 p-3 bg-dark rounded">
+                            <small class="text-muted">
+                                <strong>Timestamp:</strong> {{ moment().format('YYYY-MM-DD HH:mm:ss') }}<br>
+                                <strong>User Agent:</strong> {{ request.headers.get('User-Agent', 'N/A')[:100] }}<br>
+                                <strong>Path:</strong> {{ request.path }}<br>
+                                <strong>Method:</strong> {{ request.method }}
+                            </small>
+                        </div>
+                    </details>
+                </div>
+                
+                <div class="mt-4">
+                    <p class="text-muted small">
+                        Se o problema persistir, entre em contato com o suporte técnico.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-page {
+    padding: 2rem 0;
+}
+
+.error-icon {
+    animation: shake 0.5s infinite alternate;
+}
+
+@keyframes shake {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(5px);
+    }
+}
+
+details summary {
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0.5rem;
+}
+
+details[open] summary {
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

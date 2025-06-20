@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+
+{% block title %}Dados Processados - NFe XML Processor{% endblock %}
+
+{% block extra_head %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 mb-0">
+                <i class="feather-database me-2"></i>Dados Processados
+            </h1>
+            <p class="text-muted">Visualize e analise todas as NFes processadas</p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary" id="exportBtn">
+                    <i class="feather-download me-2"></i>Exportar
+                </button>
+                <button class="btn btn-outline-secondary" id="filterBtn" data-bs-toggle="collapse" data-bs-target="#filterPanel">
+                    <i class="feather-filter me-2"></i>Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Panel -->
+    <div class="collapse mb-4" id="filterPanel">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="feather-filter me-2"></i>Filtros Avançados
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="filterEmitente" class="form-label">Emitente</label>
+                        <input type="text" class="form-control" id="filterEmitente" placeholder="Nome ou CNPJ">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterDestinatario" class="form-label">Destinatário</label>
+                        <input type="text" class="form-control" id="filterDestinatario" placeholder="Nome ou CNPJ">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filterDataInicio" class="form-label">Data Início</label>
+                        <input type="date" class="form-control" id="filterDataInicio">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filterDataFim" class="form-label">Data Fim</label>
+                        <input type="date" class="form-control" id="filterDataFim">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filterValorMin" class="form-label">Valor Mín.</label>
+                        <input type="number" class="form-control" id="filterValorMin" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col">
+                        <button class="btn btn-primary" id="applyFilters">
+                            <i class="feather-search me-2"></i>Aplicar Filtros
+                        </button>
+                        <button class="btn btn-outline-secondary" id="clearFilters">
+                            <i class="feather-x me-2"></i>Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        {% set total_records = records.total %}
+        {% set total_value = records.items | sum(attribute='valor_total_nf') | default(0) %}
+        {% set avg_confidence = records.items | avg(attribute='ai_confidence_score') | default(0) %}
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="feather-file-text display-4 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-0">Total NFes</h6>
+                            <h2 class="mb-0">{{ total_records }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="feather-dollar-sign display-4 text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-0">Valor Total</h6>
+                            <h2 class="mb-0">R$ {{ "%.2f"|format(total_value) }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="feather-cpu display-4 text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-0">Confiança IA</h6>
+                            <h2 class="mb-0">{{ "%.1f"|format(avg_confidence * 100) }}%</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="feather-calendar display-4 text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-0">Esta Semana</h6>
+                            {% set this_week = records.items | selectattr('created_at') | 
+                                 selectattr('created_at', 'ge', moment().subtract(7, 'days')) | list | length %}
+                            <h2 class="mb-0">{{ records.items | 
+                                selectattr('created_at', 'ge', (moment() - timedelta(days=7))) | list | length }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="feather-list me-2"></i>NFes Processadas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if records.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="nfeTable">
+                            <thead>
+                                <tr>
+                                    <th>NFe</th>
+                                    <th>Data Emissão</th>
+                                    <th>Emitente</th>
+                                    <th>Destinatário</th>
+                                    <th>Valor Total</th>
+                                    <th>Confiança IA</th>
+                                    <th>Processado</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in records.items %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ record.numero_nf or 'N/A' }}</strong>
+                                            {% if record.serie %}
+                                                <small class="text-muted d-block">Série: {{ record.serie }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if record.data_emissao %}
+                                            {{ record.data_emissao.strftime('%d/%m/%Y') }}
+                                            <small class="text-muted d-block">
+                                                {{ record.data_emissao.strftime('%H:%M') }}
+                                            </small>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 200px;">
+                                            <strong>{{ record.emitente_nome or 'N/A' }}</strong>
+                                            {% if record.emitente_cnpj %}
+                                                <small class="text-muted d-block">{{ record.emitente_cnpj }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 200px;">
+                                            <strong>{{ record.destinatario_nome or 'N/A' }}</strong>
+                                            {% if record.destinatario_cnpj %}
+                                                <small class="text-muted d-block">{{ record.destinatario_cnpj }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if record.valor_total_nf %}
+                                            <strong class="text-success">R$ {{ "%.2f"|format(record.valor_total_nf) }}</strong>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.ai_confidence_score %}
+                                            {% set confidence_pct = record.ai_confidence_score * 100 %}
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                    <div class="progress-bar 
+                                                        {% if confidence_pct >= 80 %}bg-success
+                                                        {% elif confidence_pct >= 60 %}bg-warning
+                                                        {% else %}bg-danger{% endif %}" 
+                                                        style="width: {{ confidence_pct }}%">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">{{ "%.0f"|format(confidence_pct) }}%</small>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ record.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('view_record', record_id=record.id) }}" 
+                                               class="btn btn-outline-primary" title="Ver Detalhes">
+                                                <i class="feather-eye"></i>
+                                            </a>
+                                            <button class="btn btn-outline-secondary" 
+                                                    onclick="showXmlModal({{ record.id }})" 
+                                                    title="Ver XML">
+                                                <i class="feather-code"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if records.pages > 1 %}
+                    <nav aria-label="Paginação" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if records.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('data_view', page=records.prev_num) }}">
+                                        <i class="feather-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in records.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != records.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('data_view', page=page_num) }}">
+                                                {{ page_num }}
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">…</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if records.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('data_view', page=records.next_num) }}">
+                                        <i class="feather-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="feather-database display-1 text-muted mb-3"></i>
+                        <h4>Nenhuma NFe processada</h4>
+                        <p class="text-muted mb-3">Faça upload e processe arquivos XML para ver os dados aqui.</p>
+                        <a href="{{ url_for('upload_page') }}" class="btn btn-primary">
+                            <i class="feather-upload me-2"></i>Fazer Upload
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- XML Modal -->
+<div class="modal fade" id="xmlModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="feather-code me-2"></i>XML Original
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre><code id="xmlContent" class="language-xml"></code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="copyXmlToClipboard()">
+                    <i class="feather-copy me-2"></i>Copiar XML
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+<!-- Prism.js for XML syntax highlighting -->
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    if (document.getElementById('nfeTable')) {
+        $('#nfeTable').DataTable({
+            responsive: true,
+            pageLength: 25,
+            order: [[6, 'desc']], // Order by processed date
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+            },
+            columnDefs: [
+                { 
+                    targets: [7], // Actions column
+                    orderable: false,
+                    searchable: false
+                }
+            ]
+        });
+    }
+    
+    // Filter functionality
+    document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
+    document.getElementById('clearFilters')?.addEventListener('click', clearFilters);
+    
+    function applyFilters() {
+        const table = $('#nfeTable').DataTable();
+        
+        // Get filter values
+        const emitente = document.getElementById('filterEmitente').value;
+        const destinatario = document.getElementById('filterDestinatario').value;
+        const dataInicio = document.getElementById('filterDataInicio').value;
+        const dataFim = document.getElementById('filterDataFim').value;
+        const valorMin = document.getElementById('filterValorMin').value;
+        
+        // Apply filters
+        table.columns(2).search(emitente); // Emitente column
+        table.columns(3).search(destinatario); // Destinatário column
+        
+        // Draw table with filters
+        table.draw();
+    }
+    
+    function clearFilters() {
+        document.getElementById('filterEmitente').value = '';
+        document.getElementById('filterDestinatario').value = '';
+        document.getElementById('filterDataInicio').value = '';
+        document.getElementById('filterDataFim').value = '';
+        document.getElementById('filterValorMin').value = '';
+        
+        const table = $('#nfeTable').DataTable();
+        table.search('').columns().search('').draw();
+    }
+    
+    // Export functionality
+    document.getElementById('exportBtn')?.addEventListener('click', function() {
+        // Simple CSV export
+        const table = $('#nfeTable').DataTable();
+        const data = table.data().toArray();
+        
+        let csv = 'NFe,Data Emissão,Emitente,Destinatário,Valor Total,Confiança IA,Processado\n';
+        
+        data.forEach(row => {
+            // Extract text content from HTML
+            const cells = row.map(cell => {
+                const temp = document.createElement('div');
+                temp.innerHTML = cell;
+                return temp.textContent || temp.innerText || '';
+            });
+            csv += cells.slice(0, 7).join(',') + '\n';
+        });
+        
+        // Download CSV
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'nfe_data.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    });
+});
+
+function showXmlModal(recordId) {
+    // This would typically fetch the XML content via AJAX
+    // For now, show a placeholder
+    document.getElementById('xmlContent').textContent = 'Carregando XML...';
+    
+    const modal = new bootstrap.Modal(document.getElementById('xmlModal'));
+    modal.show();
+    
+    // In a real implementation, you would fetch the XML content here
+    // fetch(`/api/record/${recordId}/xml`)
+    //     .then(response => response.text())
+    //     .then(xml => {
+    //         document.getElementById('xmlContent').textContent = xml;
+    //         Prism.highlightElement(document.getElementById('xmlContent'));
+    //     });
+}
+
+function copyXmlToClipboard() {
+    const xmlContent = document.getElementById('xmlContent').textContent;
+    navigator.clipboard.writeText(xmlContent).then(function() {
+        // Show success feedback
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="feather-check me-2"></i>Copiado!';
+        setTimeout(() => {
+            button.innerHTML = originalText;
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

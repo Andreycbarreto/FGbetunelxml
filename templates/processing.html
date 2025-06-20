@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}Processamento - NFe XML Processor{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 mb-0">
+                <i class="feather-clock me-2"></i>Fila de Processamento
+            </h1>
+            <p class="text-muted">Gerencie e processe seus arquivos XML de NFe</p>
+        </div>
+        <div class="col-auto">
+            {% set pending_count = files|selectattr('status.value', 'equalto', 'pending')|list|length %}
+            {% if pending_count > 0 %}
+            <button class="btn btn-success" id="processNextBtn">
+                <i class="feather-play me-2"></i>Processar Próximo ({{ pending_count }})
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Processing Status -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="card-title mb-0">Status do Processamento</h5>
+                            <p class="card-text mb-0" id="processingStatus">
+                                Aguardando processamento...
+                            </p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="spinner-border d-none" id="processingSpinner" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 8px;">
+                        <div class="progress-bar" id="processingProgress" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Files Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="feather-file-text me-2"></i>Arquivos ({{ files|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if files %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Arquivo</th>
+                                    <th>Status</th>
+                                    <th>Tamanho</th>
+                                    <th>Upload</th>
+                                    <th>Processamento</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in files %}
+                                <tr id="file-row-{{ file.id }}">
+                                    <td>
+                                        <div>
+                                            <i class="feather-file-text me-2"></i>
+                                            <strong>{{ file.original_filename }}</strong>
+                                        </div>
+                                        {% if file.error_message %}
+                                        <small class="text-danger">
+                                            <i class="feather-alert-triangle me-1"></i>{{ file.error_message }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="status-badge" data-status="{{ file.status.value }}">
+                                            {% if file.status.value == 'completed' %}
+                                                <span class="badge bg-success">
+                                                    <i class="feather-check me-1"></i>Processado
+                                                </span>
+                                            {% elif file.status.value == 'processing' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="feather-clock me-1"></i>Processando
+                                                </span>
+                                            {% elif file.status.value == 'pending' %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="feather-clock me-1"></i>Pendente
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="feather-x me-1"></i>Erro
+                                                </span>
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ "%.1f KB"|format(file.file_size / 1024) }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ file.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if file.processing_completed_at %}
+                                            <small class="text-muted">
+                                                {{ file.processing_completed_at.strftime('%d/%m/%Y %H:%M') }}
+                                            </small>
+                                        {% elif file.processing_started_at %}
+                                            <small class="text-warning">
+                                                Iniciado: {{ file.processing_started_at.strftime('%H:%M') }}
+                                            </small>
+                                        {% else %}
+                                            <small class="text-muted">-</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if file.status.value == 'completed' %}
+                                                {% set nfe_record = file.nfe_records|first if file.nfe_records else none %}
+                                                {% if nfe_record %}
+                                                <a href="{{ url_for('view_record', record_id=nfe_record.id) }}" 
+                                                   class="btn btn-outline-info" title="Ver Dados">
+                                                    <i class="feather-eye"></i>
+                                                </a>
+                                                {% endif %}
+                                            {% endif %}
+                                            
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="deleteFile({{ file.id }})" 
+                                                    title="Excluir">
+                                                <i class="feather-trash-2"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="feather-inbox display-1 text-muted mb-3"></i>
+                        <h4>Nenhum arquivo encontrado</h4>
+                        <p class="text-muted mb-3">Faça upload de arquivos XML para começar o processamento.</p>
+                        <a href="{{ url_for('upload_page') }}" class="btn btn-primary">
+                            <i class="feather-upload me-2"></i>Fazer Upload
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Modal -->
+<div class="modal fade" id="processingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="feather-cpu me-2"></i>Processando Arquivo
+                </h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border mb-3" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <h6 id="processingFileName">Processando arquivo...</h6>
+                <p class="text-muted mb-0">
+                    A IA está analisando, extraindo e validando os dados da NFe. 
+                    Este processo pode levar alguns minutos.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const processNextBtn = document.getElementById('processNextBtn');
+    const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
+    const processingStatus = document.getElementById('processingStatus');
+    const processingSpinner = document.getElementById('processingSpinner');
+    const processingProgress = document.getElementById('processingProgress');
+    
+    if (processNextBtn) {
+        processNextBtn.addEventListener('click', processNextFile);
+    }
+    
+    function processNextFile() {
+        // Show processing UI
+        processNextBtn.disabled = true;
+        processingSpinner.classList.remove('d-none');
+        processingStatus.textContent = 'Processando arquivo...';
+        processingModal.show();
+        
+        fetch('/process_next', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            processingModal.hide();
+            processingSpinner.classList.add('d-none');
+            
+            if (data.success) {
+                processingStatus.innerHTML = `
+                    <i class="feather-check me-2"></i>
+                    ${data.message} (Confiança: ${(data.confidence_score * 100).toFixed(1)}%)
+                `;
+                
+                // Show success alert
+                showAlert('success', data.message);
+                
+                // Refresh page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+                
+            } else {
+                processingStatus.innerHTML = `
+                    <i class="feather-x me-2"></i>
+                    ${data.message}
+                `;
+                
+                showAlert('danger', data.message);
+                processNextBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            processingModal.hide();
+            processingSpinner.classList.add('d-none');
+            processingStatus.innerHTML = `
+                <i class="feather-x me-2"></i>
+                Erro de comunicação
+            `;
+            showAlert('danger', 'Erro de comunicação com o servidor');
+            processNextBtn.disabled = false;
+        });
+    }
+    
+    function showAlert(type, message) {
+        const alertContainer = document.querySelector('.container');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        alertContainer.insertBefore(alert, alertContainer.firstChild);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+    
+    // Update processing status periodically
+    setInterval(updateProcessingStatus, 10000);
+    
+    function updateProcessingStatus() {
+        fetch('/api/processing_status')
+        .then(response => response.json())
+        .then(data => {
+            const processed = data.processed_files;
+            const total = data.total_files;
+            const progress = total > 0 ? (processed / total) * 100 : 0;
+            
+            processingProgress.style.width = progress + '%';
+            
+            if (data.processing_files > 0) {
+                processingStatus.innerHTML = `
+                    <i class="feather-clock me-2"></i>
+                    Processando ${data.processing_files} arquivo(s)...
+                `;
+            } else if (data.pending_files > 0) {
+                processingStatus.innerHTML = `
+                    <i class="feather-pause me-2"></i>
+                    ${data.pending_files} arquivo(s) aguardando processamento
+                `;
+            } else if (total > 0) {
+                processingStatus.innerHTML = `
+                    <i class="feather-check me-2"></i>
+                    Todos os arquivos foram processados
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error updating status:', error);
+        });
+    }
+});
+
+function deleteFile(fileId) {
+    if (confirm('Tem certeza que deseja excluir este arquivo? Esta ação não pode ser desfeita.')) {
+        fetch(`/delete_file/${fileId}`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Erro ao excluir arquivo');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro de comunicação');
+        });
+    }
+}
+</script>
+{% endblock %}
