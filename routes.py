@@ -1,10 +1,13 @@
 import os
 import logging
 from datetime import datetime
+from functools import wraps
 from flask import session, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import current_user, login_user, logout_user
 from werkzeug.utils import secure_filename
+from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError
 
 from app import app, db, init_database
 from replit_auth import require_login, make_replit_blueprint
@@ -33,6 +36,27 @@ ALLOWED_EXTENSIONS = {'xml'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Hybrid authentication decorator for both OAuth and local auth
+def login_required_hybrid(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Admin-only access decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
+        if not current_user.is_admin():
+            flash('Acesso negado. Apenas administradores podem acessar esta página.', 'error')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 def index():
@@ -75,7 +99,7 @@ def index():
     return render_template('dashboard.html', stats=stats)
 
 @app.route('/upload')
-@require_login
+@login_required_hybrid
 def upload_page():
     """File upload page."""
     return render_template('upload.html')
