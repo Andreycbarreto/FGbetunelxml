@@ -14,9 +14,14 @@
         <div class="col-auto">
             {% set pending_count = files|selectattr('status.value', 'equalto', 'pending')|list|length %}
             {% if pending_count > 0 %}
-            <button class="btn btn-success" id="processNextBtn">
-                <i class="feather-play me-2"></i>Processar Próximo ({{ pending_count }})
-            </button>
+            <div class="btn-group" role="group">
+                <button class="btn btn-success" id="processNextBtn">
+                    <i class="feather-play me-2"></i>Processar Próximo
+                </button>
+                <button class="btn btn-primary" id="processAllBtn">
+                    <i class="feather-zap me-2"></i>Processar Todos ({{ pending_count }})
+                </button>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -196,6 +201,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const processNextBtn = document.getElementById('processNextBtn');
+    const processAllBtn = document.getElementById('processAllBtn');
     const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
     const processingStatus = document.getElementById('processingStatus');
     const processingSpinner = document.getElementById('processingSpinner');
@@ -203,6 +209,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (processNextBtn) {
         processNextBtn.addEventListener('click', processNextFile);
+    }
+    
+    if (processAllBtn) {
+        processAllBtn.addEventListener('click', processAllFiles);
     }
     
     function processNextFile() {
@@ -257,6 +267,57 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             showAlert('danger', 'Erro de comunicação com o servidor');
             processNextBtn.disabled = false;
+        });
+    }
+    
+    function processAllFiles() {
+        // Show processing UI
+        processAllBtn.disabled = true;
+        processNextBtn.disabled = true;
+        processingSpinner.classList.remove('d-none');
+        processingStatus.textContent = 'Processando todos os arquivos...';
+        
+        fetch('/process_all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            processingSpinner.classList.add('d-none');
+            
+            if (data.success) {
+                processingStatus.innerHTML = `
+                    <i class="feather-check me-2"></i>
+                    ${data.message}
+                `;
+                
+                showAlert('success', `Processamento concluído: ${data.processed_count} arquivos processados`);
+                
+                // Refresh page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+                
+            } else {
+                processingStatus.innerHTML = `
+                    <i class="feather-x me-2"></i>
+                    ${data.message}
+                `;
+                
+                showAlert('danger', data.message);
+                processAllBtn.disabled = false;
+                processNextBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            processingSpinner.classList.add('d-none');
+            processAllBtn.disabled = false;
+            processNextBtn.disabled = false;
+            
+            console.error('Error:', error);
+            showAlert('danger', 'Erro ao processar arquivos. Tente novamente.');
         });
     }
     

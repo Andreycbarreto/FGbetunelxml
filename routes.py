@@ -142,6 +142,47 @@ def processing_queue():
     
     return render_template('processing.html', files=files)
 
+@app.route('/process_all', methods=['POST'])
+@require_login
+def process_all_files():
+    """Process all pending XML files."""
+    # Get all pending files for the user
+    pending_files = UploadedFile.query.filter_by(
+        user_id=current_user.id,
+        status=ProcessingStatus.PENDING
+    ).order_by(UploadedFile.created_at.asc()).all()
+    
+    if not pending_files:
+        return jsonify({
+            'success': False,
+            'message': 'Nenhum arquivo pendente para processar'
+        })
+    
+    processed_count = 0
+    error_count = 0
+    
+    for pending_file in pending_files:
+        try:
+            result = process_single_file_internal(pending_file)
+            if result['success']:
+                processed_count += 1
+            else:
+                error_count += 1
+        except Exception as e:
+            error_count += 1
+            pending_file.status = ProcessingStatus.ERROR
+            pending_file.error_message = f'Erro no processamento: {str(e)}'
+            pending_file.processing_completed_at = datetime.now()
+            db.session.commit()
+            logger.error(f"Erro ao processar arquivo {pending_file.filename}: {str(e)}")
+    
+    return jsonify({
+        'success': True,
+        'message': f'Processamento concluído: {processed_count} arquivos processados com sucesso',
+        'processed_count': processed_count,
+        'error_count': error_count
+    })
+
 @app.route('/process_next', methods=['POST'])
 @require_login
 def process_next_file():
@@ -153,7 +194,12 @@ def process_next_file():
     ).order_by(UploadedFile.created_at.asc()).first()
     
     if not pending_file:
-        return jsonify({'success': False, 'message': 'No pending files to process'})
+        return jsonify({'success': False, 'message': 'Nenhum arquivo pendente para processar'})
+    
+    return process_single_file_internal(pending_file)
+
+def process_single_file_internal(pending_file):
+    """Internal function to process a single file."""
     
     try:
         # Update status to processing
