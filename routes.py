@@ -2,7 +2,7 @@ import os
 import logging
 from datetime import datetime
 from flask import session, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import current_user
+from flask_login import current_user, login_user, logout_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import desc
 
@@ -38,7 +38,7 @@ def allowed_file(filename):
 def index():
     """Landing page - shows login for anonymous users, dashboard for logged-in users."""
     if not current_user.is_authenticated:
-        return render_template('index.html')
+        return redirect(url_for('login'))
     
     # Get user's processing statistics
     total_files = UploadedFile.query.filter_by(user_id=current_user.id).count()
@@ -713,3 +713,45 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
+
+# Traditional Login Routes
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Traditional email/password login."""
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        if not email or not password:
+            flash('Email e senha são obrigatórios.', 'error')
+            return render_template('auth/login.html')
+        
+        # Find user by email
+        user = User.query.filter_by(email=email, active=True).first()
+        
+        if user and user.check_password(password):
+            # Update last login
+            user.last_login = datetime.now()
+            db.session.commit()
+            
+            # Log user in
+            login_user(user, remember=True)
+            flash(f'Bem-vindo, {user.full_name}!', 'success')
+            
+            # Redirect to next page or home
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('index'))
+        else:
+            flash('Email ou senha incorretos.', 'error')
+    
+    return render_template('auth/login.html')
+
+@app.route('/logout')
+def local_logout():
+    """Traditional logout."""
+    logout_user()
+    flash('Você foi desconectado com sucesso.', 'info')
+    return redirect(url_for('login'))

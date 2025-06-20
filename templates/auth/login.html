@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Login - NFe Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <h1 class="h3 mb-2">
+                            <i class="feather-log-in me-2 text-primary"></i>Entrar no Sistema
+                        </h1>
+                        <p class="text-muted">Acesse sua conta para gerenciar NFes</p>
+                    </div>
+
+                    <form method="POST">
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="feather-mail"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ request.form.email or '' }}" 
+                                       placeholder="seu@email.com" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Senha</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="feather-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="Digite sua senha" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 mb-4">
+                            <i class="feather-log-in me-2"></i>Entrar
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <div class="my-4">
+                            <span class="text-muted">ou</span>
+                        </div>
+                        
+                        <a href="{{ url_for('replit_auth.login') }}" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="feather-github me-2"></i>Entrar com Replit
+                        </a>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="feather-info me-1"></i>
+                            Não tem uma conta? Entre em contato com o administrador.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 20px;
+}
+
+.input-group-text {
+    background-color: transparent;
+    border-right: none;
+}
+
+.form-control {
+    border-left: none;
+}
+
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+</style>
+{% endblock %}
