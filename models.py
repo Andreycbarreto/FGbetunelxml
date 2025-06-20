@@ -7,6 +7,11 @@ from flask_login import UserMixin
 from sqlalchemy import UniqueConstraint, Numeric
 
 # (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+class UserRole(enum.Enum):
+    ADMIN = "admin"
+    USER = "user"
+    VIEWER = "viewer"
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.String, primary_key=True)
@@ -14,12 +19,34 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String, nullable=True)
     last_name = db.Column(db.String, nullable=True)
     profile_image_url = db.Column(db.String, nullable=True)
+    
+    # Additional user fields
+    role = db.Column(db.Enum(UserRole), default=UserRole.USER)
+    active = db.Column(db.Boolean, default=True)
+    phone = db.Column(db.String(20), nullable=True)
+    company = db.Column(db.String(255), nullable=True)
+    last_login = db.Column(db.DateTime, nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
     # Relationships
     uploaded_files = db.relationship('UploadedFile', backref='user', lazy=True)
     nfe_records = db.relationship('NFERecord', backref='user', lazy=True)
+    
+    @property
+    def full_name(self):
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        elif self.email:
+            return self.email.split('@')[0]
+        return f"User {self.id[:8]}"
+    
+    @property
+    def is_admin(self):
+        return self.role == UserRole.ADMIN
 
 # (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
 class OAuth(OAuthConsumerMixin, db.Model):

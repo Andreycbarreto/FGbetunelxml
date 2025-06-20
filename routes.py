@@ -8,7 +8,7 @@ from sqlalchemy import desc
 
 from app import app, db
 from replit_auth import require_login, make_replit_blueprint
-from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus
+from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole
 from xml_processor import NFEXMLProcessor
 from ai_agents import process_nfe_with_ai
 
@@ -457,6 +457,112 @@ def data_view():
         )
     
     return render_template('data_view.html', records=records)
+
+# Admin routes for user management
+@app.route('/admin')
+@require_login
+def admin_dashboard():
+    """Admin dashboard."""
+    if not current_user.is_admin:
+        flash('Acesso negado. Apenas administradores podem acessar esta área.', 'error')
+        return redirect(url_for('index'))
+    
+    # Get statistics
+    total_users = User.query.count()
+    active_users = User.query.filter_by(active=True).count()
+    total_files = UploadedFile.query.count()
+    total_records = NFERecord.query.count()
+    
+    # Recent users
+    recent_users = User.query.order_by(desc(User.created_at)).limit(5).all()
+    
+    stats = {
+        'total_users': total_users,
+        'active_users': active_users,
+        'total_files': total_files,
+        'total_records': total_records
+    }
+    
+    return render_template('admin/dashboard.html', stats=stats, recent_users=recent_users)
+
+@app.route('/admin/users')
+@require_login
+def admin_users():
+    """Manage users."""
+    if not current_user.is_admin:
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('index'))
+    
+    page = request.args.get('page', 1, type=int)
+    users = User.query.order_by(desc(User.created_at))\
+        .paginate(page=page, per_page=20, error_out=False)
+    
+    return render_template('admin/users.html', users=users)
+
+@app.route('/admin/users/<user_id>/toggle_status', methods=['POST'])
+@require_login
+def admin_toggle_user_status(user_id):
+    """Toggle user active status."""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Acesso negado'})
+    
+    user = User.query.get_or_404(user_id)
+    user.active = not user.active
+    db.session.commit()
+    
+    status = 'ativado' if user.active else 'desativado'
+    return jsonify({
+        'success': True, 
+        'message': f'Usuário {status} com sucesso',
+        'active': user.active
+    })
+
+@app.route('/admin/users/<user_id>/edit', methods=['GET', 'POST'])
+@require_login
+def admin_edit_user(user_id):
+    """Edit user."""
+    if not current_user.is_admin:
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('index'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        user.first_name = request.form.get('first_name')
+        user.last_name = request.form.get('last_name')
+        user.email = request.form.get('email')
+        user.phone = request.form.get('phone')
+        user.company = request.form.get('company')
+        user.role = UserRole(request.form.get('role'))
+        user.active = request.form.get('active') == 'on'
+        
+        db.session.commit()
+        flash('Usuário atualizado com sucesso!', 'success')
+        return redirect(url_for('admin_users'))
+    
+    return render_template('admin/edit_user.html', user=user, roles=UserRole)
+
+@app.route('/profile')
+@require_login
+def user_profile():
+    """User profile page."""
+    return render_template('profile.html', user=current_user)
+
+@app.route('/profile/edit', methods=['GET', 'POST'])
+@require_login
+def edit_profile():
+    """Edit user profile."""
+    if request.method == 'POST':
+        current_user.first_name = request.form.get('first_name')
+        current_user.last_name = request.form.get('last_name')
+        current_user.phone = request.form.get('phone')
+        current_user.company = request.form.get('company')
+        
+        db.session.commit()
+        flash('Perfil atualizado com sucesso!', 'success')
+        return redirect(url_for('user_profile'))
+    
+    return render_template('edit_profile.html', user=current_user)
 
 @app.route('/data/<int:record_id>')
 @require_login
