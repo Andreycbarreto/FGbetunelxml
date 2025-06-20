@@ -171,15 +171,9 @@ def process_next_file():
         # Extract data using XML processor
         raw_data = processor.process_xml_file(pending_file.file_path)
         
-        # Process with AI agents (with fallback to basic processing)
-        try:
-            ai_result = process_nfe_with_ai(xml_content, raw_data)
-            use_ai_data = ai_result.success and ai_result.data
-        except Exception as e:
-            # If AI processing fails completely, use raw data
-            use_ai_data = False
-            ai_result = None
-            print(f"AI processing failed: {e}")
+        # Use basic XML processing for now (AI processing disabled due to connectivity issues)
+        use_ai_data = False
+        ai_result = None
         
         if use_ai_data:
             # Create NFE record
