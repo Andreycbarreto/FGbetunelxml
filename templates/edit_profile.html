@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil - NFe Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="row mb-4">
+                <div class="col">
+                    <h1 class="h2">
+                        <i class="feather-edit me-2"></i>Editar Perfil
+                    </h1>
+                    <p class="text-muted">Atualize suas informações pessoais</p>
+                </div>
+                <div class="col-auto">
+                    <a href="{{ url_for('user_profile') }}" class="btn btn-outline-secondary">
+                        <i class="feather-arrow-left me-2"></i>Voltar ao Perfil
+                    </a>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-user me-2"></i>Informações Pessoais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">Nome</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ user.first_name or '' }}" placeholder="Seu nome">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Sobrenome</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ user.last_name or '' }}" placeholder="Seu sobrenome">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Telefone</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ user.phone or '' }}" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="company" class="form-label">Empresa</label>
+                                <input type="text" class="form-control" id="company" name="company" 
+                                       value="{{ user.company or '' }}" placeholder="Nome da empresa">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ user.email or '' }}" readonly>
+                            <div class="form-text">
+                                <i class="feather-info me-1"></i>
+                                O email é controlado pela autenticação do Replit e não pode ser alterado aqui.
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <small class="text-muted">
+                                    <i class="feather-clock me-1"></i>
+                                    Conta criada em {{ user.created_at.strftime('%d/%m/%Y') }}
+                                </small>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-outline-secondary me-2" onclick="window.history.back()">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="feather-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Account Information -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-shield me-2"></i>Informações da Conta
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Tipo de Conta</h6>
+                            <span class="badge bg-{{ 'danger' if user.role.value == 'admin' else 'primary' if user.role.value == 'user' else 'secondary' }} fs-6">
+                                {{ user.role.value.title() }}
+                            </span>
+                            {% if user.role.value == 'admin' %}
+                                <p class="text-muted mt-2 mb-0">
+                                    <small>Você tem acesso completo ao sistema de administração.</small>
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Status da Conta</h6>
+                            <span class="badge bg-{{ 'success' if user.active else 'secondary' }} fs-6">
+                                {{ 'Ativa' if user.active else 'Inativa' }}
+                            </span>
+                            <p class="text-muted mt-2 mb-0">
+                                <small>{{ 'Sua conta está funcionando normalmente.' if user.active else 'Entre em contato com o administrador.' }}</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Format phone number input
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 11) {
+        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (value.length >= 7) {
+        value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+    } else if (value.length >= 3) {
+        value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    }
+    e.target.value = value;
+});
+</script>
+{% endblock %}

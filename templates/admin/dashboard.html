@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Admin - NFe Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2">
+                <i class="feather-bar-chart-2 me-2"></i>Dashboard Administrativo
+            </h1>
+            <p class="text-muted">Visão geral do sistema e gerenciamento</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary rounded-circle p-3">
+                                <i class="feather-users text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title mb-1">Total de Usuários</h6>
+                            <h3 class="mb-0">{{ stats.total_users }}</h3>
+                            <small class="text-success">
+                                <i class="feather-arrow-up me-1"></i>{{ stats.active_users }} ativos
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success rounded-circle p-3">
+                                <i class="feather-file-text text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title mb-1">Arquivos Enviados</h6>
+                            <h3 class="mb-0">{{ stats.total_files }}</h3>
+                            <small class="text-muted">Total processado</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info rounded-circle p-3">
+                                <i class="feather-database text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title mb-1">NFes Processadas</h6>
+                            <h3 class="mb-0">{{ stats.total_records }}</h3>
+                            <small class="text-muted">Registros criados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning rounded-circle p-3">
+                                <i class="feather-activity text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title mb-1">Taxa de Sucesso</h6>
+                            <h3 class="mb-0">{{ ((stats.total_records / stats.total_files * 100) if stats.total_files > 0 else 0) | round(1) }}%</h3>
+                            <small class="text-muted">Processamento</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="feather-activity me-2"></i>Atividade Recente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-4">
+                        <i class="feather-clock display-1 text-muted mb-3"></i>
+                        <h6>Sistema de Logs</h6>
+                        <p class="text-muted">Implementação de logs de atividade em desenvolvimento</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="feather-user-plus me-2"></i>Usuários Recentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_users %}
+                        {% for user in recent_users %}
+                        <div class="d-flex align-items-center mb-3">
+                            {% if user.profile_image_url %}
+                                <img src="{{ user.profile_image_url }}" alt="Avatar" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="feather-user text-white"></i>
+                                </div>
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">{{ user.full_name }}</h6>
+                                <small class="text-muted">{{ user.created_at.strftime('%d/%m/%Y') }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'success' if user.active else 'secondary' }}">
+                                {{ 'Ativo' if user.active else 'Inativo' }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="feather-users text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Nenhum usuário encontrado</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

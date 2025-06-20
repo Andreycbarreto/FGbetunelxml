@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Usuários - NFe Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2">
+                <i class="feather-users me-2"></i>Gerenciar Usuários
+            </h1>
+            <p class="text-muted">Controle de acesso e permissões do sistema</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="feather-arrow-left me-2"></i>Voltar ao Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">Lista de Usuários</h5>
+                </div>
+                <div class="col-auto">
+                    <small class="text-muted">Total: {{ users.total }} usuários</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if users.items %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Contato</th>
+                            <th>Permissão</th>
+                            <th>Status</th>
+                            <th>Cadastro</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users.items %}
+                        <tr id="user-row-{{ user.id }}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if user.profile_image_url %}
+                                        <img src="{{ user.profile_image_url }}" alt="Avatar" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="feather-user text-white"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-0">{{ user.full_name }}</h6>
+                                        {% if user.company %}
+                                            <small class="text-muted">{{ user.company }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    {% if user.email %}
+                                        <div><i class="feather-mail me-1"></i>{{ user.email }}</div>
+                                    {% endif %}
+                                    {% if user.phone %}
+                                        <div><i class="feather-phone me-1"></i>{{ user.phone }}</div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'danger' if user.role.value == 'admin' else 'primary' if user.role.value == 'user' else 'secondary' }}">
+                                    {{ user.role.value.title() }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if user.active else 'secondary' }}" id="status-badge-{{ user.id }}">
+                                    {{ 'Ativo' if user.active else 'Inativo' }}
+                                </span>
+                            </td>
+                            <td>
+                                <small>{{ user.created_at.strftime('%d/%m/%Y') }}</small>
+                                {% if user.last_login %}
+                                    <br><small class="text-muted">Último acesso: {{ user.last_login.strftime('%d/%m/%Y') }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('admin_edit_user', user_id=user.id) }}" class="btn btn-outline-primary" title="Editar">
+                                        <i class="feather-edit"></i>
+                                    </a>
+                                    <button class="btn btn-outline-{{ 'warning' if user.active else 'success' }}" 
+                                            onclick="toggleUserStatus('{{ user.id }}')" 
+                                            id="toggle-btn-{{ user.id }}"
+                                            title="{{ 'Desativar' if user.active else 'Ativar' }}">
+                                        <i class="feather-{{ 'pause' if user.active else 'play' }}"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if users.pages > 1 %}
+            <div class="card-footer">
+                <nav aria-label="Navegação de páginas">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if users.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_users', page=users.prev_num) }}">Anterior</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in users.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != users.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin_users', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if users.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_users', page=users.next_num) }}">Próximo</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="feather-users display-1 text-muted mb-3"></i>
+                <h5>Nenhum usuário encontrado</h5>
+                <p class="text-muted">O sistema ainda não possui usuários cadastrados.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function toggleUserStatus(userId) {
+    const btn = document.getElementById(`toggle-btn-${userId}`);
+    const badge = document.getElementById(`status-badge-${userId}`);
+    
+    btn.disabled = true;
+    
+    fetch(`/admin/users/${userId}/toggle_status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update badge
+            badge.className = `badge bg-${data.active ? 'success' : 'secondary'}`;
+            badge.textContent = data.active ? 'Ativo' : 'Inativo';
+            
+            // Update button
+            btn.className = `btn btn-outline-${data.active ? 'warning' : 'success'}`;
+            btn.title = data.active ? 'Desativar' : 'Ativar';
+            btn.innerHTML = `<i class="feather-${data.active ? 'pause' : 'play'}"></i>`;
+            
+            // Show success message
+            showAlert('success', data.message);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Erro ao alterar status do usuário');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        feather.replace();
+    });
+}
+
+function showAlert(type, message) {
+    const alertContainer = document.querySelector('.container');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+    alert.innerHTML = `
+        <i class="feather-${type === 'success' ? 'check-circle' : 'alert-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    alertContainer.insertBefore(alert, alertContainer.firstChild.nextSibling);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

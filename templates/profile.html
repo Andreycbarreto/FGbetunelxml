@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil - NFe Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="row mb-4">
+                <div class="col">
+                    <h1 class="h2">
+                        <i class="feather-user me-2"></i>Meu Perfil
+                    </h1>
+                    <p class="text-muted">Informações da sua conta</p>
+                </div>
+                <div class="col-auto">
+                    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+                        <i class="feather-edit me-2"></i>Editar Perfil
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profile Card -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center border-end">
+                            {% if user.profile_image_url %}
+                                <img src="{{ user.profile_image_url }}" alt="Avatar" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                    <i class="feather-user text-white" style="font-size: 48px;"></i>
+                                </div>
+                            {% endif %}
+                            <h5>{{ user.full_name }}</h5>
+                            <span class="badge bg-{{ 'danger' if user.role.value == 'admin' else 'primary' if user.role.value == 'user' else 'secondary' }} mb-3">
+                                {{ user.role.value.title() }}
+                            </span>
+                            <div>
+                                <span class="badge bg-{{ 'success' if user.active else 'secondary' }}">
+                                    {{ 'Conta Ativa' if user.active else 'Conta Inativa' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <h6 class="text-muted mb-3">Informações Pessoais</h6>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Nome:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.first_name or 'Não informado' }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Sobrenome:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.last_name or 'Não informado' }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Email:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.email or 'Não informado' }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Telefone:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.phone or 'Não informado' }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Empresa:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.company or 'Não informado' }}
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <h6 class="text-muted mb-3">Informações da Conta</h6>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Membro desde:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.created_at.strftime('%d/%m/%Y às %H:%M') }}
+                                </div>
+                            </div>
+                            
+                            {% if user.last_login %}
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Último acesso:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.last_login.strftime('%d/%m/%Y às %H:%M') }}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>ID do usuário:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    <code>{{ user.id }}</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Summary -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-activity me-2"></i>Resumo de Atividade
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h3 class="text-primary">{{ user.uploaded_files | length }}</h3>
+                                <p class="text-muted mb-0">Arquivos Enviados</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h3 class="text-success">{{ user.nfe_records | length }}</h3>
+                                <p class="text-muted mb-0">NFes Processadas</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-info">
+                                {{ ((user.nfe_records | length / user.uploaded_files | length * 100) if user.uploaded_files | length > 0 else 0) | round(1) }}%
+                            </h3>
+                            <p class="text-muted mb-0">Taxa de Sucesso</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

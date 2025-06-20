@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuário - NFe Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="row mb-4">
+                <div class="col">
+                    <h1 class="h2">
+                        <i class="feather-edit me-2"></i>Editar Usuário
+                    </h1>
+                    <p class="text-muted">Gerenciar informações e permissões do usuário</p>
+                </div>
+                <div class="col-auto">
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">
+                        <i class="feather-arrow-left me-2"></i>Voltar à Lista
+                    </a>
+                </div>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-user me-2"></i>Informações do Usuário
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            {% if edit_user.profile_image_url %}
+                                <img src="{{ edit_user.profile_image_url }}" alt="Avatar" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                    <i class="feather-user text-white" style="font-size: 36px;"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <span class="badge bg-{{ 'success' if edit_user.active else 'secondary' }}">
+                                    {{ 'Ativo' if edit_user.active else 'Inativo' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <form method="POST">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="first_name" class="form-label">Nome</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" 
+                                               value="{{ edit_user.first_name or '' }}" placeholder="Nome do usuário">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="last_name" class="form-label">Sobrenome</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" 
+                                               value="{{ edit_user.last_name or '' }}" placeholder="Sobrenome do usuário">
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">Telefone</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                               value="{{ edit_user.phone or '' }}" placeholder="(11) 99999-9999">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="company" class="form-label">Empresa</label>
+                                        <input type="text" class="form-control" id="company" name="company" 
+                                               value="{{ edit_user.company or '' }}" placeholder="Nome da empresa">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ edit_user.email or '' }}" readonly>
+                                    <div class="form-text">
+                                        <i class="feather-info me-1"></i>
+                                        O email é controlado pela autenticação do Replit.
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="role" class="form-label">Permissão</label>
+                                        <select class="form-select" id="role" name="role">
+                                            <option value="user" {{ 'selected' if edit_user.role.value == 'user' else '' }}>Usuário</option>
+                                            <option value="admin" {{ 'selected' if edit_user.role.value == 'admin' else '' }}>Administrador</option>
+                                            <option value="viewer" {{ 'selected' if edit_user.role.value == 'viewer' else '' }}>Visualizador</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="active" class="form-label">Status</label>
+                                        <select class="form-select" id="active" name="active">
+                                            <option value="1" {{ 'selected' if edit_user.active else '' }}>Ativo</option>
+                                            <option value="0" {{ 'selected' if not edit_user.active else '' }}>Inativo</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <small class="text-muted">
+                                            <i class="feather-clock me-1"></i>
+                                            Membro desde {{ edit_user.created_at.strftime('%d/%m/%Y') }}
+                                        </small>
+                                        {% if edit_user.last_login %}
+                                            <br><small class="text-muted">
+                                                Último acesso: {{ edit_user.last_login.strftime('%d/%m/%Y às %H:%M') }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary me-2">
+                                            Cancelar
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="feather-save me-2"></i>Salvar Alterações
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Activity Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-activity me-2"></i>Resumo de Atividade
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h3 class="text-primary">{{ edit_user.uploaded_files | length }}</h3>
+                                <p class="text-muted mb-0">Arquivos Enviados</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h3 class="text-success">{{ edit_user.nfe_records | length }}</h3>
+                                <p class="text-muted mb-0">NFes Processadas</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-info">
+                                {{ ((edit_user.nfe_records | length / edit_user.uploaded_files | length * 100) if edit_user.uploaded_files | length > 0 else 0) | round(1) }}%
+                            </h3>
+                            <p class="text-muted mb-0">Taxa de Sucesso</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Format phone number input
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 11) {
+        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (value.length >= 7) {
+        value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+    } else if (value.length >= 3) {
+        value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    }
+    e.target.value = value;
+});
+
+// Role change warning
+document.getElementById('role').addEventListener('change', function(e) {
+    if (e.target.value === 'admin') {
+        if (!confirm('Tem certeza que deseja dar permissões de administrador para este usuário? Isso dará acesso completo ao sistema.')) {
+            e.target.value = '{{ edit_user.role.value }}';
+        }
+    }
+});
+</script>
+{% endblock %}
