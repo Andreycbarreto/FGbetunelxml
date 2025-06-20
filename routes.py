@@ -171,10 +171,17 @@ def process_next_file():
         # Extract data using XML processor
         raw_data = processor.process_xml_file(pending_file.file_path)
         
-        # Process with AI agents
-        ai_result = process_nfe_with_ai(xml_content, raw_data)
+        # Process with AI agents (with fallback to basic processing)
+        try:
+            ai_result = process_nfe_with_ai(xml_content, raw_data)
+            use_ai_data = ai_result.success and ai_result.data
+        except Exception as e:
+            # If AI processing fails completely, use raw data
+            use_ai_data = False
+            ai_result = None
+            print(f"AI processing failed: {e}")
         
-        if ai_result.success and ai_result.data:
+        if use_ai_data:
             # Create NFE record
             nfe_record = NFERecord(
                 user_id=current_user.id,
@@ -215,20 +222,62 @@ def process_next_file():
             })
         
         else:
-            # Processing failed
-            pending_file.status = ProcessingStatus.ERROR
-            pending_file.error_message = '\n'.join(ai_result.errors) if ai_result.errors else 'Unknown processing error'
-            pending_file.processing_completed_at = datetime.now()
-            
-            db.session.commit()
-            
-            logger.error(f"Failed to process file {pending_file.filename}: {pending_file.error_message}")
-            
-            return jsonify({
-                'success': False,
-                'message': f'Failed to process {pending_file.original_filename}',
-                'errors': ai_result.errors
-            })
+            # Fallback to basic XML processing when AI fails
+            try:
+                # Create NFE record using raw XML data
+                nfe_record = NFERecord(
+                    user_id=current_user.id,
+                    uploaded_file_id=pending_file.id,
+                    **{k: v for k, v in raw_data.items() if k != 'items' and hasattr(NFERecord, k)}
+                )
+                
+                # Store raw XML and processing info
+                nfe_record.raw_xml_data = xml_content
+                nfe_record.ai_confidence_score = 0.3  # Low confidence for basic processing
+                nfe_record.ai_processing_notes = 'Processed using basic XML parser (AI unavailable)'
+                
+                db.session.add(nfe_record)
+                db.session.flush()  # Get the ID
+                
+                # Create NFE items from raw data
+                items_data = raw_data.get('items', [])
+                for item_data in items_data:
+                    nfe_item = NFEItem(
+                        nfe_record_id=nfe_record.id,
+                        **{k: v for k, v in item_data.items() if hasattr(NFEItem, k)}
+                    )
+                    db.session.add(nfe_item)
+                
+                # Update file status
+                pending_file.status = ProcessingStatus.COMPLETED
+                pending_file.processing_completed_at = datetime.now()
+                
+                db.session.commit()
+                
+                logger.info(f"Successfully processed file {pending_file.filename} using basic XML parser")
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Successfully processed {pending_file.original_filename} (basic mode)',
+                    'confidence_score': 0.3,
+                    'processing_notes': ['Processed using basic XML parser']
+                })
+                
+            except Exception as fallback_error:
+                # Complete processing failure
+                pending_file.status = ProcessingStatus.ERROR
+                pending_file.error_message = f'XML processing failed: {str(fallback_error)}'
+                pending_file.processing_completed_at = datetime.now()
+                
+                db.session.commit()
+                
+                logger.error(f"Failed to process file {pending_file.filename}: {pending_file.error_message}")
+                
+                return jsonify({
+                    'success': False,
+                    'message': f'Failed to process {pending_file.original_filename}',
+                    'errors': [str(fallback_error)]
+                })
     
     except Exception as e:
         # Handle unexpected errors

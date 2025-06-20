@@ -78,7 +78,10 @@ class NFEAnalysisAgent:
                 temperature=0.1
             )
             
-            analysis_result = json.loads(response.choices[0].message.content)
+            content = response.choices[0].message.content
+            if not content:
+                raise ValueError("Empty response from OpenAI")
+            analysis_result = json.loads(content)
             
             state['analyzed_data'] = analysis_result
             state['current_step'] = 'analysis_complete'
@@ -150,18 +153,36 @@ class NFEExtractionAgent:
             }
             """
             
-            response = openai_client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": extraction_prompt},
-                    {"role": "user", "content": f"Extract all fields from this NFe XML:\n\n{state['xml_content']}"}
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.1,
-                max_tokens=4000
-            )
+            # Truncate XML content if too large to avoid API timeouts
+            xml_content = state['xml_content']
+            if len(xml_content) > 50000:  # Limit to ~50KB
+                xml_content = xml_content[:50000] + "\n... [XML truncated for processing]"
             
-            extraction_result = json.loads(response.choices[0].message.content)
+            try:
+                response = openai_client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": extraction_prompt},
+                        {"role": "user", "content": f"Extract all fields from this NFe XML:\n\n{xml_content}"}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.1,
+                    max_tokens=4000,
+                    timeout=30  # 30 second timeout
+                )
+            except Exception as e:
+                state['errors'].append(f"AI extraction failed: {str(e)}")
+                state['processing_notes'].append(f"{self.name}: AI extraction failed, using raw data")
+                # Fall back to using raw_data if AI fails
+                state['extracted_data'] = state['raw_data']
+                state['confidence_score'] = 0.5  # Medium confidence for fallback
+                state['current_step'] = 'extraction_fallback'
+                return state
+            
+            content = response.choices[0].message.content
+            if not content:
+                raise ValueError("Empty response from OpenAI")
+            extraction_result = json.loads(content)
             
             state['extracted_data'] = extraction_result
             state['confidence_score'] = extraction_result.get('overall_confidence', 0.0)
@@ -225,18 +246,30 @@ class NFEValidationAgent:
             
             extracted_data_str = json.dumps(state['extracted_data'], indent=2, ensure_ascii=False, default=str)
             
-            response = openai_client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": validation_prompt},
-                    {"role": "user", "content": f"Validate this extracted NFe data:\n\n{extracted_data_str}"}
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.1,
-                max_tokens=4000
-            )
+            try:
+                response = openai_client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": validation_prompt},
+                        {"role": "user", "content": f"Validate this extracted NFe data:\n\n{extracted_data_str}"}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.1,
+                    max_tokens=4000,
+                    timeout=30
+                )
+            except Exception as e:
+                state['errors'].append(f"AI validation failed: {str(e)}")
+                state['processing_notes'].append(f"{self.name}: AI validation failed, using extracted data as-is")
+                # Use extracted data without validation if AI fails
+                state['validated_data'] = state['extracted_data']
+                state['current_step'] = 'validation_fallback'
+                return state
             
-            validation_result = json.loads(response.choices[0].message.content)
+            content = response.choices[0].message.content
+            if not content:
+                raise ValueError("Empty response from OpenAI")
+            validation_result = json.loads(content)
             
             state['validated_data'] = validation_result['validated_data']
             state['confidence_score'] = validation_result.get('final_confidence', state['confidence_score'])
