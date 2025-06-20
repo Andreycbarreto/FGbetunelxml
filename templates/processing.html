@@ -2,6 +2,44 @@
 
 {% block title %}Fila de Processamento - NFe Processor{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Force table header visibility */
+    #filesTable thead th {
+        background-color: #212529 !important;
+        color: #ffffff !important;
+        border-color: #495057 !important;
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.875rem !important;
+        padding: 1rem 0.75rem !important;
+    }
+    
+    .table-dark th {
+        background-color: #212529 !important;
+        color: #ffffff !important;
+        border-bottom: 2px solid #495057 !important;
+    }
+    
+    /* Ensure text is always white in dark header */
+    .table-dark > :not(caption) > * > * {
+        color: #ffffff !important;
+    }
+    
+    .stats-card {
+        border-radius: 16px;
+        border: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <!-- Header Section -->
