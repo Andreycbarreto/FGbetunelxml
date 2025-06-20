@@ -1,9 +1,10 @@
 from datetime import datetime
+import enum
+
 from app import db
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from flask_login import UserMixin
-from sqlalchemy import UniqueConstraint
-import enum
+from sqlalchemy import UniqueConstraint, Numeric
 
 # (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
 class User(UserMixin, db.Model):
@@ -90,16 +91,16 @@ class NFERecord(db.Model):
     destinatario_cep = db.Column(db.String(10), nullable=True)
     
     # Valores totais
-    valor_total_produtos = db.Column(db.Decimal(15, 2), nullable=True)
-    valor_total_nf = db.Column(db.Decimal(15, 2), nullable=True)
-    valor_icms = db.Column(db.Decimal(15, 2), nullable=True)
-    valor_ipi = db.Column(db.Decimal(15, 2), nullable=True)
-    valor_pis = db.Column(db.Decimal(15, 2), nullable=True)
-    valor_cofins = db.Column(db.Decimal(15, 2), nullable=True)
-    valor_frete = db.Column(db.Decimal(15, 2), nullable=True)
-    valor_seguro = db.Column(db.Decimal(15, 2), nullable=True)
-    valor_desconto = db.Column(db.Decimal(15, 2), nullable=True)
-    valor_tributos = db.Column(db.Decimal(15, 2), nullable=True)
+    valor_total_produtos = db.Column(Numeric(15, 2), nullable=True)
+    valor_total_nf = db.Column(Numeric(15, 2), nullable=True)
+    valor_icms = db.Column(Numeric(15, 2), nullable=True)
+    valor_ipi = db.Column(Numeric(15, 2), nullable=True)
+    valor_pis = db.Column(Numeric(15, 2), nullable=True)
+    valor_cofins = db.Column(Numeric(15, 2), nullable=True)
+    valor_frete = db.Column(Numeric(15, 2), nullable=True)
+    valor_seguro = db.Column(Numeric(15, 2), nullable=True)
+    valor_desconto = db.Column(Numeric(15, 2), nullable=True)
+    valor_tributos = db.Column(Numeric(15, 2), nullable=True)
     
     # Transport and payment info
     modalidade_frete = db.Column(db.String(50), nullable=True)
@@ -138,33 +139,33 @@ class NFEItem(db.Model):
     
     # Commercial quantities and values
     unidade_comercial = db.Column(db.String(10), nullable=True)
-    quantidade_comercial = db.Column(db.Decimal(15, 4), nullable=True)
-    valor_unitario_comercial = db.Column(db.Decimal(15, 4), nullable=True)
-    valor_total_produto = db.Column(db.Decimal(15, 2), nullable=True)
+    quantidade_comercial = db.Column(Numeric(15, 4), nullable=True)
+    valor_unitario_comercial = db.Column(Numeric(15, 4), nullable=True)
+    valor_total_produto = db.Column(Numeric(15, 2), nullable=True)
     
     # Tax quantities and values
     unidade_tributavel = db.Column(db.String(10), nullable=True)
-    quantidade_tributavel = db.Column(db.Decimal(15, 4), nullable=True)
-    valor_unitario_tributavel = db.Column(db.Decimal(15, 4), nullable=True)
+    quantidade_tributavel = db.Column(Numeric(15, 4), nullable=True)
+    valor_unitario_tributavel = db.Column(Numeric(15, 4), nullable=True)
     
     # Tax information
     origem_mercadoria = db.Column(db.String(5), nullable=True)
     situacao_tributaria_icms = db.Column(db.String(10), nullable=True)
-    base_calculo_icms = db.Column(db.Decimal(15, 2), nullable=True)
-    aliquota_icms = db.Column(db.Decimal(5, 2), nullable=True)
-    valor_icms = db.Column(db.Decimal(15, 2), nullable=True)
+    base_calculo_icms = db.Column(Numeric(15, 2), nullable=True)
+    aliquota_icms = db.Column(Numeric(5, 2), nullable=True)
+    valor_icms = db.Column(Numeric(15, 2), nullable=True)
     
     situacao_tributaria_ipi = db.Column(db.String(10), nullable=True)
-    valor_ipi = db.Column(db.Decimal(15, 2), nullable=True)
+    valor_ipi = db.Column(Numeric(15, 2), nullable=True)
     
     situacao_tributaria_pis = db.Column(db.String(10), nullable=True)
-    base_calculo_pis = db.Column(db.Decimal(15, 2), nullable=True)
-    aliquota_pis = db.Column(db.Decimal(5, 4), nullable=True)
-    valor_pis = db.Column(db.Decimal(15, 2), nullable=True)
+    base_calculo_pis = db.Column(Numeric(15, 2), nullable=True)
+    aliquota_pis = db.Column(Numeric(5, 4), nullable=True)
+    valor_pis = db.Column(Numeric(15, 2), nullable=True)
     
     situacao_tributaria_cofins = db.Column(db.String(10), nullable=True)
-    base_calculo_cofins = db.Column(db.Decimal(15, 2), nullable=True)
-    aliquota_cofins = db.Column(db.Decimal(5, 4), nullable=True)
-    valor_cofins = db.Column(db.Decimal(15, 2), nullable=True)
+    base_calculo_cofins = db.Column(Numeric(15, 2), nullable=True)
+    aliquota_cofins = db.Column(Numeric(5, 4), nullable=True)
+    valor_cofins = db.Column(Numeric(15, 2), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.now)
