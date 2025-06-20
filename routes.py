@@ -521,6 +521,7 @@ def admin_register_user():
         phone = request.form.get('phone')
         company = request.form.get('company')
         role = request.form.get('role')
+        password = request.form.get('password')
         active = bool(request.form.get('active'))
         
         # Check if user already exists
@@ -529,10 +530,15 @@ def admin_register_user():
             flash('Já existe um usuário com este email.', 'error')
             return render_template('admin/register_user.html')
         
-        # Create new user with a generated ID (since we don't have the actual Replit user ID yet)
+        # Validate password
+        if not password or len(password) < 6:
+            flash('A senha deve ter pelo menos 6 caracteres.', 'error')
+            return render_template('admin/register_user.html')
+        
+        # Create new user with a generated ID
         import uuid
         new_user = User(
-            id=str(uuid.uuid4()),  # Temporary ID, will be replaced when user first logs in
+            id=str(uuid.uuid4()),
             email=email,
             first_name=first_name,
             last_name=last_name,
@@ -540,9 +546,13 @@ def admin_register_user():
             company=company,
             role=UserRole(role.lower()),
             active=active,
+            auth_method='local',
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
+        
+        # Set password for local authentication
+        new_user.set_password(password)
         
         try:
             db.session.add(new_user)

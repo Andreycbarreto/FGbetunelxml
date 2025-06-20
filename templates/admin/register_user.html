@@ -76,6 +76,18 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Senha <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       required minlength="6" placeholder="Mínimo 6 caracteres">
+                                <div class="form-text">
+                                    <i class="feather-lock me-1"></i>
+                                    A senha permitirá login direto no sistema sem necessidade do Replit.
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-4">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="active" name="active" 
@@ -88,9 +100,8 @@
 
                         <div class="alert alert-info">
                             <i class="feather-info-circle me-2"></i>
-                            <strong>Importante:</strong> O usuário precisará ter uma conta Replit com o email informado 
-                            para conseguir fazer login no sistema. Após o cadastro, instrua o usuário a acessar 
-                            o sistema através do link de login.
+                            <strong>Importante:</strong> O usuário poderá fazer login usando o email e senha cadastrados, 
+                            ou através da conta Replit (se tiver uma). O sistema suporta ambos os métodos de autenticação.
                         </div>
 
                         <hr class="my-4">

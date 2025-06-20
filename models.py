@@ -20,6 +20,10 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String, nullable=True)
     profile_image_url = db.Column(db.String, nullable=True)
     
+    # Authentication fields
+    password_hash = db.Column(db.String(256), nullable=True)  # For local authentication
+    auth_method = db.Column(db.String(20), default='oauth')  # 'oauth' or 'local'
+    
     # Additional user fields
     role = db.Column(db.Enum(UserRole), default=UserRole.USER)
     active = db.Column(db.Boolean, default=True)
@@ -47,6 +51,19 @@ class User(UserMixin, db.Model):
     @property
     def is_admin(self):
         return self.role == UserRole.ADMIN
+    
+    def set_password(self, password):
+        """Set password hash for local authentication."""
+        from werkzeug.security import generate_password_hash
+        self.password_hash = generate_password_hash(password)
+        self.auth_method = 'local'
+    
+    def check_password(self, password):
+        """Check password for local authentication."""
+        from werkzeug.security import check_password_hash
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
 
 # (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
 class OAuth(OAuthConsumerMixin, db.Model):
