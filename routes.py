@@ -6,7 +6,7 @@ from flask_login import current_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import desc
 
-from app import app, db
+from app import app, db, init_database
 from replit_auth import require_login, make_replit_blueprint
 from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole
 from xml_processor import NFEXMLProcessor
@@ -16,9 +16,16 @@ app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
 logger = logging.getLogger(__name__)
 
-# Make session permanent
+# Initialize database flag
+_database_initialized = False
+
+# Make session permanent and ensure database is initialized
 @app.before_request
 def make_session_permanent():
+    global _database_initialized
+    if not _database_initialized:
+        init_database()
+        _database_initialized = True
     session.permanent = True
 
 # Allowed file extensions

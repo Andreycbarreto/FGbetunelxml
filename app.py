@@ -36,8 +36,14 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # initialize the app with the extension, flask-sqlalchemy >= 3.0.x
 db.init_app(app)
 
-with app.app_context():
-    # Make sure to import the models here or their tables won't be created
-    import models  # noqa: F401
-    db.create_all()
-    logging.info("Database tables created")
+def init_database():
+    """Initialize database tables safely."""
+    try:
+        with app.app_context():
+            # Make sure to import the models here or their tables won't be created
+            import models  # noqa: F401
+            db.create_all()
+            logging.info("Database tables created")
+    except Exception as e:
+        logging.warning(f"Could not initialize database on startup: {e}")
+        logging.info("Database will be initialized on first request")
