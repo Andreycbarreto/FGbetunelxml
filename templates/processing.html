@@ -1,140 +1,258 @@
 {% extends "base.html" %}
 
-{% block title %}Processamento - NFe XML Processor{% endblock %}
+{% block title %}Fila de Processamento - NFe Processor{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container">
+    <!-- Header Section -->
     <div class="row mb-4">
         <div class="col">
-            <h1 class="h2 mb-0">
-                <i class="feather-clock me-2"></i>Fila de Processamento
-            </h1>
-            <p class="text-muted">Gerencie e processe seus arquivos XML de NFe</p>
-        </div>
-        <div class="col-auto">
-            {% set pending_count = files|selectattr('status.value', 'equalto', 'pending')|list|length %}
-            {% if pending_count > 0 %}
-            <button class="btn btn-primary btn-lg" id="processAllBtn">
-                <i class="feather-cpu me-2"></i>Processar ({{ pending_count }} arquivo{{ 's' if pending_count > 1 else '' }})
-            </button>
-            {% endif %}
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="h2 mb-1">
+                        <i class="feather-cpu me-2 text-primary"></i>Fila de Processamento
+                    </h1>
+                    <p class="text-muted mb-0">Gerencie e processe seus arquivos XML de NFe</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('upload_page') }}" class="btn btn-outline-primary">
+                        <i class="feather-upload me-2"></i>Adicionar Arquivos
+                    </a>
+                    {% set pending_count = files|selectattr('status.value', 'equalto', 'pending')|list|length %}
+                    {% if pending_count > 0 %}
+                    <button class="btn btn-success btn-lg" id="processAllBtn">
+                        <i class="feather-play me-2"></i>Processar {{ pending_count }} arquivo{{ 's' if pending_count > 1 else '' }}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
-    
-    <!-- Processing Status -->
-    <div class="row mb-4">
-        <div class="col">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h5 class="card-title mb-0">Status do Processamento</h5>
-                            <p class="card-text mb-0" id="processingStatus">
-                                Aguardando processamento...
-                            </p>
+    <!-- Statistics Cards -->
+    {% set completed_count = files|selectattr('status.value', 'equalto', 'completed')|list|length %}
+    {% set error_count = files|selectattr('status.value', 'equalto', 'error')|list|length %}
+    {% set processing_count = files|selectattr('status.value', 'equalto', 'processing')|list|length %}
+    {% set total_count = files|length %}
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="bg-primary rounded-circle p-3 me-3">
+                            <i class="feather-file-text text-white"></i>
                         </div>
-                        <div class="col-auto">
-                            <div class="spinner-border d-none" id="processingSpinner" role="status">
-                                <span class="visually-hidden">Carregando...</span>
-                            </div>
+                        <div class="text-start">
+                            <h3 class="mb-0 text-primary">{{ total_count }}</h3>
+                            <p class="text-muted mb-0">Total</p>
                         </div>
                     </div>
-                    <div class="progress mt-3" style="height: 8px;">
-                        <div class="progress-bar" id="processingProgress" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="bg-warning rounded-circle p-3 me-3">
+                            <i class="feather-clock text-white"></i>
+                        </div>
+                        <div class="text-start">
+                            <h3 class="mb-0 text-warning">{{ pending_count }}</h3>
+                            <p class="text-muted mb-0">Pendente</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="bg-success rounded-circle p-3 me-3">
+                            <i class="feather-check text-white"></i>
+                        </div>
+                        <div class="text-start">
+                            <h3 class="mb-0 text-success">{{ completed_count }}</h3>
+                            <p class="text-muted mb-0">Processado</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="bg-danger rounded-circle p-3 me-3">
+                            <i class="feather-x text-white"></i>
+                        </div>
+                        <div class="text-start">
+                            <h3 class="mb-0 text-danger">{{ error_count }}</h3>
+                            <p class="text-muted mb-0">Com Erro</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Files Table -->
+
+    <!-- Processing Status Bar -->
+    {% if processing_count > 0 or pending_count > 0 %}
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="spinner-border text-primary me-3" id="processingSpinner" role="status" style="display: none;">
+                                <span class="visually-hidden">Processando...</span>
+                            </div>
+                            <i class="feather-info text-primary me-3" id="statusIcon"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Status do Processamento</h6>
+                            <p class="mb-0 text-muted" id="processingStatus">
+                                {% if processing_count > 0 %}
+                                    Processando {{ processing_count }} arquivo{{ 's' if processing_count > 1 else '' }}...
+                                {% else %}
+                                    {{ pending_count }} arquivo{{ 's' if pending_count > 1 else '' }} aguardando processamento
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 6px;">
+                        <div class="progress-bar bg-success" id="processingProgress" role="progressbar" 
+                             style="width: {{ (completed_count / total_count * 100) if total_count > 0 else 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <!-- Files Section -->
     <div class="row">
         <div class="col">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="feather-file-text me-2"></i>Arquivos ({{ files|length }})
-                    </h5>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="mb-0">
+                                <i class="feather-folder me-2 text-primary"></i>Arquivos XML
+                            </h5>
+                            <small class="text-muted">{{ files|length }} arquivo{{ 's' if files|length != 1 else '' }} total</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-outline-secondary btn-sm me-2" onclick="refreshTable()">
+                                <i class="feather-refresh-cw me-1"></i>Atualizar
+                            </button>
+                            {% if files %}
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="feather-filter me-1"></i>Filtrar
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item filter-option" href="#" data-filter="all">Todos</a></li>
+                                    <li><a class="dropdown-item filter-option" href="#" data-filter="pending">Pendentes</a></li>
+                                    <li><a class="dropdown-item filter-option" href="#" data-filter="completed">Processados</a></li>
+                                    <li><a class="dropdown-item filter-option" href="#" data-filter="error">Com Erro</a></li>
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     {% if files %}
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                        <table class="table table-hover mb-0" id="filesTable">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Arquivo</th>
-                                    <th>Status</th>
-                                    <th>Tamanho</th>
-                                    <th>Upload</th>
-                                    <th>Processamento</th>
-                                    <th>Ações</th>
+                                    <th class="border-0 ps-4">Arquivo</th>
+                                    <th class="border-0">Status</th>
+                                    <th class="border-0">Tamanho</th>
+                                    <th class="border-0">Upload</th>
+                                    <th class="border-0">Processamento</th>
+                                    <th class="border-0 text-end pe-4">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for file in files %}
-                                <tr id="file-row-{{ file.id }}">
-                                    <td>
-                                        <div>
-                                            <i class="feather-file-text me-2"></i>
-                                            <strong>{{ file.original_filename }}</strong>
+                                <tr id="file-row-{{ file.id }}" class="file-row" data-status="{{ file.status.value }}">
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary bg-opacity-10 rounded p-2 me-3">
+                                                <i class="feather-file-text text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ file.original_filename }}</h6>
+                                                {% if file.error_message %}
+                                                <small class="text-danger">
+                                                    <i class="feather-alert-triangle me-1"></i>{{ file.error_message }}
+                                                </small>
+                                                {% else %}
+                                                <small class="text-muted">ID: {{ file.id }}</small>
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                        {% if file.error_message %}
-                                        <small class="text-danger">
-                                            <i class="feather-alert-triangle me-1"></i>{{ file.error_message }}
-                                        </small>
-                                        {% endif %}
                                     </td>
                                     <td>
                                         <span class="status-badge" data-status="{{ file.status.value }}">
                                             {% if file.status.value == 'completed' %}
-                                                <span class="badge bg-success">
-                                                    <i class="feather-check me-1"></i>Processado
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                    <i class="feather-check-circle me-1"></i>Processado
                                                 </span>
                                             {% elif file.status.value == 'processing' %}
-                                                <span class="badge bg-warning">
+                                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
                                                     <i class="feather-clock me-1"></i>Processando
                                                 </span>
                                             {% elif file.status.value == 'pending' %}
-                                                <span class="badge bg-secondary">
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
                                                     <i class="feather-clock me-1"></i>Pendente
                                                 </span>
                                             {% else %}
-                                                <span class="badge bg-danger">
-                                                    <i class="feather-x me-1"></i>Erro
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                                    <i class="feather-x-circle me-1"></i>Erro
                                                 </span>
                                             {% endif %}
                                         </span>
                                     </td>
                                     <td>
-                                        <small class="text-muted">
-                                            {{ "%.1f KB"|format(file.file_size / 1024) }}
-                                        </small>
+                                        <div class="d-flex align-items-center">
+                                            <i class="feather-hard-drive me-2 text-muted"></i>
+                                            <span class="fw-medium">{{ "%.1f"|format(file.file_size / 1024) }} KB</span>
+                                        </div>
                                     </td>
                                     <td>
-                                        <small class="text-muted">
-                                            {{ file.created_at.strftime('%d/%m/%Y %H:%M') }}
-                                        </small>
+                                        <div>
+                                            <span class="fw-medium">{{ file.created_at.strftime('%d/%m/%Y') }}</span>
+                                            <br><small class="text-muted">{{ file.created_at.strftime('%H:%M') }}</small>
+                                        </div>
                                     </td>
                                     <td>
                                         {% if file.processing_completed_at %}
-                                            <small class="text-muted">
-                                                {{ file.processing_completed_at.strftime('%d/%m/%Y %H:%M') }}
-                                            </small>
+                                            <div>
+                                                <span class="fw-medium text-success">{{ file.processing_completed_at.strftime('%d/%m/%Y') }}</span>
+                                                <br><small class="text-muted">{{ file.processing_completed_at.strftime('%H:%M') }}</small>
+                                            </div>
                                         {% elif file.processing_started_at %}
-                                            <small class="text-warning">
-                                                Iniciado: {{ file.processing_started_at.strftime('%H:%M') }}
-                                            </small>
+                                            <div>
+                                                <span class="fw-medium text-warning">Processando</span>
+                                                <br><small class="text-muted">{{ file.processing_started_at.strftime('%H:%M') }}</small>
+                                            </div>
                                         {% else %}
-                                            <small class="text-muted">-</small>
+                                            <span class="text-muted">-</span>
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group btn-group-sm" role="group">
                                             {% if file.status.value == 'completed' %}
                                                 {% set nfe_record = file.nfe_records|first if file.nfe_records else none %}
                                                 {% if nfe_record %}
                                                 <a href="{{ url_for('view_record', record_id=nfe_record.id) }}" 
-                                                   class="btn btn-outline-info" title="Ver Dados">
+                                                   class="btn btn-outline-primary" 
+                                                   title="Visualizar dados da NFe"
+                                                   data-bs-toggle="tooltip">
                                                     <i class="feather-eye"></i>
                                                 </a>
                                                 {% endif %}
@@ -171,16 +289,78 @@
 
 {% endblock %}
 
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="feather-trash-2 me-2 text-danger"></i>Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-danger bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="feather-alert-triangle text-danger"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Tem certeza que deseja excluir este arquivo?</h6>
+                        <p class="mb-0 text-muted" id="deleteFileName">Nome do arquivo</p>
+                    </div>
+                </div>
+                <div class="alert alert-warning">
+                    <i class="feather-info me-2"></i>
+                    Esta ação não pode ser desfeita. Todos os dados processados deste arquivo também serão removidos.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="feather-trash-2 me-2"></i>Excluir Arquivo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const processAllBtn = document.getElementById('processAllBtn');
     const processingStatus = document.getElementById('processingStatus');
     const processingSpinner = document.getElementById('processingSpinner');
+    const statusIcon = document.getElementById('statusIcon');
     const processingProgress = document.getElementById('processingProgress');
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
     
     if (processAllBtn) {
         processAllBtn.addEventListener('click', processAllFiles);
+    }
+    
+    // Filter functionality
+    document.querySelectorAll('.filter-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            const filter = this.dataset.filter;
+            filterTable(filter);
+        });
+    });
+    
+    function filterTable(filter) {
+        const rows = document.querySelectorAll('.file-row');
+        rows.forEach(row => {
+            if (filter === 'all' || row.dataset.status === filter) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
     }
     
     function processAllFiles() {
