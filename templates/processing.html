@@ -335,10 +335,11 @@
                                                 </button>
                                             {% endif %}
                                             
-                                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" 
-                                                    onclick="confirmDelete({{ file.id }}, '{{ file.original_filename }}')" 
+                                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3 delete-file-btn" 
                                                     title="Excluir arquivo"
-                                                    data-bs-toggle="tooltip">
+                                                    data-bs-toggle="tooltip"
+                                                    data-file-id="{{ file.id }}"
+                                                    data-file-name="{{ file.original_filename }}">
                                                 <i class="feather-trash-2 me-1"></i>Excluir
                                             </button>
                                         </div>
@@ -416,6 +417,30 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+    
+    // Initialize delete buttons event listeners
+    console.log('Initializing delete buttons...');
+    initializeDeleteButtons();
+    
+    // Initialize confirm delete button
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            console.log('Confirm delete button clicked, fileToDelete:', fileToDelete);
+            if (fileToDelete) {
+                deleteFile(fileToDelete);
+                
+                // Hide the modal
+                const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                if (deleteModal) {
+                    deleteModal.hide();
+                }
+                
+                // Reset the variable
+                fileToDelete = null;
+            }
+        });
+    }
     
     if (processAllBtn) {
         processAllBtn.addEventListener('click', processAllFiles);
@@ -548,7 +573,25 @@ document.addEventListener('DOMContentLoaded', function() {
 // Global variables for delete modal
 let fileToDelete = null;
 
+function initializeDeleteButtons() {
+    // Add event listeners to all delete buttons
+    const deleteButtons = document.querySelectorAll('.delete-file-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const fileId = this.getAttribute('data-file-id');
+            const fileName = this.getAttribute('data-file-name');
+            
+            console.log('Delete button clicked for file:', fileId, fileName);
+            confirmDelete(fileId, fileName);
+        });
+    });
+}
+
 function confirmDelete(fileId, fileName) {
+    console.log('confirmDelete called with:', fileId, fileName);
     fileToDelete = fileId;
     document.getElementById('deleteFileName').textContent = fileName;
     
@@ -557,19 +600,7 @@ function confirmDelete(fileId, fileName) {
     deleteModal.show();
 }
 
-// Handle the actual deletion when user confirms
-document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-    if (fileToDelete) {
-        deleteFile(fileToDelete);
-        
-        // Hide the modal
-        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
-        deleteModal.hide();
-        
-        // Reset the variable
-        fileToDelete = null;
-    }
-});
+
 
 function deleteFile(fileId) {
     // Show loading state
