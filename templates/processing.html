@@ -576,7 +576,10 @@ let fileToDelete = null;
 function initializeDeleteButtons() {
     // Add event listeners to all delete buttons
     const deleteButtons = document.querySelectorAll('.delete-file-btn');
-    deleteButtons.forEach(button => {
+    console.log('Found delete buttons:', deleteButtons.length);
+    
+    deleteButtons.forEach((button, index) => {
+        console.log(`Setting up button ${index}:`, button);
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -585,7 +588,11 @@ function initializeDeleteButtons() {
             const fileName = this.getAttribute('data-file-name');
             
             console.log('Delete button clicked for file:', fileId, fileName);
-            confirmDelete(fileId, fileName);
+            
+            // Direct confirmation without modal for testing
+            if (confirm(`Tem certeza que deseja excluir o arquivo "${fileName}"? Esta ação não pode ser desfeita.`)) {
+                deleteFile(fileId);
+            }
         });
     });
 }
@@ -603,11 +610,7 @@ function confirmDelete(fileId, fileName) {
 
 
 function deleteFile(fileId) {
-    // Show loading state
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    const originalText = confirmBtn.innerHTML;
-    confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Excluindo...';
-    confirmBtn.disabled = true;
+    console.log('Attempting to delete file:', fileId);
     
     fetch(`/delete_file/${fileId}`, {
         method: 'POST',
@@ -617,6 +620,7 @@ function deleteFile(fileId) {
         }
     })
     .then(response => {
+        console.log('Delete response:', response);
         if (response.ok) {
             // Show success message
             showNotification('Arquivo excluído com sucesso!', 'success');
@@ -632,21 +636,20 @@ function deleteFile(fileId) {
                     fileRow.remove();
                     updateStatistics();
                 }, 300);
+            } else {
+                // If row animation fails, just reload the page
+                window.location.reload();
             }
         } else {
             response.text().then(text => {
+                console.error('Delete error response:', text);
                 showNotification('Erro ao excluir arquivo: ' + text, 'error');
             });
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('Delete fetch error:', error);
         showNotification('Erro de comunicação ao excluir arquivo', 'error');
-    })
-    .finally(() => {
-        // Reset button state
-        confirmBtn.innerHTML = originalText;
-        confirmBtn.disabled = false;
     });
 }
 
