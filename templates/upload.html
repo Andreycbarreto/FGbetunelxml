@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Upload de Arquivos - NFe XML Processor{% endblock %}
+{% block title %}Upload de Documentos NFe - Processador{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -84,33 +84,77 @@
     <div class="row mb-4">
         <div class="col">
             <h1 class="h2 mb-0">
-                <i class="feather-upload me-2"></i>Upload de Arquivos XML
+                <i class="feather-upload me-2"></i>Upload de Documentos NFe
             </h1>
-            <p class="text-muted">Selecione um ou múltiplos arquivos XML de NFe para processamento</p>
+            <p class="text-muted">Escolha o tipo de documento e faça o upload para processamento automático</p>
         </div>
     </div>
     
-    <div class="row justify-content-center">
+    <!-- Document Type Selection -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-file-text me-2"></i>Tipo de Documento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="documentType" id="xmlType" value="xml" checked>
+                                <label class="form-check-label" for="xmlType">
+                                    <strong>Arquivos XML</strong>
+                                    <br>
+                                    <small class="text-muted">Processamento direto de XMLs de NFe com estrutura completa</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="documentType" id="pdfType" value="pdf">
+                                <label class="form-check-label" for="pdfType">
+                                    <strong>Arquivos PDF</strong>
+                                    <br>
+                                    <small class="text-muted">Processamento com IA para extrair dados de PDFs de NFe</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- XML Upload Section -->
+    <div class="row justify-content-center" id="xmlUploadSection">
         <div class="col-lg-8">
             <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-code me-2"></i>Upload de Arquivos XML
+                    </h5>
+                </div>
                 <div class="card-body">
-                    <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="xmlUploadForm">
+                        <input type="hidden" name="file_type" value="xml">
                         <div class="upload-area mb-4">
-                            <div class="upload-zone" id="uploadZone">
+                            <div class="upload-zone" id="xmlUploadZone">
                                 <div class="upload-content text-center py-5">
-                                    <i class="feather-upload display-1 text-muted mb-3"></i>
+                                    <i class="feather-code display-1 text-muted mb-3"></i>
                                     <h4>Arraste arquivos XML aqui</h4>
                                     <p class="text-muted mb-3">ou clique para selecionar arquivos</p>
-                                    <input type="file" name="files" id="fileInput" multiple accept=".xml" class="d-none">
-                                    <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
-                                        <i class="feather-folder me-2"></i>Selecionar Arquivos
+                                    <input type="file" name="files" id="xmlFileInput" multiple accept=".xml" class="d-none">
+                                    <button type="button" class="btn btn-primary" onclick="document.getElementById('xmlFileInput').click()">
+                                        <i class="feather-folder me-2"></i>Selecionar Arquivos XML
                                     </button>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- File List -->
-                        <div id="fileList" class="mb-4" style="display: none;">
+                        <!-- XML File List -->
+                        <div id="xmlFileList" class="mb-4" style="display: none;">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">
                                     <i class="feather-file-text me-2"></i>Arquivos Selecionados:
@@ -133,8 +177,76 @@
                                 </small>
                             </div>
                             <div>
-                                <button type="submit" class="btn btn-success" id="uploadBtn" disabled>
-                                    <i class="feather-upload me-2"></i>Fazer Upload
+                                <button type="submit" class="btn btn-success" id="xmlUploadBtn" disabled>
+                                    <i class="feather-upload me-2"></i>Fazer Upload XML
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PDF Upload Section -->
+    <div class="row justify-content-center" id="pdfUploadSection" style="display: none;">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="feather-file me-2"></i>Upload de Arquivos PDF
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading">
+                            <i class="feather-zap me-2"></i>Processamento com IA
+                        </h6>
+                        <p class="mb-0">Os PDFs serão processados usando inteligência artificial para extrair automaticamente todos os dados da NFe. Este processo pode demorar um pouco mais que o XML.</p>
+                    </div>
+                    
+                    <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="pdfUploadForm">
+                        <input type="hidden" name="file_type" value="pdf">
+                        <div class="upload-area mb-4">
+                            <div class="upload-zone" id="pdfUploadZone">
+                                <div class="upload-content text-center py-5">
+                                    <i class="feather-file display-1 text-muted mb-3"></i>
+                                    <h4>Arraste arquivos PDF aqui</h4>
+                                    <p class="text-muted mb-3">ou clique para selecionar arquivos</p>
+                                    <input type="file" name="files" id="pdfFileInput" multiple accept=".pdf" class="d-none">
+                                    <button type="button" class="btn btn-primary" onclick="document.getElementById('pdfFileInput').click()">
+                                        <i class="feather-folder me-2"></i>Selecionar Arquivos PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- PDF File List -->
+                        <div id="pdfFileList" class="mb-4" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">
+                                    <i class="feather-file-text me-2"></i>Arquivos Selecionados:
+                                </h5>
+                                <small class="text-muted">
+                                    <i class="feather-info me-1"></i>Clique em "Remover" para excluir arquivos
+                                </small>
+                            </div>
+                            <div class="file-list-container" id="pdfSelectedFiles">
+                                <!-- PDF files will be dynamically added here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Upload Button -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">
+                                    <i class="feather-info me-1"></i>
+                                    Apenas arquivos PDF são aceitos. Tamanho máximo: 50MB por arquivo.
+                                </small>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-success" id="pdfUploadBtn" disabled>
+                                    <i class="feather-upload me-2"></i>Fazer Upload PDF
                                 </button>
                             </div>
                         </div>
@@ -178,13 +290,51 @@
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const uploadZone = document.getElementById('uploadZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileList = document.getElementById('fileList');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const uploadForm = document.getElementById('uploadForm');
+    // Document type selection
+    const xmlType = document.getElementById('xmlType');
+    const pdfType = document.getElementById('pdfType');
+    const xmlUploadSection = document.getElementById('xmlUploadSection');
+    const pdfUploadSection = document.getElementById('pdfUploadSection');
     
-    let selectedFiles = [];
+    // XML elements
+    const xmlUploadZone = document.getElementById('xmlUploadZone');
+    const xmlFileInput = document.getElementById('xmlFileInput');
+    const xmlFileList = document.getElementById('xmlFileList');
+    const xmlUploadBtn = document.getElementById('xmlUploadBtn');
+    const xmlUploadForm = document.getElementById('xmlUploadForm');
+    
+    // PDF elements
+    const pdfUploadZone = document.getElementById('pdfUploadZone');
+    const pdfFileInput = document.getElementById('pdfFileInput');
+    const pdfFileList = document.getElementById('pdfFileList');
+    const pdfUploadBtn = document.getElementById('pdfUploadBtn');
+    const pdfUploadForm = document.getElementById('pdfUploadForm');
+    
+    let xmlSelectedFiles = [];
+    let pdfSelectedFiles = [];
+    
+    // Document type switching
+    xmlType.addEventListener('change', function() {
+        if (this.checked) {
+            xmlUploadSection.style.display = 'block';
+            pdfUploadSection.style.display = 'none';
+        }
+    });
+    
+    pdfType.addEventListener('change', function() {
+        if (this.checked) {
+            xmlUploadSection.style.display = 'none';
+            pdfUploadSection.style.display = 'block';
+        }
+    });
+    
+    // Initialize XML upload functionality
+    initializeUpload(xmlUploadZone, xmlFileInput, xmlFileList, xmlUploadBtn, xmlUploadForm, xmlSelectedFiles, '.xml', 'xmlSelectedFiles');
+    
+    // Initialize PDF upload functionality
+    initializeUpload(pdfUploadZone, pdfFileInput, pdfFileList, pdfUploadBtn, pdfUploadForm, pdfSelectedFiles, '.pdf', 'pdfSelectedFiles');
+    
+    function initializeUpload(uploadZone, fileInput, fileList, uploadBtn, uploadForm, selectedFiles, fileExtension, containerId) {
     
     // Drag and drop functionality
     uploadZone.addEventListener('dragover', function(e) {

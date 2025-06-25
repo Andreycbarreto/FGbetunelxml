@@ -92,6 +92,7 @@ class UploadedFile(db.Model):
     original_filename = db.Column(db.String(255), nullable=False)
     file_path = db.Column(db.String(500), nullable=False)
     file_size = db.Column(db.Integer, nullable=False)
+    file_type = db.Column(db.String(10), nullable=False, default='xml')  # 'xml' or 'pdf'
     status = db.Column(db.Enum(ProcessingStatus), default=ProcessingStatus.PENDING)
     error_message = db.Column(db.Text, nullable=True)
     processing_started_at = db.Column(db.DateTime, nullable=True)
