@@ -335,44 +335,47 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeUpload(pdfUploadZone, pdfFileInput, pdfFileList, pdfUploadBtn, pdfUploadForm, pdfSelectedFiles, '.pdf', 'pdfSelectedFiles');
     
     function initializeUpload(uploadZone, fileInput, fileList, uploadBtn, uploadForm, selectedFiles, fileExtension, containerId) {
-    
-    // Drag and drop functionality
-    uploadZone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-    });
-    
-    uploadZone.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-    });
-    
-    uploadZone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
         
-        const files = Array.from(e.dataTransfer.files);
-        handleFiles(files);
-    });
-    
-    // File input change
-    fileInput.addEventListener('change', function(e) {
-        const files = Array.from(e.target.files);
-        handleFiles(files);
-    });
-    
-    function handleFiles(files) {
-        // Filter XML files
-        const xmlFiles = files.filter(file => file.name.toLowerCase().endsWith('.xml'));
+        // Drag and drop functionality
+        uploadZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
         
-        if (xmlFiles.length !== files.length) {
-            alert('Apenas arquivos XML são aceitos.');
+        uploadZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            
+            const files = Array.from(e.dataTransfer.files);
+            handleFiles(files);
+        });
+        
+        // File input change
+        fileInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            handleFiles(files);
+        });
+        
+        function handleFiles(files) {
+            // Filter files by extension
+            const validFiles = files.filter(file => file.name.toLowerCase().endsWith(fileExtension));
+            
+            if (validFiles.length !== files.length) {
+                const fileType = fileExtension === '.xml' ? 'XML' : 'PDF';
+                alert(`Apenas arquivos ${fileType} são aceitos.`);
+            }
+            
+            // Update the selectedFiles array reference
+            selectedFiles.length = 0;
+            selectedFiles.push(...validFiles);
+            updateFileList();
+            updateUploadButton();
         }
-        
-        selectedFiles = xmlFiles;
-        updateFileList();
-        updateUploadButton();
-    }
     
     function updateFileList() {
         if (selectedFiles.length === 0) {

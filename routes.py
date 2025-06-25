@@ -14,6 +14,8 @@ from replit_auth import require_login, make_replit_blueprint
 from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole
 from xml_processor import NFEXMLProcessor
 from ai_agents import process_nfe_with_ai
+from pdf_processor import NFEPDFProcessor
+from pdf_ai_agents import process_nfe_pdf_with_ai
 
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
@@ -32,10 +34,15 @@ def make_session_permanent():
     session.permanent = True
 
 # Allowed file extensions
-ALLOWED_EXTENSIONS = {'xml'}
+ALLOWED_EXTENSIONS = {'xml', 'pdf'}
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def allowed_file(filename, file_type='xml'):
+    """Check if the uploaded file has an allowed extension."""
+    if file_type == 'xml':
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'xml'
+    elif file_type == 'pdf':
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'pdf'
+    return False
 
 # Hybrid authentication decorator for both OAuth and local auth
 def login_required_hybrid(f):
@@ -107,15 +114,16 @@ def upload_page():
 @app.route('/upload', methods=['POST'])
 @login_required_hybrid
 def upload_files():
-    """Handle multiple XML file uploads."""
+    """Handle multiple file uploads (XML or PDF)."""
     if 'files' not in request.files:
-        flash('No files selected', 'error')
+        flash('Nenhum arquivo selecionado', 'error')
         return redirect(request.url)
     
     files = request.files.getlist('files')
+    file_type = request.form.get('file_type', 'xml')  # Default to XML
     
     if not files or all(file.filename == '' for file in files):
-        flash('No files selected', 'error')
+        flash('Nenhum arquivo selecionado', 'error')
         return redirect(request.url)
     
     uploaded_count = 0
