@@ -20,4 +20,7 @@ dependencies = [
     "langchain-core>=0.3.65",
     "typing-extensions>=4.14.0",
     "sqlalchemy>=2.0.41",
+    "pymupdf4llm>=0.0.25",
+    "pymupdf>=1.26.1",
+    "markdown>=3.8.2",
 ]
