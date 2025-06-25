@@ -264,6 +264,9 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th scope="col">
+                                        <i class="feather-file me-1"></i>Tipo
+                                    </th>
+                                    <th scope="col">
                                         <i class="feather-hash me-1"></i>NFe
                                     </th>
                                     <th scope="col">
@@ -292,6 +295,17 @@
                             <tbody>
                                 {% for record in records.items %}
                                 <tr>
+                                    <td>
+                                        {% if record.uploaded_file.file_type == 'pdf' %}
+                                            <span class="badge bg-info">
+                                                <i class="feather-file-text me-1"></i>PDF
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success">
+                                                <i class="feather-code me-1"></i>XML
+                                            </span>
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         <div>
                                             <strong>{{ record.numero_nf or 'N/A' }}</strong>

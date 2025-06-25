@@ -389,12 +389,26 @@ def process_single_file_internal(pending_file):
         # Process the XML file
         processor = NFEXMLProcessor()
         
-        # Read XML content
-        with open(pending_file.file_path, 'r', encoding='utf-8') as f:
-            xml_content = f.read()
-        
-        # Extract data using XML processor
-        raw_data = processor.process_xml_file(pending_file.file_path)
+        # Read file content based on type
+        if pending_file.file_type == 'pdf':
+            # Process PDF file
+            pdf_processor = SimplePDFProcessor()
+            pdf_result = pdf_processor.process_pdf_to_nfe_data(pending_file.file_path)
+            
+            if not pdf_result['success']:
+                raise Exception(f"PDF processing failed: {pdf_result.get('error', 'Unknown error')}")
+            
+            # Use PDF processing results
+            raw_data = pdf_result['data']
+            xml_content = pdf_result.get('markdown_content', '')
+            
+        else:
+            # Read XML content
+            with open(pending_file.file_path, 'r', encoding='utf-8') as f:
+                xml_content = f.read()
+            
+            # Extract data using XML processor
+            raw_data = processor.process_xml_file(pending_file.file_path)
         
         # Use basic XML processing for now (AI processing disabled due to connectivity issues)
         use_ai_data = False

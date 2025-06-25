@@ -337,7 +337,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupFileUpload(uploadZone, fileInput, fileList, uploadBtn, uploadForm, selectedFiles, fileExtension, containerId) {
         
         // Click to upload functionality
-        uploadZone.addEventListener('click', function() {
+        uploadZone.addEventListener('click', function(e) {
+            // Prevent double click if already triggered
+            if (e.target.tagName === 'BUTTON') return;
             fileInput.click();
         });
         
@@ -413,11 +415,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         container.innerHTML = selectedFiles.map((file, index) => `
-            <div class="file-item d-flex justify-content-between align-items-center p-3 border rounded mb-2 bg-light">
+            <div class="file-item d-flex justify-content-between align-items-center p-3 border rounded mb-2" style="background-color: var(--bs-light); color: var(--bs-dark);">
                 <div class="d-flex align-items-center flex-grow-1">
                     <i class="feather-file-text text-primary me-3"></i>
                     <div>
-                        <div class="fw-semibold">${file.name}</div>
+                        <div class="fw-semibold text-dark">${file.name}</div>
                         <small class="text-muted">${formatFileSize(file.size)}</small>
                     </div>
                 </div>
