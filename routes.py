@@ -130,7 +130,7 @@ def upload_files():
     error_count = 0
     
     for file in files:
-        if file and file.filename and allowed_file(file.filename):
+        if file and file.filename and allowed_file(file.filename, file_type):
             try:
                 filename = secure_filename(file.filename)
                 # Add timestamp to avoid conflicts
@@ -142,26 +142,27 @@ def upload_files():
                 file.save(file_path)
                 
                 # Create database record
-                uploaded_file = UploadedFile(
-                    user_id=current_user.id,
-                    filename=filename,
-                    original_filename=file.filename,
-                    file_path=file_path,
-                    file_size=os.path.getsize(file_path),
-                    status=ProcessingStatus.PENDING
-                )
+                uploaded_file = UploadedFile()
+                uploaded_file.user_id = current_user.id
+                uploaded_file.filename = filename
+                uploaded_file.original_filename = file.filename
+                uploaded_file.file_path = file_path
+                uploaded_file.file_size = os.path.getsize(file_path)
+                uploaded_file.file_type = file_type
+                uploaded_file.status = ProcessingStatus.PENDING
                 
                 db.session.add(uploaded_file)
                 db.session.commit()
                 
                 uploaded_count += 1
-                logger.info(f"File uploaded successfully: {filename} by user {current_user.id}")
+                logger.info(f"{file_type.upper()} file uploaded successfully: {filename} by user {current_user.id}")
                 
             except Exception as e:
                 error_count += 1
                 logger.error(f"Error uploading file {file.filename}: {str(e)}")
         else:
             error_count += 1
+            logger.warning(f"File rejected: {file.filename} (type: {file_type})")
     
     if uploaded_count > 0:
         flash(f'Successfully uploaded {uploaded_count} file(s)', 'success')
@@ -287,39 +288,80 @@ def process_file_internal(pending_file):
         pending_file.processing_started_at = datetime.now()
         db.session.commit()
         
-        # Process the XML file
-        processor = NFEXMLProcessor()
+        # Initialize variables
+        nfe_record = NFERecord()
+        nfe_record.user_id = pending_file.user_id
+        nfe_record.uploaded_file_id = pending_file.id
+        items_data = []
         
-        # Read XML content
-        with open(pending_file.file_path, 'r', encoding='utf-8') as f:
-            xml_content = f.read()
+        # Determine processing method based on file type
+        if pending_file.file_type == 'pdf':
+            # Process PDF file
+            pdf_processor = NFEPDFProcessor()
+            pdf_result = pdf_processor.process_pdf_file(pending_file.file_path)
+            
+            if pdf_result['success']:
+                # Use AI to extract structured data from PDF
+                ai_result = process_nfe_pdf_with_ai(
+                    pdf_result['markdown_content'], 
+                    pdf_result['metadata']
+                )
+                
+                if ai_result.success and ai_result.data:
+                    # Map AI-extracted data to NFE record fields
+                    for field, value in ai_result.data.items():
+                        if hasattr(nfe_record, field) and field != 'items':
+                            setattr(nfe_record, field, value)
+                    
+                    # Store processing metadata
+                    nfe_record.raw_xml_data = pdf_result['markdown_content']
+                    nfe_record.ai_confidence_score = ai_result.confidence_score
+                    nfe_record.ai_processing_notes = f"PDF processed with AI. Notes: {'; '.join(ai_result.processing_notes)}"
+                    
+                    # Get items data
+                    items_data = ai_result.data.get('items', [])
+                    
+                else:
+                    raise Exception(f"Falha no processamento com IA: {'; '.join(ai_result.errors)}")
+            else:
+                raise Exception(f"Falha no processamento do PDF: {pdf_result.get('error', 'Erro desconhecido')}")
         
-        # Extract data using XML processor
-        raw_data = processor.process_xml_file(pending_file.file_path)
-        
-        # Fallback to basic XML processing when AI fails
-        # Create NFE record using raw XML data
-        nfe_record = NFERecord(
-            user_id=pending_file.user_id,
-            uploaded_file_id=pending_file.id,
-            **{k: v for k, v in raw_data.items() if k != 'items' and hasattr(NFERecord, k)}
-        )
-        
-        # Store raw XML and processing info
-        nfe_record.raw_xml_data = xml_content
-        nfe_record.ai_confidence_score = 0.3  # Low confidence for basic processing
-        nfe_record.ai_processing_notes = 'Processed using basic XML parser (AI unavailable)'
+        else:
+            # Process XML file (existing logic)
+            processor = NFEXMLProcessor()
+            
+            # Read XML content
+            with open(pending_file.file_path, 'r', encoding='utf-8') as f:
+                xml_content = f.read()
+            
+            # Extract data using XML processor
+            raw_data = processor.process_xml_file(pending_file.file_path)
+            
+            # Map raw data to NFE record fields
+            for field, value in raw_data.items():
+                if hasattr(nfe_record, field) and field != 'items':
+                    setattr(nfe_record, field, value)
+            
+            # Store raw XML and processing info
+            nfe_record.raw_xml_data = xml_content
+            nfe_record.ai_confidence_score = 0.8  # High confidence for XML processing
+            nfe_record.ai_processing_notes = 'Processed using XML parser'
+            
+            # Get items data
+            items_data = raw_data.get('items', [])
         
         db.session.add(nfe_record)
         db.session.flush()  # Get the ID
         
-        # Create NFE items from raw data
-        items_data = raw_data.get('items', [])
         for item_data in items_data:
-            nfe_item = NFEItem(
-                nfe_record_id=nfe_record.id,
-                **{k: v for k, v in item_data.items() if hasattr(NFEItem, k)}
-            )
+            nfe_item = NFEItem()
+            nfe_item.nfe_record_id = nfe_record.id
+            
+            # Map item data to NFE item fields
+            for field, value in item_data.items():
+                if hasattr(nfe_item, field):
+                    setattr(nfe_item, field, value)
+            
             db.session.add(nfe_item)
         
         # Update file status
@@ -328,13 +370,15 @@ def process_file_internal(pending_file):
         
         db.session.commit()
         
-        logger.info(f"Successfully processed file {pending_file.filename} using basic XML parser")
+        file_type_desc = "PDF with AI" if pending_file.file_type == 'pdf' else "XML parser"
+        logger.info(f"Successfully processed file {pending_file.filename} using {file_type_desc}")
         return True
         
     except Exception as e:
         # Complete processing failure
         pending_file.status = ProcessingStatus.ERROR
-        pending_file.error_message = f'XML processing failed: {str(e)}'
+        error_desc = f'{pending_file.file_type.upper()} processing failed: {str(e)}'
+        pending_file.error_message = error_desc
         pending_file.processing_completed_at = datetime.now()
         
         db.session.commit()
