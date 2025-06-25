@@ -30,8 +30,12 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
 # Upload folder configuration
-app.config['UPLOAD_FOLDER'] = 'uploads'
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Create upload directory if it doesn't exist
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 # initialize the app with the extension, flask-sqlalchemy >= 3.0.x
 db.init_app(app)
