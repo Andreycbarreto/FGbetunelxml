@@ -207,15 +207,21 @@ def process_all_files():
             pending_file.processing_started_at = datetime.now()
             db.session.commit()
             
-            # Process the XML file
-            processor = NFEXMLProcessor()
-            
-            # Read XML content
-            with open(pending_file.file_path, 'r', encoding='utf-8') as f:
-                xml_content = f.read()
-            
-            # Extract data using XML processor
-            raw_data = processor.process_xml_file(pending_file.file_path)
+            # Process the file based on type
+            if pending_file.file_type == 'pdf':
+                # Skip this processing for PDF files as they're processed later
+                xml_content = f"PDF file: {pending_file.original_filename}"
+                raw_data = {}
+            else:
+                # Process XML file
+                processor = NFEXMLProcessor()
+                
+                # Read XML content
+                with open(pending_file.file_path, 'r', encoding='utf-8') as f:
+                    xml_content = f.read()
+                
+                # Extract data using XML processor
+                raw_data = processor.process_xml_file(pending_file.file_path)
             
             # Create NFE record using raw XML data
             nfe_record = NFERecord(
@@ -321,12 +327,17 @@ def process_file_internal(pending_file):
             # Process XML file (existing logic)
             processor = NFEXMLProcessor()
             
-            # Read XML content
-            with open(pending_file.file_path, 'r', encoding='utf-8') as f:
-                xml_content = f.read()
-            
-            # Extract data using XML processor
-            raw_data = processor.process_xml_file(pending_file.file_path)
+            # Read XML content (only for XML files)
+            if pending_file.file_type == 'xml':
+                with open(pending_file.file_path, 'r', encoding='utf-8') as f:
+                    xml_content = f.read()
+                
+                # Extract data using XML processor
+                raw_data = processor.process_xml_file(pending_file.file_path)
+            else:
+                # This shouldn't happen, but handle gracefully
+                xml_content = f"Non-XML file: {pending_file.original_filename}"
+                raw_data = {}
             
             # Map raw data to NFE record fields
             for field, value in raw_data.items():
@@ -403,12 +414,17 @@ def process_single_file_internal(pending_file):
             xml_content = pdf_result.get('markdown_content', '')
             
         else:
-            # Read XML content
-            with open(pending_file.file_path, 'r', encoding='utf-8') as f:
-                xml_content = f.read()
-            
-            # Extract data using XML processor
-            raw_data = processor.process_xml_file(pending_file.file_path)
+            # Read XML content (only for XML files)
+            if pending_file.file_type == 'xml':
+                with open(pending_file.file_path, 'r', encoding='utf-8') as f:
+                    xml_content = f.read()
+                
+                # Extract data using XML processor
+                raw_data = processor.process_xml_file(pending_file.file_path)
+            else:
+                # This shouldn't happen in this branch, but handle gracefully
+                xml_content = f"Non-XML file: {pending_file.original_filename}"
+                raw_data = {}
         
         # Use basic XML processing for now (AI processing disabled due to connectivity issues)
         use_ai_data = False
@@ -464,10 +480,15 @@ def process_single_file_internal(pending_file):
                     **{k: v for k, v in raw_data.items() if k != 'items' and hasattr(NFERecord, k)}
                 )
                 
-                # Store raw XML and processing info
-                nfe_record.raw_xml_data = xml_content
-                nfe_record.ai_confidence_score = 0.3  # Low confidence for basic processing
-                nfe_record.ai_processing_notes = 'Processed using basic XML parser (AI unavailable)'
+                # Store raw data and processing info
+                if pending_file.file_type == 'pdf':
+                    nfe_record.raw_xml_data = f"PDF processed: {pending_file.original_filename}"
+                    nfe_record.ai_confidence_score = 0.5  # Medium confidence for PDF processing
+                    nfe_record.ai_processing_notes = 'Processed using PDF parser'
+                else:
+                    nfe_record.raw_xml_data = xml_content
+                    nfe_record.ai_confidence_score = 0.3  # Low confidence for basic processing
+                    nfe_record.ai_processing_notes = 'Processed using basic XML parser (AI unavailable)'
                 
                 db.session.add(nfe_record)
                 db.session.flush()  # Get the ID
