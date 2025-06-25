@@ -14,8 +14,7 @@ from replit_auth import require_login, make_replit_blueprint
 from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole
 from xml_processor import NFEXMLProcessor
 from ai_agents import process_nfe_with_ai
-from pdf_processor import NFEPDFProcessor
-from pdf_ai_agents import process_nfe_pdf_with_ai
+from pdf_simple_processor import SimplePDFProcessor
 
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
@@ -296,33 +295,25 @@ def process_file_internal(pending_file):
         
         # Determine processing method based on file type
         if pending_file.file_type == 'pdf':
-            # Process PDF file
-            pdf_processor = NFEPDFProcessor()
-            pdf_result = pdf_processor.process_pdf_file(pending_file.file_path)
+            # Process PDF file with simplified processor
+            pdf_processor = SimplePDFProcessor()
+            pdf_result = pdf_processor.process_pdf_to_nfe_data(pending_file.file_path)
             
             if pdf_result['success']:
-                # Use AI to extract structured data from PDF
-                ai_result = process_nfe_pdf_with_ai(
-                    pdf_result['markdown_content'], 
-                    pdf_result['metadata']
-                )
+                # Map AI-extracted data to NFE record fields
+                extracted_data = pdf_result['data']
+                for field, value in extracted_data.items():
+                    if hasattr(nfe_record, field) and field != 'items':
+                        setattr(nfe_record, field, value)
                 
-                if ai_result.success and ai_result.data:
-                    # Map AI-extracted data to NFE record fields
-                    for field, value in ai_result.data.items():
-                        if hasattr(nfe_record, field) and field != 'items':
-                            setattr(nfe_record, field, value)
-                    
-                    # Store processing metadata
-                    nfe_record.raw_xml_data = pdf_result['markdown_content']
-                    nfe_record.ai_confidence_score = ai_result.confidence_score
-                    nfe_record.ai_processing_notes = f"PDF processed with AI. Notes: {'; '.join(ai_result.processing_notes)}"
-                    
-                    # Get items data
-                    items_data = ai_result.data.get('items', [])
-                    
-                else:
-                    raise Exception(f"Falha no processamento com IA: {'; '.join(ai_result.errors)}")
+                # Store processing metadata
+                nfe_record.raw_xml_data = pdf_result.get('markdown_content', '')
+                nfe_record.ai_confidence_score = pdf_result.get('confidence_score', 0.85)
+                nfe_record.ai_processing_notes = f"PDF processed with AI. Notes: {'; '.join(pdf_result.get('processing_notes', []))}"
+                
+                # Get items data
+                items_data = extracted_data.get('items', [])
+                
             else:
                 raise Exception(f"Falha no processamento do PDF: {pdf_result.get('error', 'Erro desconhecido')}")
         
