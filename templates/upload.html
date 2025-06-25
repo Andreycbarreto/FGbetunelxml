@@ -163,7 +163,7 @@
                                     <i class="feather-info me-1"></i>Clique em "Remover" para excluir arquivos
                                 </small>
                             </div>
-                            <div class="file-list-container">
+                            <div class="file-list-container" id="xmlSelectedFiles">
                                 <!-- Files will be listed here -->
                             </div>
                         </div>
@@ -406,6 +406,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         fileList.style.display = 'block';
         const container = document.getElementById(containerId);
+        
+        if (!container) {
+            console.error('Container not found:', containerId);
+            return;
+        }
         
         container.innerHTML = selectedFiles.map((file, index) => `
             <div class="file-item d-flex justify-content-between align-items-center p-3 border rounded mb-2 bg-light">
