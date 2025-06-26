@@ -213,7 +213,7 @@ class AsyncPDFProcessor:
         """Save processing result to database."""
         try:
             from app import app, db
-            from models import NFERecord, NFEItem
+            from models import NFERecord, NFEItem, UploadedFile, ProcessingStatus
             
             with app.app_context():
                 raw_data = result['data']
@@ -249,7 +249,7 @@ class AsyncPDFProcessor:
                     
                     db.session.add(nfe_item)
                 
-                # Update file status (within same context)
+                # Update file status (within same context)  
                 file_record = UploadedFile.query.get(job.file_id)
                 if file_record:
                     file_record.status = ProcessingStatus.COMPLETED
