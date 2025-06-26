@@ -137,6 +137,16 @@
                     </h5>
                 </div>
                 <div class="card-body">
+                    <!-- Info Alert with fixed height -->
+                    <div class="alert alert-light mb-4" style="min-height: 100px; display: flex; align-items: center;">
+                        <div class="w-100 text-center">
+                            <h6 class="alert-heading">
+                                <i class="feather-code me-2"></i>Processamento Direto XML
+                            </h6>
+                            <p class="mb-0">Processamento rápido e direto de arquivos XML de NFe com estrutura completa.</p>
+                        </div>
+                    </div>
+                    
                     <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="xmlUploadForm">
                         <input type="hidden" name="file_type" value="xml">
                         <div class="upload-area mb-4">
@@ -154,7 +164,7 @@
                         </div>
                         
                         <!-- XML File List -->
-                        <div id="xmlFileList" class="mb-4" style="display: none;">
+                        <div id="xmlFileList" class="mb-4" style="display: none; min-height: 150px;">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">
                                     <i class="feather-file-text me-2"></i>Arquivos Selecionados:
@@ -168,8 +178,8 @@
                             </div>
                         </div>
                         
-                        <!-- Upload Button -->
-                        <div class="d-flex justify-content-between align-items-center">
+                        <!-- Upload Button with fixed container height -->
+                        <div class="d-flex justify-content-between align-items-center" style="min-height: 60px;">
                             <div>
                                 <small class="text-muted">
                                     <i class="feather-info me-1"></i>
@@ -198,11 +208,14 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info mb-4">
-                        <h6 class="alert-heading">
-                            <i class="feather-zap me-2"></i>Processamento com IA
-                        </h6>
-                        <p class="mb-0">Os PDFs serão processados usando inteligência artificial para extrair automaticamente todos os dados da NFe. Este processo pode demorar um pouco mais que o XML.</p>
+                    <!-- Info Alert with fixed height to match XML section -->
+                    <div class="alert alert-info mb-4" style="min-height: 100px; display: flex; align-items: center;">
+                        <div class="w-100 text-center">
+                            <h6 class="alert-heading">
+                                <i class="feather-zap me-2"></i>Processamento com IA
+                            </h6>
+                            <p class="mb-0">Os PDFs serão processados usando inteligência artificial para extrair automaticamente todos os dados da NFe. Este processo pode demorar um pouco mais que o XML.</p>
+                        </div>
                     </div>
                     
                     <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="pdfUploadForm">
@@ -222,7 +235,7 @@
                         </div>
                         
                         <!-- PDF File List -->
-                        <div id="pdfFileList" class="mb-4" style="display: none;">
+                        <div id="pdfFileList" class="mb-4" style="display: none; min-height: 150px;">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">
                                     <i class="feather-file-text me-2"></i>Arquivos Selecionados:
@@ -236,8 +249,8 @@
                             </div>
                         </div>
                         
-                        <!-- Upload Button -->
-                        <div class="d-flex justify-content-between align-items-center">
+                        <!-- Upload Button with fixed container height -->
+                        <div class="d-flex justify-content-between align-items-center" style="min-height: 60px;">
                             <div>
                                 <small class="text-muted">
                                     <i class="feather-info me-1"></i>
