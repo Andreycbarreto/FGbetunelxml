@@ -340,7 +340,7 @@
                                             <td>{{ item.cfop or 'N/A' }}</td>
                                             <td>
                                                 {% if item.quantidade_comercial %}
-                                                    {{ "%.2f"|format(item.quantidade_comercial) }}
+                                                    {{ item.quantidade_comercial | brazilian_decimal }}
                                                 {% else %}
                                                     N/A
                                                 {% endif %}

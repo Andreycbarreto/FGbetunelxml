@@ -69,6 +69,17 @@ def brazil_time_filter(utc_datetime):
     except Exception:
         return utc_datetime.strftime('%d/%m/%Y %H:%M') if utc_datetime else 'N/A'
 
+@app.template_filter('brazilian_decimal')
+def brazilian_decimal_filter(value):
+    """Format decimal number with Brazilian decimal separator."""
+    if value is None:
+        return '0,00'
+    try:
+        # Format with 2 decimal places and replace . with ,
+        return f"{float(value):.2f}".replace('.', ',')
+    except (ValueError, TypeError):
+        return '0,00'
+
 def init_database():
     """Initialize database tables safely."""
     try:
