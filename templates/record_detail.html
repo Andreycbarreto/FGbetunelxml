@@ -348,7 +348,7 @@
                                             <td>{{ item.unidade_comercial or 'N/A' }}</td>
                                             <td>
                                                 {% if item.valor_unitario_comercial %}
-                                                    R$ {{ "%.2f"|format(item.valor_unitario_comercial) }}
+                                                    {{ item.valor_unitario_comercial | currency }}
                                                 {% else %}
                                                     N/A
                                                 {% endif %}
@@ -356,7 +356,7 @@
                                             <td>
                                                 {% if item.valor_total_produto %}
                                                     <strong class="text-success">
-                                                        R$ {{ "%.2f"|format(item.valor_total_produto) }}
+                                                        {{ item.valor_total_produto | currency }}
                                                     </strong>
                                                 {% else %}
                                                     N/A
@@ -389,38 +389,26 @@
                                         <tr>
                                             <td><strong>Valor Produtos:</strong></td>
                                             <td class="text-end">
-                                                {% if record.valor_total_produtos %}
-                                                    R$ {{ "%.2f"|format(record.valor_total_produtos) }}
-                                                {% else %}
-                                                    N/A
-                                                {% endif %}
+                                                {{ record.valor_total_produtos | currency if record.valor_total_produtos else 'N/A' }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Valor Frete:</strong></td>
                                             <td class="text-end">
-                                                {% if record.valor_frete %}
-                                                    R$ {{ "%.2f"|format(record.valor_frete) }}
-                                                {% else %}
-                                                    R$ 0,00
-                                                {% endif %}
+                                                {{ record.valor_frete | currency if record.valor_frete else 'R$ 0,00' }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Valor Seguro:</strong></td>
                                             <td class="text-end">
-                                                {% if record.valor_seguro %}
-                                                    R$ {{ "%.2f"|format(record.valor_seguro) }}
-                                                {% else %}
-                                                    R$ 0,00
-                                                {% endif %}
+                                                {{ record.valor_seguro | currency if record.valor_seguro else 'R$ 0,00' }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Valor Desconto:</strong></td>
                                             <td class="text-end">
                                                 {% if record.valor_desconto %}
-                                                    -R$ {{ "%.2f"|format(record.valor_desconto) }}
+                                                    -{{ record.valor_desconto | currency }}
                                                 {% else %}
                                                     R$ 0,00
                                                 {% endif %}
@@ -430,11 +418,7 @@
                                             <td><strong>Valor Total NFe:</strong></td>
                                             <td class="text-end">
                                                 <strong>
-                                                    {% if record.valor_total_nf %}
-                                                        R$ {{ "%.2f"|format(record.valor_total_nf) }}
-                                                    {% else %}
-                                                        N/A
-                                                    {% endif %}
+                                                    {{ record.valor_total_nf | currency if record.valor_total_nf else 'N/A' }}
                                                 </strong>
                                             </td>
                                         </tr>
@@ -447,52 +431,32 @@
                                         <tr>
                                             <td><strong>ICMS:</strong></td>
                                             <td class="text-end">
-                                                {% if record.valor_icms %}
-                                                    R$ {{ "%.2f"|format(record.valor_icms) }}
-                                                {% else %}
-                                                    R$ 0,00
-                                                {% endif %}
+                                                {{ record.valor_icms | currency if record.valor_icms else 'R$ 0,00' }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td><strong>IPI:</strong></td>
                                             <td class="text-end">
-                                                {% if record.valor_ipi %}
-                                                    R$ {{ "%.2f"|format(record.valor_ipi) }}
-                                                {% else %}
-                                                    R$ 0,00
-                                                {% endif %}
+                                                {{ record.valor_ipi | currency if record.valor_ipi else 'R$ 0,00' }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td><strong>PIS:</strong></td>
                                             <td class="text-end">
-                                                {% if record.valor_pis %}
-                                                    R$ {{ "%.2f"|format(record.valor_pis) }}
-                                                {% else %}
-                                                    R$ 0,00
-                                                {% endif %}
+                                                {{ record.valor_pis | currency if record.valor_pis else 'R$ 0,00' }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td><strong>COFINS:</strong></td>
                                             <td class="text-end">
-                                                {% if record.valor_cofins %}
-                                                    R$ {{ "%.2f"|format(record.valor_cofins) }}
-                                                {% else %}
-                                                    R$ 0,00
-                                                {% endif %}
+                                                {{ record.valor_cofins | currency if record.valor_cofins else 'R$ 0,00' }}
                                             </td>
                                         </tr>
                                         <tr class="table-warning">
                                             <td><strong>Total Tributos:</strong></td>
                                             <td class="text-end">
                                                 <strong>
-                                                    {% if record.valor_tributos %}
-                                                        R$ {{ "%.2f"|format(record.valor_tributos) }}
-                                                    {% else %}
-                                                        N/A
-                                                    {% endif %}
+                                                    {{ record.valor_tributos | currency if record.valor_tributos else 'N/A' }}
                                                 </strong>
                                             </td>
                                         </tr>
@@ -535,33 +499,36 @@
                                 </div>
                                 
                                 <div class="col-md-6">
-                                    <h6 class="border-bottom pb-2 mb-3">Processamento IA</h6>
+                                    <h6 class="border-bottom pb-2 mb-3">Transporte</h6>
                                     <table class="table table-sm">
                                         <tr>
-                                            <td><strong>Confiança IA:</strong></td>
-                                            <td>
-                                                {% if record.ai_confidence_score %}
-                                                    <div class="d-flex align-items-center">
-                                                        {% set confidence_pct = record.ai_confidence_score * 100 %}
-                                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                                                            <div class="progress-bar 
-                                                                {% if confidence_pct >= 80 %}bg-success
-                                                                {% elif confidence_pct >= 60 %}bg-warning
-                                                                {% else %}bg-danger{% endif %}" 
-                                                                style="width: {{ confidence_pct }}%">
-                                                            </div>
-                                                        </div>
-                                                        <span>{{ "%.1f"|format(confidence_pct) }}%</span>
-                                                    </div>
-                                                {% else %}
-                                                    N/A
-                                                {% endif %}
-                                            </td>
+                                            <td><strong>Modalidade Frete:</strong></td>
+                                            <td>{{ record.modalidade_frete or 'N/A' }}</td>
                                         </tr>
                                         <tr>
-                                            <td><strong>Data Processamento:</strong></td>
-                                            <td>{{ record.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                            <td><strong>Transportadora:</strong></td>
+                                            <td>{{ record.transportadora_nome or 'N/A' }}</td>
                                         </tr>
+                                        {% if record.transportadora_cnpj %}
+                                        <tr>
+                                            <td><strong>CNPJ Transportadora:</strong></td>
+                                            <td>{{ record.transportadora_cnpj }}</td>
+                                        </tr>
+                                        {% endif %}
+                                    </table>
+                                    
+                                    <h6 class="border-bottom pb-2 mb-3 mt-4">Processamento</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Data Processamento:</strong></td>
+                                            <td>{{ record.created_at | brazil_time }}</td>
+                                        </tr>
+                                        {% if record.forma_pagamento %}
+                                        <tr>
+                                            <td><strong>Forma Pagamento:</strong></td>
+                                            <td>{{ record.forma_pagamento }}</td>
+                                        </tr>
+                                        {% endif %}
                                     </table>
                                     
                                     {% if record.ai_processing_notes %}
