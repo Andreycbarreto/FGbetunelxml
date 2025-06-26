@@ -209,9 +209,15 @@ def process_all_files():
             
             # Process the file based on type
             if pending_file.file_type == 'pdf':
-                # Skip this processing for PDF files as they're processed later
-                xml_content = f"PDF file: {pending_file.original_filename}"
-                raw_data = {}
+                # Process PDF file
+                pdf_processor = SimplePDFProcessor()
+                pdf_result = pdf_processor.process_pdf_to_nfe_data(pending_file.file_path)
+                
+                if pdf_result['success']:
+                    raw_data = pdf_result['data']
+                    xml_content = pdf_result.get('markdown_content', f"PDF file: {pending_file.original_filename}")
+                else:
+                    raise Exception(f"PDF processing failed: {pdf_result.get('error', 'Unknown error')}")
             else:
                 # Process XML file
                 processor = NFEXMLProcessor()
@@ -230,10 +236,15 @@ def process_all_files():
                 **{k: v for k, v in raw_data.items() if k != 'items' and hasattr(NFERecord, k)}
             )
             
-            # Store raw XML and processing info
-            nfe_record.raw_xml_data = xml_content
-            nfe_record.ai_confidence_score = 0.3
-            nfe_record.ai_processing_notes = 'Processed using basic XML parser'
+            # Store data and processing info based on file type
+            if pending_file.file_type == 'pdf':
+                nfe_record.raw_xml_data = f"PDF processed: {pending_file.original_filename}"
+                nfe_record.ai_confidence_score = 0.7  # Higher confidence for PDF processing with AI
+                nfe_record.ai_processing_notes = 'Processed using PDF parser with OpenAI'
+            else:
+                nfe_record.raw_xml_data = xml_content
+                nfe_record.ai_confidence_score = 0.3  # Low confidence for basic processing
+                nfe_record.ai_processing_notes = 'Processed using basic XML parser'
             
             db.session.add(nfe_record)
             db.session.flush()
@@ -253,7 +264,10 @@ def process_all_files():
             db.session.commit()
             
             processed_count += 1
-            logger.info(f"Successfully processed file {pending_file.filename} using basic XML parser")
+            if pending_file.file_type == 'pdf':
+                logger.info(f"Successfully processed file {pending_file.filename} using PDF parser with OpenAI")
+            else:
+                logger.info(f"Successfully processed file {pending_file.filename} using basic XML parser")
             
         except Exception as e:
             error_count += 1
