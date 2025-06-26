@@ -207,7 +207,7 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="card-title text-muted mb-0">Valor Total</h6>
-                            <h2 class="mb-0">R$ {{ "%.2f"|format(total_value) }}</h2>
+                            <h2 class="mb-0">{{ total_value | currency }}</h2>
                         </div>
                     </div>
                 </div>
@@ -339,20 +339,14 @@
                                     </td>
                                     <td>
                                         {% if record.valor_total_nf %}
-                                            <strong class="text-success">R$ {{ "%.2f"|format(record.valor_total_nf) }}</strong>
+                                            <strong class="text-success">{{ record.valor_total_nf | currency }}</strong>
                                         {% else %}
                                             <span class="text-muted">N/A</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <small class="text-muted">
-                                            {% set utc_time = record.created_at %}
-                                            {% set brazil_time = utc_time.replace(tzinfo=timezone.utc).astimezone(timezone(timedelta(hours=-3))) if utc_time else None %}
-                                            {% if brazil_time %}
-                                                {{ brazil_time.strftime('%d/%m/%Y %H:%M') }}
-                                            {% else %}
-                                                {{ record.created_at.strftime('%d/%m/%Y %H:%M') if record.created_at else 'N/A' }}
-                                            {% endif %}
+                                            {{ record.created_at | brazil_time }}
                                         </small>
                                     </td>
                                     <td class="text-center">

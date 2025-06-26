@@ -25,10 +25,7 @@
                         {% endif %}
                     </h1>
                     <p class="text-muted mb-0">
-                        Processada em {{ record.created_at.strftime('%d/%m/%Y às %H:%M') }}
-                        {% if record.ai_confidence_score %}
-                            • Confiança IA: {{ "%.1f"|format(record.ai_confidence_score * 100) }}%
-                        {% endif %}
+                        Processada em {{ record.created_at | brazil_time }}
                     </p>
                 </div>
                 <div class="btn-group">
@@ -62,7 +59,7 @@
                     <h6 class="card-title">Valor Total</h6>
                     <h4 class="text-success">
                         {% if record.valor_total_nf %}
-                            R$ {{ "%.2f"|format(record.valor_total_nf) }}
+                            {{ record.valor_total_nf | currency }}
                         {% else %}
                             N/A
                         {% endif %}
