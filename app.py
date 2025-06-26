@@ -4,6 +4,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
+from datetime import datetime, timezone, timedelta
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -39,6 +40,34 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # initialize the app with the extension, flask-sqlalchemy >= 3.0.x
 db.init_app(app)
+
+# Template filters for better formatting
+@app.template_filter('currency')
+def currency_filter(value):
+    """Format number as Brazilian currency with thousands separator."""
+    if value is None:
+        return 'R$ 0,00'
+    try:
+        # Format with thousands separator and 2 decimal places
+        return f"R$ {float(value):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+    except (ValueError, TypeError):
+        return 'R$ 0,00'
+
+@app.template_filter('brazil_time')
+def brazil_time_filter(utc_datetime):
+    """Convert UTC datetime to Brazil time (GMT-3)."""
+    if not utc_datetime:
+        return 'N/A'
+    try:
+        # Create Brazil timezone (GMT-3)
+        brazil_tz = timezone(timedelta(hours=-3))
+        # Convert UTC to Brazil time
+        if utc_datetime.tzinfo is None:
+            utc_datetime = utc_datetime.replace(tzinfo=timezone.utc)
+        brazil_time = utc_datetime.astimezone(brazil_tz)
+        return brazil_time.strftime('%d/%m/%Y %H:%M')
+    except Exception:
+        return utc_datetime.strftime('%d/%m/%Y %H:%M') if utc_datetime else 'N/A'
 
 def init_database():
     """Initialize database tables safely."""

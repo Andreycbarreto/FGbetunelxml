@@ -219,11 +219,11 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <i class="feather-cpu display-4 text-info"></i>
+                            <i class="feather-activity display-4 text-info"></i>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="card-title text-muted mb-0">Confiança IA</h6>
-                            <h2 class="mb-0">{{ "%.1f"|format(avg_confidence * 100) }}%</h2>
+                            <h6 class="card-title text-muted mb-0">Processados</h6>
+                            <h2 class="mb-0">{{ records.items | length }}</h2>
                         </div>
                     </div>
                 </div>
@@ -280,9 +280,6 @@
                                     </th>
                                     <th scope="col">
                                         <i class="feather-dollar-sign me-1"></i>Valor Total
-                                    </th>
-                                    <th scope="col">
-                                        <i class="feather-cpu me-1"></i>Confiança IA
                                     </th>
                                     <th scope="col">
                                         <i class="feather-clock me-1"></i>Processado
@@ -348,26 +345,14 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if record.ai_confidence_score %}
-                                            {% set confidence_pct = record.ai_confidence_score * 100 %}
-                                            <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                                                    <div class="progress-bar 
-                                                        {% if confidence_pct >= 80 %}bg-success
-                                                        {% elif confidence_pct >= 60 %}bg-warning
-                                                        {% else %}bg-danger{% endif %}" 
-                                                        style="width: {{ confidence_pct }}%">
-                                                    </div>
-                                                </div>
-                                                <small class="text-muted">{{ "%.0f"|format(confidence_pct) }}%</small>
-                                            </div>
-                                        {% else %}
-                                            <span class="text-muted">N/A</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
                                         <small class="text-muted">
-                                            {{ record.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                            {% set utc_time = record.created_at %}
+                                            {% set brazil_time = utc_time.replace(tzinfo=timezone.utc).astimezone(timezone(timedelta(hours=-3))) if utc_time else None %}
+                                            {% if brazil_time %}
+                                                {{ brazil_time.strftime('%d/%m/%Y %H:%M') }}
+                                            {% else %}
+                                                {{ record.created_at.strftime('%d/%m/%Y %H:%M') if record.created_at else 'N/A' }}
+                                            {% endif %}
                                         </small>
                                     </td>
                                     <td class="text-center">
