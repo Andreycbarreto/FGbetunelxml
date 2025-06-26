@@ -15,6 +15,7 @@ from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, Use
 from xml_processor import NFEXMLProcessor
 from ai_agents import process_nfe_with_ai
 from pdf_simple_processor import SimplePDFProcessor
+from pdf_vision_processor import PDFVisionProcessor
 
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
@@ -209,15 +210,16 @@ def process_all_files():
             
             # Process the file based on type
             if pending_file.file_type == 'pdf':
-                # Process PDF file
-                pdf_processor = SimplePDFProcessor()
-                pdf_result = pdf_processor.process_pdf_to_nfe_data(pending_file.file_path)
+                # Process PDF file using GPT-4 Vision
+                pdf_processor = PDFVisionProcessor()
+                pdf_result = pdf_processor.process_pdf_with_vision(pending_file.file_path)
                 
                 if pdf_result['success']:
                     raw_data = pdf_result['data']
-                    xml_content = pdf_result.get('markdown_content', f"PDF file: {pending_file.original_filename}")
+                    xml_content = f"PDF processed with GPT-4 Vision: {pending_file.original_filename}"
+                    logger.info(f"PDF processed with Vision - Pages: {pdf_result.get('pages_processed', 'unknown')}, Method: {pdf_result.get('processing_method', 'unknown')}")
                 else:
-                    raise Exception(f"PDF processing failed: {pdf_result.get('error', 'Unknown error')}")
+                    raise Exception(f"PDF Vision processing failed: {pdf_result.get('error', 'Unknown error')}")
             else:
                 # Process XML file
                 processor = NFEXMLProcessor()
@@ -238,9 +240,9 @@ def process_all_files():
             
             # Store data and processing info based on file type
             if pending_file.file_type == 'pdf':
-                nfe_record.raw_xml_data = f"PDF processed: {pending_file.original_filename}"
-                nfe_record.ai_confidence_score = 0.7  # Higher confidence for PDF processing with AI
-                nfe_record.ai_processing_notes = 'Processed using PDF parser with OpenAI'
+                nfe_record.raw_xml_data = f"PDF processed with GPT-4 Vision: {pending_file.original_filename}"
+                nfe_record.ai_confidence_score = 0.9  # Very high confidence for Vision processing
+                nfe_record.ai_processing_notes = 'Processed using GPT-4 Vision (image analysis)'
             else:
                 nfe_record.raw_xml_data = xml_content
                 nfe_record.ai_confidence_score = 0.3  # Low confidence for basic processing
@@ -265,7 +267,7 @@ def process_all_files():
             
             processed_count += 1
             if pending_file.file_type == 'pdf':
-                logger.info(f"Successfully processed file {pending_file.filename} using PDF parser with OpenAI")
+                logger.info(f"Successfully processed file {pending_file.filename} using GPT-4 Vision (image analysis)")
             else:
                 logger.info(f"Successfully processed file {pending_file.filename} using basic XML parser")
             
