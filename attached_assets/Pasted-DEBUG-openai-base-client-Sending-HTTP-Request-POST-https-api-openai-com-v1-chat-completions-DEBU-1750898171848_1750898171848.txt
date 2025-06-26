@@ -1,0 +1,26 @@
+DEBUG:openai._base_client:Sending HTTP Request: POST https://api.openai.com/v1/chat/completions
+DEBUG:httpcore.http11:send_request_headers.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:send_request_headers.complete
+DEBUG:httpcore.http11:send_request_body.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:send_request_body.complete
+DEBUG:httpcore.http11:receive_response_headers.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 26 Jun 2025 00:34:55 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'bizarte'), (b'openai-processing-ms', b'28171'), (b'openai-version', b'2020-10-01'), (b'x-envoy-upstream-service-time', b'28083'), (b'x-ratelimit-limit-input-images', b'250000'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'30000000'), (b'x-ratelimit-remaining-input-images', b'249999'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'29998401'), (b'x-ratelimit-reset-input-images', b'0s'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'3ms'), (b'x-request-id', b'req_52647eebc4fa8f8f6d393abe5a349f08'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'95589e7749443095-SEA'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG:httpcore.http11:receive_response_body.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:receive_response_body.complete
+DEBUG:httpcore.http11:response_closed.started
+DEBUG:httpcore.http11:response_closed.complete
+DEBUG:openai._base_client:HTTP Response: POST https://api.openai.com/v1/chat/completions "200 OK" Headers({'date': 'Thu, 26 Jun 2025 00:34:55 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-expose-headers': 'X-Request-ID', 'openai-organization': 'bizarte', 'openai-processing-ms': '28171', 'openai-version': '2020-10-01', 'x-envoy-upstream-service-time': '28083', 'x-ratelimit-limit-input-images': '250000', 'x-ratelimit-limit-requests': '10000', 'x-ratelimit-limit-tokens': '30000000', 'x-ratelimit-remaining-input-images': '249999', 'x-ratelimit-remaining-requests': '9999', 'x-ratelimit-remaining-tokens': '29998401', 'x-ratelimit-reset-input-images': '0s', 'x-ratelimit-reset-requests': '6ms', 'x-ratelimit-reset-tokens': '3ms', 'x-request-id': 'req_52647eebc4fa8f8f6d393abe5a349f08', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'cf-cache-status': 'DYNAMIC', 'x-content-type-options': 'nosniff', 'server': 'cloudflare', 'cf-ray': '95589e7749443095-SEA', 'content-encoding': 'gzip', 'alt-svc': 'h3=":443"; ma=86400'})
+DEBUG:openai._base_client:request_id: req_52647eebc4fa8f8f6d393abe5a349f08
+INFO:pdf_vision_processor:Successfully analyzed page 1 with GPT-4 Vision
+ERROR:async_pdf_processor:Error saving processing result for 17240401593821000303550020000201891415238493.pdf: Working outside of application context.
+
+This typically means that you attempted to use functionality that needed
+the current application. To solve this, set up an application context
+with app.app_context(). See the documentation for more information.
+ERROR:async_pdf_processor:Error updating file status for 185: Working outside of application context.
+
+This typically means that you attempted to use functionality that needed
+the current application. To solve this, set up an application context
+with app.app_context(). See the documentation for more information.
+INFO:async_pdf_processor:Successfully processed PDF: 17240401593821000303550020000201891415238493.pdf

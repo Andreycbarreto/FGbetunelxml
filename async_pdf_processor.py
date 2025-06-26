@@ -185,25 +185,26 @@ class AsyncPDFProcessor:
     def _update_file_status(self, file_id: int, status: str, message: str = None):
         """Update file processing status in database."""
         try:
-            from app import db
+            from app import app, db
             from models import UploadedFile, ProcessingStatus
             
-            file_record = UploadedFile.query.get(file_id)
-            if file_record:
-                if status == 'processing':
-                    file_record.status = ProcessingStatus.PROCESSING
-                    file_record.processing_started_at = datetime.now()
-                elif status == 'completed':
-                    file_record.status = ProcessingStatus.COMPLETED
-                    file_record.processing_completed_at = datetime.now()
-                elif status == 'error':
-                    file_record.status = ProcessingStatus.ERROR
-                    file_record.processing_completed_at = datetime.now()
-                
-                if message:
-                    file_record.error_message = message
-                
-                db.session.commit()
+            with app.app_context():
+                file_record = UploadedFile.query.get(file_id)
+                if file_record:
+                    if status == 'processing':
+                        file_record.status = ProcessingStatus.PROCESSING
+                        file_record.processing_started_at = datetime.now()
+                    elif status == 'completed':
+                        file_record.status = ProcessingStatus.COMPLETED
+                        file_record.processing_completed_at = datetime.now()
+                    elif status == 'error':
+                        file_record.status = ProcessingStatus.ERROR
+                        file_record.processing_completed_at = datetime.now()
+                    
+                    if message:
+                        file_record.error_message = message
+                    
+                    db.session.commit()
                 
         except Exception as e:
             self.logger.error(f"Error updating file status for {file_id}: {str(e)}")
@@ -211,41 +212,52 @@ class AsyncPDFProcessor:
     def _save_processing_result(self, job: ProcessingJob, result: Dict[str, Any]):
         """Save processing result to database."""
         try:
-            from app import db
+            from app import app, db
             from models import NFERecord, NFEItem
             
-            raw_data = result['data']
-            
-            # Create NFE record
-            nfe_record = NFERecord(
-                user_id=job.user_id,
-                uploaded_file_id=job.file_id,
-                **{k: v for k, v in raw_data.items() if k != 'items' and hasattr(NFERecord, k)}
-            )
-            
-            # Set processing info
-            nfe_record.raw_xml_data = f"PDF processed with GPT-4 Vision: {job.original_filename}"
-            nfe_record.ai_confidence_score = result.get('confidence_score', 0.9)
-            nfe_record.ai_processing_notes = f'Processed using GPT-4 Vision (async) - Pages: {result.get("pages_processed", "unknown")}'
-            
-            db.session.add(nfe_record)
-            db.session.flush()  # Get the ID
-            
-            # Create NFE items
-            items_data = raw_data.get('items', [])
-            for item_data in items_data:
-                nfe_item = NFEItem(
-                    nfe_record_id=nfe_record.id,
-                    **{k: v for k, v in item_data.items() if hasattr(NFEItem, k)}
-                )
-                db.session.add(nfe_item)
-            
-            # Update file status
-            self._update_file_status(job.file_id, 'completed')
-            
-            db.session.commit()
-            
-            self.logger.info(f"Saved processing result for {job.original_filename} - Record ID: {nfe_record.id}, Items: {len(items_data)}")
+            with app.app_context():
+                raw_data = result['data']
+                
+                # Create NFE record
+                nfe_record = NFERecord()
+                nfe_record.user_id = job.user_id
+                nfe_record.uploaded_file_id = job.file_id
+                
+                # Set all compatible fields from raw_data
+                for key, value in raw_data.items():
+                    if key != 'items' and hasattr(nfe_record, key):
+                        setattr(nfe_record, key, value)
+                
+                # Set processing info
+                nfe_record.raw_xml_data = f"PDF processed with GPT-4 Vision: {job.original_filename}"
+                nfe_record.ai_confidence_score = result.get('confidence_score', 0.9)
+                nfe_record.ai_processing_notes = f'Processed using GPT-4 Vision (async) - Pages: {result.get("pages_processed", "unknown")}'
+                
+                db.session.add(nfe_record)
+                db.session.flush()  # Get the ID
+                
+                # Create NFE items
+                items_data = raw_data.get('items', [])
+                for item_data in items_data:
+                    nfe_item = NFEItem()
+                    nfe_item.nfe_record_id = nfe_record.id
+                    
+                    # Set all compatible fields from item_data
+                    for key, value in item_data.items():
+                        if hasattr(nfe_item, key):
+                            setattr(nfe_item, key, value)
+                    
+                    db.session.add(nfe_item)
+                
+                # Update file status (within same context)
+                file_record = UploadedFile.query.get(job.file_id)
+                if file_record:
+                    file_record.status = ProcessingStatus.COMPLETED
+                    file_record.processing_completed_at = datetime.now()
+                
+                db.session.commit()
+                
+                self.logger.info(f"Saved processing result for {job.original_filename} - Record ID: {nfe_record.id}, Items: {len(items_data)}")
             
         except Exception as e:
             self.logger.error(f"Error saving processing result for {job.original_filename}: {str(e)}")
