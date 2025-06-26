@@ -16,8 +16,12 @@ from xml_processor import NFEXMLProcessor
 from ai_agents import process_nfe_with_ai
 from pdf_simple_processor import SimplePDFProcessor
 from pdf_vision_processor import PDFVisionProcessor
+from async_pdf_processor import add_pdf_processing_job, start_async_processor, get_processing_status
 
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
+
+# Initialize async PDF processor
+start_async_processor()
 
 logger = logging.getLogger(__name__)
 
@@ -210,16 +214,18 @@ def process_all_files():
             
             # Process the file based on type
             if pending_file.file_type == 'pdf':
-                # Process PDF file using GPT-4 Vision
-                pdf_processor = PDFVisionProcessor()
-                pdf_result = pdf_processor.process_pdf_with_vision(pending_file.file_path)
+                # Add PDF to async processing queue instead of processing immediately
+                add_pdf_processing_job(
+                    file_id=pending_file.id,
+                    file_path=pending_file.file_path,
+                    original_filename=pending_file.original_filename,
+                    user_id=pending_file.user_id
+                )
+                logger.info(f"PDF {pending_file.original_filename} added to async processing queue")
                 
-                if pdf_result['success']:
-                    raw_data = pdf_result['data']
-                    xml_content = f"PDF processed with GPT-4 Vision: {pending_file.original_filename}"
-                    logger.info(f"PDF processed with Vision - Pages: {pdf_result.get('pages_processed', 'unknown')}, Method: {pdf_result.get('processing_method', 'unknown')}")
-                else:
-                    raise Exception(f"PDF Vision processing failed: {pdf_result.get('error', 'Unknown error')}")
+                # Skip the rest of the processing for PDFs as it will be handled asynchronously
+                processed_count += 1
+                continue
             else:
                 # Process XML file
                 processor = NFEXMLProcessor()
@@ -285,6 +291,13 @@ def process_all_files():
         'processed_count': processed_count,
         'error_count': error_count
     })
+
+@app.route('/processing_status', methods=['GET'])
+@login_required_hybrid
+def get_processing_status():
+    """Get current processing queue status."""
+    status = get_processing_status()
+    return jsonify(status)
 
 @app.route('/process_next', methods=['POST'])
 @login_required_hybrid
