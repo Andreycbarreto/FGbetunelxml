@@ -351,15 +351,36 @@
                                             </td>
                                             <td>
                                                 <div>
-                                                    <strong>{{ item.descricao_produto or 'N/A' }}</strong>
-                                                    {% if item.codigo_produto %}
-                                                        <small class="text-muted d-block">
-                                                            Código: {{ item.codigo_produto }}
-                                                        </small>
+                                                    {% if item.descricao_servico %}
+                                                        <strong>{{ item.descricao_servico }}</strong>
+                                                        <small class="badge bg-info ms-1">Serviço</small>
+                                                    {% elif item.descricao_produto %}
+                                                        <strong>{{ item.descricao_produto }}</strong>
+                                                        <small class="badge bg-success ms-1">Produto</small>
+                                                    {% else %}
+                                                        <strong>N/A</strong>
                                                     {% endif %}
                                                 </div>
                                             </td>
-                                            <td>{{ item.ncm or 'N/A' }}</td>
+                                            <td>
+                                                <div class="small">
+                                                    {% if item.codigo_servico %}
+                                                        <div><strong>Serviço:</strong> {{ item.codigo_servico }}</div>
+                                                    {% endif %}
+                                                    {% if item.codigo_atividade %}
+                                                        <div><strong>Atividade:</strong> {{ item.codigo_atividade }}</div>
+                                                    {% endif %}
+                                                    {% if item.codigo_produto %}
+                                                        <div><strong>Produto:</strong> {{ item.codigo_produto }}</div>
+                                                    {% endif %}
+                                                    {% if item.ncm %}
+                                                        <div><strong>NCM:</strong> {{ item.ncm }}</div>
+                                                    {% endif %}
+                                                    {% if not item.codigo_servico and not item.codigo_atividade and not item.codigo_produto and not item.ncm %}
+                                                        N/A
+                                                    {% endif %}
+                                                </div>
+                                            </td>
                                             <td>{{ item.cfop or 'N/A' }}</td>
                                             <td>
                                                 {% if item.quantidade_comercial %}

@@ -233,6 +233,7 @@ class NFEXMLProcessor:
                     data['valor_inss'] = self._get_decimal(ret_trib, 'nfe:vRetINSS')
                     data['valor_csll'] = self._get_decimal(ret_trib, 'nfe:vRetCSLL')
                     data['valor_iss_retido'] = self._get_decimal(ret_trib, 'nfe:vRetISS')
+                    data['valor_issrf'] = self._get_decimal(ret_trib, 'nfe:vRetISSRF')  # ISS Retido na Fonte
         
         except Exception as e:
             logger.warning(f"Error extracting totals data: {str(e)}")

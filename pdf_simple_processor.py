@@ -122,6 +122,7 @@ class SimplePDFProcessor:
             "valor_iss_retido": "valor do ISS retido na fonte (número)",
             
             "informacoes_adicionais": "conteúdo completo do campo informações adicionais da NFe",
+            "data_vencimento": "data de vencimento do pagamento (formato YYYY-MM-DD) - se não informada, use a data de emissão para serviços pagos à vista",
             
             "protocolo_autorizacao": "protocolo de autorização",
             "ambiente": "produção ou homologação",
