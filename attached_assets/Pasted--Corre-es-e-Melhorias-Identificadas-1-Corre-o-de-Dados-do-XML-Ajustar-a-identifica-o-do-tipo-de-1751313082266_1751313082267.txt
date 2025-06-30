@@ -1,0 +1,76 @@
+✅ Correções e Melhorias Identificadas
+1. Correção de Dados do XML
+Ajustar a identificação do tipo de nota (serviço vs produto) com base no valor do campo “modelo” (ex: 55 = produto, 57 = serviço).
+
+Corrigir leitura da inscrição estadual e municipal, reconhecendo corretamente que notas de serviço são sempre municipais.
+
+Incluir lógica para preencher dados ausentes como data de vencimento, tratando casos em que a nota já foi paga (ex: despachante).
+
+2. Reconhecimento de Impostos
+Acrescentar suporte para impostos típicos de serviços:
+
+ISSQN, IR, ISS retido na fonte, além dos já implementados (PIS/COFINS).
+
+Permitir que o sistema reconheça impostos mesmo quando eles não têm campos previamente configurados no modelo atual.
+
+3. Leitura Avançada dos Campos do Item
+Separar e identificar corretamente:
+
+Código de serviço
+
+Código da atividade
+
+Descrição do serviço
+
+Tratar esses campos em estrutura própria para serem reutilizados no sistema Fluig.
+
+4. Campo de Informações Adicionais
+Incluir campo para capturar o conteúdo de "informações adicionais" da nota, pois ali muitas vezes há detalhes relevantes (ex: incentivos fiscais).
+
+🛠️ Funcionalidades a Serem Implementadas
+1. Sistema de Lotes e Contratos
+Criar possibilidade de cadastrar um lote/processo que agrupe várias notas.
+
+Cada lote deve conter:
+
+Nome do contrato/processo
+
+Nome do item (produto que será vinculado no RM)
+
+Unidade de negócio
+
+Centro de custo
+
+A tela de upload de notas deverá permitir:
+
+Abrir um novo lote
+
+Adicionar notas a um lote existente
+
+2. Integração com Fluig (Web Services)
+Criar três chamadas distintas via API:
+
+Criar solicitação
+
+Anexar nota (PDF/XML)
+
+Publicar solicitação (submeter para aprovação)
+
+Essas chamadas devem:
+
+Utilizar dados como coligada, filial, centro de custo e tipo de documento.
+
+Fazer consulta à base local (ou RM) por CNPJ para identificar o fornecedor.
+
+Preencher automaticamente o formulário de solicitação com os dados coletados.
+
+3. Pré-processamento com Botão “Processar”
+Antes de enviar ao Fluig, criar etapa intermediária que:
+
+Preenche os dados consultando a base
+
+Exibe campos validados
+
+Permite ajustes
+
+O campo destinatário deve ser preenchido automaticamente com o nome do lote/processo, evitando retrabalho.

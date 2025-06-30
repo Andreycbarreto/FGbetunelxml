@@ -152,19 +152,54 @@ class AsyncPDFProcessor:
                     self.logger.info(f"Retry {attempt}/{max_retries} for {job.original_filename} in {wait_time}s")
                     time.sleep(wait_time)
                 
-                # Attempt processing
+                # Attempt processing with vision processor first
                 result = self.vision_processor.process_pdf_with_vision(job.file_path)
                 
                 if result['success']:
                     return result
                 else:
-                    self.logger.warning(f"Processing failed for {job.original_filename} (attempt {attempt + 1}): {result.get('error', 'Unknown error')}")
+                    error_msg = result.get('error', 'Unknown error')
+                    self.logger.warning(f"Vision processing failed for {job.original_filename} (attempt {attempt + 1}): {error_msg}")
+                    
+                    # Check if this is an API-related error that should trigger fallback
+                    api_errors = ['502', 'bad gateway', 'timeout', 'rate limit', 'cloudflare', 'connection']
+                    if any(err in error_msg.lower() for err in api_errors):
+                        self.logger.info(f"API error detected for {job.original_filename}, trying fallback processor")
+                        
+                        # Try fallback processor
+                        try:
+                            from pdf_simple_processor import PDFSimpleProcessor
+                            fallback_processor = PDFSimpleProcessor()
+                            fallback_result = fallback_processor.process_pdf(job.file_path)
+                            if fallback_result.get('success'):
+                                fallback_result['processing_note'] = 'Processed with fallback method due to API unavailability'
+                                self.logger.info(f"Fallback processing successful for {job.original_filename}")
+                                return fallback_result
+                        except Exception as fallback_e:
+                            self.logger.error(f"Fallback processing also failed for {job.original_filename}: {str(fallback_e)}")
                     
             except Exception as e:
                 error_msg = str(e)
                 self.logger.error(f"Exception during processing attempt {attempt + 1} for {job.original_filename}: {error_msg}")
                 
-                # Check if it's a rate limit or timeout error
+                # Check if it's an API-related error that should use fallback
+                api_errors = ['502', 'bad gateway', 'timeout', 'rate limit', 'cloudflare', 'connection', 'openai']
+                if any(err in error_msg.lower() for err in api_errors):
+                    self.logger.info(f"API error detected for {job.original_filename}, trying fallback processor")
+                    
+                    # Try fallback processor
+                    try:
+                        from pdf_simple_processor import PDFSimpleProcessor
+                        fallback_processor = PDFSimpleProcessor()
+                        fallback_result = fallback_processor.process_pdf(job.file_path)
+                        if fallback_result.get('success'):
+                            fallback_result['processing_note'] = 'Processed with fallback method due to API error'
+                            self.logger.info(f"Fallback processing successful for {job.original_filename}")
+                            return fallback_result
+                    except Exception as fallback_e:
+                        self.logger.error(f"Fallback processing also failed for {job.original_filename}: {str(fallback_e)}")
+                
+                # Check if it's a rate limit or timeout error for retries
                 if 'timeout' in error_msg.lower() or 'rate' in error_msg.lower() or 'limit' in error_msg.lower():
                     if attempt < max_retries:
                         continue  # Retry for these types of errors

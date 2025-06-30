@@ -18,7 +18,10 @@ class PDFVisionProcessor:
     """Advanced PDF processor using GPT-4 Vision for NFe analysis."""
     
     def __init__(self):
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.client = OpenAI(
+            api_key=os.environ.get("OPENAI_API_KEY"),
+            timeout=60.0  # 60 second timeout
+        )
         self.logger = logging.getLogger(__name__)
     
     def process_pdf_with_vision(self, file_path: str) -> Dict[str, Any]:
@@ -213,7 +216,13 @@ class PDFVisionProcessor:
             return result
             
         except Exception as e:
-            self.logger.error(f"Error analyzing page {page_num} with vision: {str(e)}")
+            error_msg = str(e)
+            self.logger.error(f"Error analyzing page {page_num} with vision: {error_msg}")
+            
+            # Check for specific API errors that should trigger fallback
+            if any(err in error_msg.lower() for err in ['502', 'bad gateway', 'cloudflare', 'timeout', 'rate limit']):
+                raise Exception(f"API error detected: {error_msg}")
+            
             return {}
     
     def _consolidate_nfe_data(self, all_page_data: List[Dict[str, Any]]) -> Dict[str, Any]:
