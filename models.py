@@ -121,6 +121,7 @@ class NFERecord(db.Model):
     emitente_nome = db.Column(db.String(255), nullable=True)
     emitente_fantasia = db.Column(db.String(255), nullable=True)
     emitente_ie = db.Column(db.String(20), nullable=True)
+    emitente_im = db.Column(db.String(20), nullable=True)  # Inscrição Municipal
     emitente_endereco = db.Column(db.Text, nullable=True)
     emitente_municipio = db.Column(db.String(100), nullable=True)
     emitente_uf = db.Column(db.String(2), nullable=True)
@@ -130,6 +131,7 @@ class NFERecord(db.Model):
     destinatario_cnpj = db.Column(db.String(18), nullable=True)
     destinatario_nome = db.Column(db.String(255), nullable=True)
     destinatario_ie = db.Column(db.String(20), nullable=True)
+    destinatario_im = db.Column(db.String(20), nullable=True)  # Inscrição Municipal
     destinatario_endereco = db.Column(db.Text, nullable=True)
     destinatario_municipio = db.Column(db.String(100), nullable=True)
     destinatario_uf = db.Column(db.String(2), nullable=True)
@@ -137,11 +139,15 @@ class NFERecord(db.Model):
     
     # Valores totais
     valor_total_produtos = db.Column(Numeric(15, 2), nullable=True)
+    valor_total_servicos = db.Column(Numeric(15, 2), nullable=True)
     valor_total_nf = db.Column(Numeric(15, 2), nullable=True)
     valor_icms = db.Column(Numeric(15, 2), nullable=True)
     valor_ipi = db.Column(Numeric(15, 2), nullable=True)
     valor_pis = db.Column(Numeric(15, 2), nullable=True)
     valor_cofins = db.Column(Numeric(15, 2), nullable=True)
+    valor_issqn = db.Column(Numeric(15, 2), nullable=True)
+    valor_ir = db.Column(Numeric(15, 2), nullable=True)
+    valor_iss_retido = db.Column(Numeric(15, 2), nullable=True)
     valor_frete = db.Column(Numeric(15, 2), nullable=True)
     valor_seguro = db.Column(Numeric(15, 2), nullable=True)
     valor_desconto = db.Column(Numeric(15, 2), nullable=True)
@@ -152,11 +158,16 @@ class NFERecord(db.Model):
     transportadora_cnpj = db.Column(db.String(18), nullable=True)
     transportadora_nome = db.Column(db.String(255), nullable=True)
     forma_pagamento = db.Column(db.String(100), nullable=True)
+    data_vencimento = db.Column(db.DateTime, nullable=True)  # Payment due date
     
     # Protocol and status
     protocolo_autorizacao = db.Column(db.String(50), nullable=True)
     status_autorizacao = db.Column(db.String(20), nullable=True)
     ambiente = db.Column(db.String(20), nullable=True)  # Produção/Homologação
+    
+    # Additional information fields
+    informacoes_adicionais = db.Column(db.Text, nullable=True)  # Campo de informações adicionais da NFe
+    tipo_documento = db.Column(db.String(20), nullable=True)  # produto, servico, misto
     
     # AI processing metadata
     ai_confidence_score = db.Column(db.Float, nullable=True)
@@ -178,7 +189,10 @@ class NFEItem(db.Model):
     # Item identification
     numero_item = db.Column(db.Integer, nullable=True)
     codigo_produto = db.Column(db.String(100), nullable=True)
+    codigo_servico = db.Column(db.String(100), nullable=True)  # Service code
+    codigo_atividade = db.Column(db.String(100), nullable=True)  # Activity code
     descricao_produto = db.Column(db.Text, nullable=True)
+    descricao_servico = db.Column(db.Text, nullable=True)  # Service description
     ncm = db.Column(db.String(20), nullable=True)
     cfop = db.Column(db.String(10), nullable=True)
     
@@ -212,5 +226,21 @@ class NFEItem(db.Model):
     base_calculo_cofins = db.Column(Numeric(15, 2), nullable=True)
     aliquota_cofins = db.Column(Numeric(5, 4), nullable=True)
     valor_cofins = db.Column(Numeric(15, 2), nullable=True)
+    
+    # Service taxes
+    situacao_tributaria_issqn = db.Column(db.String(10), nullable=True)
+    base_calculo_issqn = db.Column(Numeric(15, 2), nullable=True)
+    aliquota_issqn = db.Column(Numeric(5, 4), nullable=True)
+    valor_issqn = db.Column(Numeric(15, 2), nullable=True)
+    
+    # Income tax withheld
+    base_calculo_ir = db.Column(Numeric(15, 2), nullable=True)
+    aliquota_ir = db.Column(Numeric(5, 4), nullable=True)
+    valor_ir = db.Column(Numeric(15, 2), nullable=True)
+    
+    # ISS withheld at source
+    base_calculo_iss_retido = db.Column(Numeric(15, 2), nullable=True)
+    aliquota_iss_retido = db.Column(Numeric(5, 4), nullable=True)
+    valor_iss_retido = db.Column(Numeric(15, 2), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.now)
