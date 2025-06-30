@@ -146,7 +146,10 @@ class NFERecord(db.Model):
     valor_pis = db.Column(Numeric(15, 2), nullable=True)
     valor_cofins = db.Column(Numeric(15, 2), nullable=True)
     valor_issqn = db.Column(Numeric(15, 2), nullable=True)
+    valor_issrf = db.Column(Numeric(15, 2), nullable=True)  # ISS Retido na Fonte
     valor_ir = db.Column(Numeric(15, 2), nullable=True)
+    valor_inss = db.Column(Numeric(15, 2), nullable=True)
+    valor_csll = db.Column(Numeric(15, 2), nullable=True)
     valor_iss_retido = db.Column(Numeric(15, 2), nullable=True)
     valor_frete = db.Column(Numeric(15, 2), nullable=True)
     valor_seguro = db.Column(Numeric(15, 2), nullable=True)
@@ -242,5 +245,21 @@ class NFEItem(db.Model):
     base_calculo_iss_retido = db.Column(Numeric(15, 2), nullable=True)
     aliquota_iss_retido = db.Column(Numeric(5, 4), nullable=True)
     valor_iss_retido = db.Column(Numeric(15, 2), nullable=True)
+    
+    # Additional municipal/federal taxes
+    situacao_tributaria_issrf = db.Column(db.String(10), nullable=True)
+    base_calculo_issrf = db.Column(Numeric(15, 2), nullable=True)
+    aliquota_issrf = db.Column(Numeric(5, 4), nullable=True)
+    valor_issrf = db.Column(Numeric(15, 2), nullable=True)
+    
+    situacao_tributaria_inss = db.Column(db.String(10), nullable=True)
+    base_calculo_inss = db.Column(Numeric(15, 2), nullable=True)
+    aliquota_inss = db.Column(Numeric(5, 4), nullable=True)
+    valor_inss = db.Column(Numeric(15, 2), nullable=True)
+    
+    situacao_tributaria_csll = db.Column(db.String(10), nullable=True)
+    base_calculo_csll = db.Column(Numeric(15, 2), nullable=True)
+    aliquota_csll = db.Column(Numeric(5, 4), nullable=True)
+    valor_csll = db.Column(Numeric(15, 2), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.now)

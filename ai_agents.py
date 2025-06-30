@@ -150,10 +150,12 @@ class NFEExtractionAgent:
             SPECIAL EXTRACTION RULES:
             - For service documents: prioritize municipal registration (IM) over state (IE)
             - Extract service codes, activity codes separately from product codes
-            - Capture service taxes: ISSQN, IR retido, ISS retido na fonte
+            - Capture ALL service taxes: ISSQN, ISSRF (ISS Retido na Fonte), IR, INSS, CSLL, ISS retido
+            - Identify tax contexts correctly (municipal vs federal/state)
             - Handle missing payment due dates (common in prepaid services)
-            - Extract additional information field content
+            - Extract additional information field content completely
             - Separate service descriptions from product descriptions
+            - Document type classification: model 55=produto, 57=serviço, 65=misto
             
             For each field, provide:
             - Field name
@@ -187,7 +189,10 @@ class NFEExtractionAgent:
                         "product_description": {},
                         "service_description": {"value": "service_desc", "confidence": 0.95, "data_type": "string"},
                         "issqn_tax": {"base": 0.00, "rate": 0.00, "value": 0.00, "confidence": 0.95},
+                        "issrf_tax": {"base": 0.00, "rate": 0.00, "value": 0.00, "confidence": 0.95},
                         "ir_withheld": {"base": 0.00, "rate": 0.00, "value": 0.00, "confidence": 0.95},
+                        "inss_tax": {"base": 0.00, "rate": 0.00, "value": 0.00, "confidence": 0.95},
+                        "csll_tax": {"base": 0.00, "rate": 0.00, "value": 0.00, "confidence": 0.95},
                         "iss_withheld": {"base": 0.00, "rate": 0.00, "value": 0.00, "confidence": 0.95}
                     }
                 ],

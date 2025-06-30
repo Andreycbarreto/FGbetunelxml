@@ -120,6 +120,7 @@ class NFEXMLProcessor:
                 data['emitente_nome'] = self._get_text(emit, 'nfe:xNome')
                 data['emitente_fantasia'] = self._get_text(emit, 'nfe:xFant')
                 data['emitente_ie'] = self._get_text(emit, 'nfe:IE')
+                data['emitente_im'] = self._get_text(emit, 'nfe:IM')  # Inscrição Municipal
                 
                 # Address
                 ender_emit = emit.find('nfe:enderEmit', self.namespaces)
@@ -157,6 +158,7 @@ class NFEXMLProcessor:
                 data['destinatario_cnpj'] = self._get_text(dest, 'nfe:CNPJ')
                 data['destinatario_nome'] = self._get_text(dest, 'nfe:xNome')
                 data['destinatario_ie'] = self._get_text(dest, 'nfe:IE')
+                data['destinatario_im'] = self._get_text(dest, 'nfe:IM')  # Inscrição Municipal
                 
                 # Address
                 ender_dest = dest.find('nfe:enderDest', self.namespaces)
