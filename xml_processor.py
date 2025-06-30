@@ -56,6 +56,9 @@ class NFEXMLProcessor:
             # Protocol information
             data.update(self._extract_protocol(root))
             
+            # Additional information
+            data.update(self._extract_additional_info(root))
+            
             # Items/Products
             data['items'] = self._extract_items(root)
             
@@ -205,6 +208,20 @@ class NFEXMLProcessor:
                     data['valor_seguro'] = self._get_decimal(icms_tot, 'nfe:vSeg')
                     data['valor_desconto'] = self._get_decimal(icms_tot, 'nfe:vDesc')
                     data['valor_tributos'] = self._get_decimal(icms_tot, 'nfe:vTotTrib')
+                
+                # Service taxes - typically found in ISSQNTot section
+                issqn_tot = total.find('nfe:ISSQNTot', self.namespaces)
+                if issqn_tot is not None:
+                    data['valor_issqn'] = self._get_decimal(issqn_tot, 'nfe:vISS')
+                    data['valor_total_servicos'] = self._get_decimal(issqn_tot, 'nfe:vServ')
+                
+                # Retained taxes - typically found in retTrib section
+                ret_trib = total.find('nfe:retTrib', self.namespaces)
+                if ret_trib is not None:
+                    data['valor_ir'] = self._get_decimal(ret_trib, 'nfe:vRetIR')
+                    data['valor_inss'] = self._get_decimal(ret_trib, 'nfe:vRetINSS')
+                    data['valor_csll'] = self._get_decimal(ret_trib, 'nfe:vRetCSLL')
+                    data['valor_iss_retido'] = self._get_decimal(ret_trib, 'nfe:vRetISS')
         
         except Exception as e:
             logger.warning(f"Error extracting totals data: {str(e)}")
@@ -286,6 +303,29 @@ class NFEXMLProcessor:
         
         return data
     
+    def _extract_additional_info(self, root):
+        """Extract additional information (INFADFISCO/INFCPL section)."""
+        data = {}
+        
+        try:
+            # Try to find additional information in different possible locations
+            inf_ad_fisco = root.find('.//nfe:infAdFisco', self.namespaces)
+            if inf_ad_fisco is not None:
+                data['informacoes_adicionais'] = inf_ad_fisco.text
+            
+            # Also check for complementary information
+            inf_cpl = root.find('.//nfe:infCpl', self.namespaces)
+            if inf_cpl is not None:
+                if data.get('informacoes_adicionais'):
+                    data['informacoes_adicionais'] += f"\n\n{inf_cpl.text}"
+                else:
+                    data['informacoes_adicionais'] = inf_cpl.text
+        
+        except Exception as e:
+            logger.warning(f"Error extracting additional info: {str(e)}")
+        
+        return data
+    
     def _extract_items(self, root):
         """Extract items/products data (DET section)."""
         items = []
@@ -313,6 +353,12 @@ class NFEXMLProcessor:
                     item['unidade_tributavel'] = self._get_text(prod, 'nfe:uTrib')
                     item['quantidade_tributavel'] = self._get_decimal(prod, 'nfe:qTrib')
                     item['valor_unitario_tributavel'] = self._get_decimal(prod, 'nfe:vUnTrib')
+                    
+                    # Service-specific fields (check for service codes)
+                    # Some NFe implementations store service codes in different fields
+                    item['codigo_servico'] = self._get_text(prod, 'nfe:cServ')  # Service code
+                    item['codigo_atividade'] = self._get_text(prod, 'nfe:cAtiv')  # Activity code
+                    item['descricao_servico'] = self._get_text(prod, 'nfe:xServ')  # Service description
                 
                 # Tax information
                 imposto = det.find('nfe:imposto', self.namespaces)
@@ -357,6 +403,39 @@ class NFEXMLProcessor:
                             item['aliquota_cofins'] = self._get_decimal(cofins_group, 'nfe:pCOFINS')
                             item['valor_cofins'] = self._get_decimal(cofins_group, 'nfe:vCOFINS')
                             break
+                    
+                    # ISSQN (Service tax)
+                    issqn = imposto.find('nfe:ISSQN', self.namespaces)
+                    if issqn is not None:
+                        item['situacao_tributaria_issqn'] = self._get_text(issqn, 'nfe:cSitTrib')
+                        item['base_calculo_issqn'] = self._get_decimal(issqn, 'nfe:vBC')
+                        item['aliquota_issqn'] = self._get_decimal(issqn, 'nfe:vAliq')
+                        item['valor_issqn'] = self._get_decimal(issqn, 'nfe:vISSQN')
+                    
+                    # IR withheld (Item level)
+                    item['base_calculo_ir'] = self._get_decimal(imposto, 'nfe:vBCRetIR')
+                    item['aliquota_ir'] = self._get_decimal(imposto, 'nfe:pRetIR')
+                    item['valor_ir'] = self._get_decimal(imposto, 'nfe:vRetIR')
+                    
+                    # INSS withheld
+                    item['base_calculo_inss'] = self._get_decimal(imposto, 'nfe:vBCRetINSS')
+                    item['aliquota_inss'] = self._get_decimal(imposto, 'nfe:pRetINSS')
+                    item['valor_inss'] = self._get_decimal(imposto, 'nfe:vRetINSS')
+                    
+                    # CSLL withheld
+                    item['base_calculo_csll'] = self._get_decimal(imposto, 'nfe:vBCRetCSLL')
+                    item['aliquota_csll'] = self._get_decimal(imposto, 'nfe:pRetCSLL')
+                    item['valor_csll'] = self._get_decimal(imposto, 'nfe:vRetCSLL')
+                    
+                    # ISS withheld at source
+                    item['base_calculo_iss_retido'] = self._get_decimal(imposto, 'nfe:vBCRetISS')
+                    item['aliquota_iss_retido'] = self._get_decimal(imposto, 'nfe:pRetISS')
+                    item['valor_iss_retido'] = self._get_decimal(imposto, 'nfe:vRetISS')
+                    
+                    # ISSRF (ISS Retido na Fonte)
+                    item['base_calculo_issrf'] = self._get_decimal(imposto, 'nfe:vBCISSRF')
+                    item['aliquota_issrf'] = self._get_decimal(imposto, 'nfe:pISSRF')
+                    item['valor_issrf'] = self._get_decimal(imposto, 'nfe:vISSRF')
                 
                 items.append(item)
         
