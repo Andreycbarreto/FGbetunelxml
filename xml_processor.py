@@ -80,9 +80,20 @@ class NFEXMLProcessor:
             if ide is not None:
                 data['numero_nf'] = self._get_text(ide, 'nfe:nNF')
                 data['serie'] = self._get_text(ide, 'nfe:serie')
-                data['modelo'] = self._get_text(ide, 'nfe:mod')
+                modelo = self._get_text(ide, 'nfe:mod')
+                data['modelo'] = modelo
                 data['natureza_operacao'] = self._get_text(ide, 'nfe:natOp')
                 data['tipo_operacao'] = '1' if self._get_text(ide, 'nfe:tpNF') == '1' else '0'
+                
+                # Document type classification based on model
+                if modelo == '55':
+                    data['tipo_documento'] = 'produto'
+                elif modelo == '57':
+                    data['tipo_documento'] = 'servico'
+                elif modelo == '65':
+                    data['tipo_documento'] = 'misto'
+                else:
+                    data['tipo_documento'] = 'produto'  # Default fallback
                 
                 # Extract dates
                 dh_emi = self._get_text(ide, 'nfe:dhEmi')
