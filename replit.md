@@ -97,6 +97,14 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- June 30, 2025. Enhanced AI processing with Brazilian tax system specifics:
+  * Added service document recognition (model 55=product, 57=service, 65=mixed)
+  * Implemented municipal vs state tax context handling
+  * Added service-specific fields: service codes, activity codes, service descriptions
+  * Enhanced tax recognition: ISSQN, IR retido, ISS retido na fonte
+  * Added missing data inference (payment due dates for prepaid services)
+  * Implemented additional information field capture
+  * Updated database schema with new service-specific columns
 - June 24, 2025. Initial setup
 
 ## User Preferences

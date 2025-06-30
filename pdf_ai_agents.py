@@ -56,20 +56,35 @@ class PDFAnalysisAgent:
 
             TAREFAS:
             1. Identifique se este é realmente um documento de NFe válido
-            2. Localize as principais seções: cabeçalho, emitente, destinatário, produtos, totais, impostos
-            3. Avalie a qualidade e completude das informações extraídas
-            4. Identifique possíveis problemas ou dados ausentes
-            5. Forneça uma confiança geral do documento (0-100)
+            2. Identifique o modelo do documento (55=produto, 57=serviço, 65=misto)
+            3. Classifique o tipo de documento (produto/serviço/misto)
+            4. Localize as principais seções: cabeçalho, emitente, destinatário, produtos/serviços, totais, impostos
+            5. Identifique impostos específicos de serviços (ISSQN, IR retido, ISS retido)
+            6. Localize campos de informações adicionais
+            7. Avalie a qualidade e completude das informações extraídas
+            8. Identifique possíveis problemas ou dados ausentes
+            9. Forneça uma confiança geral do documento (0-100)
+
+            ATENÇÃO ESPECIAL:
+            - Para documentos de serviço: foque em inscrições municipais
+            - Identifique códigos de serviço e atividade
+            - Verifique presença de impostos municipais
+            - Analise contexto de pagamento (à vista/prazo)
 
             Responda em formato JSON:
             {{
                 "is_valid_nfe": true/false,
-                "document_type": "NFe/NFCe/Outro",
+                "document_model": "55|57|65",
+                "document_type": "produto|servico|misto",
                 "identified_sections": ["seção1", "seção2", ...],
-                "data_quality": "alta/média/baixa",
+                "has_service_taxes": true/false,
+                "has_municipal_registration": true/false,
+                "has_additional_info": true/false,
+                "tax_context": "municipal|estadual|misto",
+                "data_quality": "alta|média|baixa",
                 "confidence_score": 0-100,
                 "issues_found": ["problema1", "problema2", ...],
-                "processing_notes": ["nota1", "nota2", ...]
+                "processing_notes": ["nota1", "nota2", "incluindo", "justificativa", "da", "classificação"]
             }}
             """
             
@@ -116,10 +131,19 @@ class PDFExtractionAgent:
         try:
             self.logger.info("PDF Extraction Agent: Starting data extraction")
             
+            # Get analysis context for extraction
+            analyzed_data = state.get('analyzed_data', {})
+            document_model = analyzed_data.get('document_model', '55')
+            document_type = analyzed_data.get('document_type', 'produto')
+            
             # Create comprehensive extraction prompt
             prompt = f"""
             Você é um especialista em extração de dados de NFe brasileira. 
             Extraia todos os dados estruturados do conteúdo markdown de uma NFe em PDF.
+
+            CONTEXTO DO DOCUMENTO:
+            - Modelo: {document_model} ({document_type})
+            - Processamento específico para documentos de serviço (modelo 57)
 
             CONTEÚDO DO PDF (MARKDOWN):
             {state['markdown_content']}
@@ -130,7 +154,8 @@ class PDFExtractionAgent:
             - chave_nfe: Chave de acesso da NFe (44 dígitos)
             - numero_nf: Número da nota fiscal
             - serie: Série da nota
-            - modelo: Modelo do documento
+            - modelo: Modelo do documento (55/57/65)
+            - tipo_documento: produto|servico|misto (baseado no modelo)
             - data_emissao: Data de emissão (formato YYYY-MM-DD)
             - data_saida_entrada: Data de saída/entrada
             - tipo_operacao: Entrada ou Saída
@@ -141,6 +166,7 @@ class PDFExtractionAgent:
             - emitente_nome: Razão social
             - emitente_fantasia: Nome fantasia
             - emitente_ie: Inscrição estadual
+            - emitente_im: Inscrição municipal (especialmente para serviços)
             - emitente_endereco: Endereço completo
             - emitente_municipio: Município
             - emitente_uf: UF
@@ -150,6 +176,7 @@ class PDFExtractionAgent:
             - destinatario_cnpj: CNPJ/CPF do destinatário
             - destinatario_nome: Nome/Razão social
             - destinatario_ie: Inscrição estadual
+            - destinatario_im: Inscrição municipal (especialmente para serviços)
             - destinatario_endereco: Endereço completo
             - destinatario_municipio: Município
             - destinatario_uf: UF
@@ -157,11 +184,15 @@ class PDFExtractionAgent:
 
             VALORES TOTAIS:
             - valor_total_produtos: Valor total dos produtos
+            - valor_total_servicos: Valor total dos serviços
             - valor_total_nf: Valor total da nota
             - valor_icms: Valor do ICMS
             - valor_ipi: Valor do IPI
             - valor_pis: Valor do PIS
             - valor_cofins: Valor do COFINS
+            - valor_issqn: Valor do ISSQN (para serviços)
+            - valor_ir: Valor do IR retido
+            - valor_iss_retido: Valor do ISS retido na fonte
             - valor_frete: Valor do frete
             - valor_seguro: Valor do seguro
             - valor_desconto: Valor do desconto
@@ -174,15 +205,32 @@ class PDFExtractionAgent:
 
             PAGAMENTO:
             - forma_pagamento: Forma de pagamento
+            - data_vencimento: Data de vencimento (inferir se não informado para pagamentos à vista)
 
             PROTOCOLO:
             - protocolo_autorizacao: Protocolo de autorização
             - status_autorizacao: Status
             - ambiente: Produção ou Homologação
 
-            ITENS (lista de produtos):
-            Para cada item, extrair: numero_item, codigo_produto, descricao_produto, ncm, cfop, 
-            unidade_comercial, quantidade_comercial, valor_unitario_comercial, valor_total_produto, etc.
+            INFORMAÇÕES ADICIONAIS:
+            - informacoes_adicionais: Conteúdo do campo de informações adicionais da NFe
+
+            ITENS (lista de produtos/serviços):
+            Para cada item, extrair campos básicos E campos específicos de serviços:
+            - numero_item, codigo_produto, descricao_produto
+            - codigo_servico: Código específico do serviço (diferente do produto)
+            - codigo_atividade: Código da atividade do serviço
+            - descricao_servico: Descrição específica do serviço
+            - ncm, cfop, unidade_comercial, quantidade_comercial, valor_unitario_comercial, valor_total_produto
+            - Impostos de serviços: valor_issqn, valor_ir, valor_iss_retido com suas bases e alíquotas
+
+            REGRAS ESPECIAIS PARA EXTRAÇÃO:
+            - Para documentos de serviço (modelo 57): priorize inscrições municipais
+            - Separe códigos de serviço dos códigos de produto
+            - Capture descrições de serviços separadamente
+            - Identifique impostos municipais (ISSQN, IR retido, ISS retido)
+            - Para pagamentos à vista sem data: infira como mesma data de emissão
+            - Extraia todo conteúdo do campo "informações adicionais"
 
             Responda APENAS em formato JSON válido com todos os campos acima.
             """
