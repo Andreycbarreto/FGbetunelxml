@@ -149,7 +149,22 @@
                                         </tr>
                                         <tr>
                                             <td><strong>Modelo:</strong></td>
-                                            <td>{{ record.modelo or 'N/A' }}</td>
+                                            <td>
+                                                {{ record.modelo or 'N/A' }}
+                                                {% if record.tipo_documento %}
+                                                    <span class="badge bg-info ms-2">
+                                                        {% if record.tipo_documento == 'produto' %}
+                                                            Produto
+                                                        {% elif record.tipo_documento == 'servico' %}
+                                                            Serviço
+                                                        {% elif record.tipo_documento == 'misto' %}
+                                                            Misto
+                                                        {% else %}
+                                                            {{ record.tipo_documento|title }}
+                                                        {% endif %}
+                                                    </span>
+                                                {% endif %}
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Tipo Operação:</strong></td>
@@ -242,6 +257,10 @@
                                             <td>{{ record.emitente_ie or 'N/A' }}</td>
                                         </tr>
                                         <tr>
+                                            <td><strong>Inscrição Municipal:</strong></td>
+                                            <td>{{ record.emitente_im or 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
                                             <td><strong>Endereço:</strong></td>
                                             <td>{{ record.emitente_endereco or 'N/A' }}</td>
                                         </tr>
@@ -279,6 +298,10 @@
                                             <td>{{ record.destinatario_ie or 'N/A' }}</td>
                                         </tr>
                                         <tr>
+                                            <td><strong>Inscrição Municipal:</strong></td>
+                                            <td>{{ record.destinatario_im or 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
                                             <td><strong>Endereço:</strong></td>
                                             <td>{{ record.destinatario_endereco or 'N/A' }}</td>
                                         </tr>
@@ -311,8 +334,8 @@
                                     <thead>
                                         <tr>
                                             <th>Item</th>
-                                            <th>Produto</th>
-                                            <th>NCM</th>
+                                            <th>Produto/Serviço</th>
+                                            <th>Códigos</th>
                                             <th>CFOP</th>
                                             <th>Qtd.</th>
                                             <th>Unidade</th>
@@ -426,7 +449,7 @@
                                 </div>
                                 
                                 <div class="col-md-6">
-                                    <h6 class="border-bottom pb-2 mb-3">Impostos</h6>
+                                    <h6 class="border-bottom pb-2 mb-3">Impostos Federais/Estaduais</h6>
                                     <table class="table table-sm">
                                         <tr>
                                             <td><strong>ICMS:</strong></td>
@@ -452,15 +475,58 @@
                                                 {{ record.valor_cofins | currency if record.valor_cofins else 'R$ 0,00' }}
                                             </td>
                                         </tr>
-                                        <tr class="table-warning">
-                                            <td><strong>Total Tributos:</strong></td>
+                                    </table>
+                                    
+                                    <h6 class="border-bottom pb-2 mb-3 mt-4">Impostos Municipais/Retidos</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>ISSQN:</strong></td>
                                             <td class="text-end">
-                                                <strong>
-                                                    {{ record.valor_tributos | currency if record.valor_tributos else 'N/A' }}
-                                                </strong>
+                                                {{ record.valor_issqn | currency if record.valor_issqn else 'R$ 0,00' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>ISSRF (ISS Ret. Fonte):</strong></td>
+                                            <td class="text-end">
+                                                {{ record.valor_issrf | currency if record.valor_issrf else 'R$ 0,00' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>IR Retido:</strong></td>
+                                            <td class="text-end">
+                                                {{ record.valor_ir | currency if record.valor_ir else 'R$ 0,00' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>INSS Retido:</strong></td>
+                                            <td class="text-end">
+                                                {{ record.valor_inss | currency if record.valor_inss else 'R$ 0,00' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>CSLL Retido:</strong></td>
+                                            <td class="text-end">
+                                                {{ record.valor_csll | currency if record.valor_csll else 'R$ 0,00' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>ISS Retido:</strong></td>
+                                            <td class="text-end">
+                                                {{ record.valor_iss_retido | currency if record.valor_iss_retido else 'R$ 0,00' }}
                                             </td>
                                         </tr>
                                     </table>
+                                    
+                                    <div class="mt-3">
+                                        <div class="table table-warning">
+                                            <div class="d-flex justify-content-between align-items-center p-2">
+                                                <strong>Total Tributos:</strong>
+                                                <strong>
+                                                    {{ record.valor_tributos | currency if record.valor_tributos else 'N/A' }}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -499,20 +565,18 @@
                                 </div>
                                 
                                 <div class="col-md-6">
-                                    <h6 class="border-bottom pb-2 mb-3">Transporte</h6>
+                                    <h6 class="border-bottom pb-2 mb-3">Pagamento e Vencimento</h6>
                                     <table class="table table-sm">
+                                        {% if record.data_vencimento %}
                                         <tr>
-                                            <td><strong>Modalidade Frete:</strong></td>
-                                            <td>{{ record.modalidade_frete or 'N/A' }}</td>
+                                            <td><strong>Data Vencimento:</strong></td>
+                                            <td>{{ record.data_vencimento.strftime('%d/%m/%Y') }}</td>
                                         </tr>
+                                        {% endif %}
+                                        {% if record.valor_total_servicos %}
                                         <tr>
-                                            <td><strong>Transportadora:</strong></td>
-                                            <td>{{ record.transportadora_nome or 'N/A' }}</td>
-                                        </tr>
-                                        {% if record.transportadora_cnpj %}
-                                        <tr>
-                                            <td><strong>CNPJ Transportadora:</strong></td>
-                                            <td>{{ record.transportadora_cnpj }}</td>
+                                            <td><strong>Valor Serviços:</strong></td>
+                                            <td class="text-end">{{ record.valor_total_servicos | currency }}</td>
                                         </tr>
                                         {% endif %}
                                     </table>
@@ -523,10 +587,19 @@
                                             <td><strong>Data Processamento:</strong></td>
                                             <td>{{ record.created_at | brazil_time }}</td>
                                         </tr>
-                                        {% if record.forma_pagamento %}
+                                        {% if record.ai_confidence_score %}
                                         <tr>
-                                            <td><strong>Forma Pagamento:</strong></td>
-                                            <td>{{ record.forma_pagamento }}</td>
+                                            <td><strong>Confiança IA:</strong></td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar" role="progressbar" 
+                                                         style="width: {{ (record.ai_confidence_score * 100)|round }}%"
+                                                         aria-valuenow="{{ (record.ai_confidence_score * 100)|round }}" 
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                        {{ (record.ai_confidence_score * 100)|round }}%
+                                                    </div>
+                                                </div>
+                                            </td>
                                         </tr>
                                         {% endif %}
                                     </table>
@@ -538,6 +611,23 @@
                                     </div>
                                     {% endif %}
                                 </div>
+                            </div>
+                            
+                            <!-- Informações Adicionais Section -->
+                            {% if record.informacoes_adicionais %}
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <h6 class="border-bottom pb-2 mb-3">
+                                        <i class="feather-info me-2"></i>Informações Adicionais da NFe
+                                    </h6>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <p class="mb-0" style="white-space: pre-wrap;">{{ record.informacoes_adicionais }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                             </div>
                         </div>
                     </div>
