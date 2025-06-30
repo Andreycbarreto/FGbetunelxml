@@ -80,7 +80,7 @@ class SimplePDFProcessor:
             "chave_nfe": "chave de acesso da NFe (44 dígitos)",
             "numero_nf": "número da nota fiscal",
             "serie": "série da nota",
-            "modelo": "modelo do documento",
+            "modelo": "modelo do documento (APENAS O CÓDIGO: 55, 57, 65, etc.)",
             "data_emissao": "data de emissão (formato YYYY-MM-DD)",
             "natureza_operacao": "natureza da operação",
             
@@ -148,8 +148,16 @@ class SimplePDFProcessor:
         }}
 
         
-        INSTRUÇÕES ESPECIAIS PARA IMPOSTOS:
-        - Procure por impostos municipais/federais específicos:
+        INSTRUÇÕES ESPECIAIS PARA EXTRAÇÃO:
+        
+        MODELO DO DOCUMENTO:
+        - Para o campo "modelo": extraia APENAS o código numérico (55, 57, 65)
+        - Se encontrar texto como "Nota Fiscal de Serviço Eletrônica", o modelo é 57
+        - Se encontrar "NFe" ou "Nota Fiscal Eletrônica", o modelo é 55
+        - Se encontrar "NFCe", o modelo é 65
+        
+        IMPOSTOS MUNICIPAIS/FEDERAIS:
+        - Procure por impostos específicos:
           * ISSQN, ISS, "Imposto sobre Serviços"
           * ISSRF, "ISS Retido na Fonte", "ISS Ret. Fonte"
           * IR, "Imposto de Renda", "IR Retido"

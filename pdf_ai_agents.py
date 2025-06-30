@@ -154,7 +154,7 @@ class PDFExtractionAgent:
             - chave_nfe: Chave de acesso da NFe (44 dígitos)
             - numero_nf: Número da nota fiscal
             - serie: Série da nota
-            - modelo: Modelo do documento (55/57/65)
+            - modelo: Modelo do documento (APENAS O CÓDIGO: 55, 57, 65, etc.)
             - tipo_documento: produto|servico|misto (baseado no modelo)
             - data_emissao: Data de emissão (formato YYYY-MM-DD)
             - data_saida_entrada: Data de saída/entrada
@@ -241,6 +241,14 @@ class PDFExtractionAgent:
             - Para cada imposto: base de cálculo, alíquota e valor
 
             REGRAS ESPECIAIS PARA EXTRAÇÃO:
+            
+            MODELO DO DOCUMENTO:
+            - Para o campo "modelo": extraia APENAS o código numérico (55, 57, 65)
+            - Se encontrar "Nota Fiscal de Serviço Eletrônica": modelo = 57
+            - Se encontrar "NFe" ou "Nota Fiscal Eletrônica": modelo = 55
+            - Se encontrar "NFCe": modelo = 65
+            
+            DOCUMENTOS E IMPOSTOS:
             - Para documentos de serviço (modelo 57): priorize inscrições municipais
             - Separe códigos de serviço dos códigos de produto
             - Capture descrições de serviços separadamente dos produtos
