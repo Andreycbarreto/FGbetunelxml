@@ -190,8 +190,11 @@ class PDFExtractionAgent:
             - valor_ipi: Valor do IPI
             - valor_pis: Valor do PIS
             - valor_cofins: Valor do COFINS
-            - valor_issqn: Valor do ISSQN (para serviços)
-            - valor_ir: Valor do IR retido
+            - valor_issqn: Valor do ISSQN (imposto municipal sobre serviços)
+            - valor_issrf: Valor do ISSRF (ISS retido na fonte)
+            - valor_ir: Valor do IR retido (imposto de renda)
+            - valor_inss: Valor do INSS retido (contribuição previdenciária)
+            - valor_csll: Valor do CSLL retido (contribuição social)
             - valor_iss_retido: Valor do ISS retido na fonte
             - valor_frete: Valor do frete
             - valor_seguro: Valor do seguro
@@ -216,21 +219,44 @@ class PDFExtractionAgent:
             - informacoes_adicionais: Conteúdo do campo de informações adicionais da NFe
 
             ITENS (lista de produtos/serviços):
-            Para cada item, extrair campos básicos E campos específicos de serviços:
+            Para cada item, extrair TODOS os campos específicos:
+            
+            IDENTIFICAÇÃO DO ITEM:
             - numero_item, codigo_produto, descricao_produto
-            - codigo_servico: Código específico do serviço (diferente do produto)
+            - codigo_servico: Código específico do serviço (separado do produto)
             - codigo_atividade: Código da atividade do serviço
-            - descricao_servico: Descrição específica do serviço
+            - descricao_servico: Descrição específica do serviço (separada do produto)
             - ncm, cfop, unidade_comercial, quantidade_comercial, valor_unitario_comercial, valor_total_produto
-            - Impostos de serviços: valor_issqn, valor_ir, valor_iss_retido com suas bases e alíquotas
+            
+            IMPOSTOS TRADICIONAIS:
+            - valor_icms, valor_ipi, valor_pis, valor_cofins com bases e alíquotas
+            
+            IMPOSTOS MUNICIPAIS/FEDERAIS (ESSENCIAL PARA SERVIÇOS):
+            - valor_issqn: ISSQN (imposto municipal)
+            - valor_issrf: ISSRF (ISS retido na fonte)  
+            - valor_ir: IR retido (imposto de renda)
+            - valor_inss: INSS retido (contribuição previdenciária)
+            - valor_csll: CSLL retido (contribuição social)
+            - valor_iss_retido: ISS retido na fonte
+            - Para cada imposto: base de cálculo, alíquota e valor
 
             REGRAS ESPECIAIS PARA EXTRAÇÃO:
             - Para documentos de serviço (modelo 57): priorize inscrições municipais
             - Separe códigos de serviço dos códigos de produto
-            - Capture descrições de serviços separadamente
-            - Identifique impostos municipais (ISSQN, IR retido, ISS retido)
+            - Capture descrições de serviços separadamente dos produtos
+            - IDENTIFIQUE IMPOSTOS MUNICIPAIS/FEDERAIS: procure por:
+              * ISSQN, ISS, "Imposto sobre Serviços"
+              * ISSRF, "ISS Retido na Fonte", "ISS Ret. Fonte"
+              * IR, "Imposto de Renda", "IR Retido"
+              * INSS, "Contribuição Previdenciária", "INSS Retido"
+              * CSLL, "Contribuição Social", "CSLL Retido"
+            - Para cada imposto encontrado: extraia base, alíquota e valor
             - Para pagamentos à vista sem data: infira como mesma data de emissão
             - Extraia todo conteúdo do campo "informações adicionais"
+            - Para documentos de serviço: busque especialmente impostos municipais na seção de totais
+
+            IMPORTANTE: Não confunda impostos tradicionais (ICMS, IPI, PIS, COFINS) com impostos de serviços.
+            Os impostos municipais/federais são específicos e devem ser identificados separadamente.
 
             Responda APENAS em formato JSON válido com todos os campos acima.
             """

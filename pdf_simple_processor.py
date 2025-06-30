@@ -87,6 +87,8 @@ class SimplePDFProcessor:
             "emitente_cnpj": "CNPJ do emitente",
             "emitente_nome": "razão social do emitente",
             "emitente_fantasia": "nome fantasia",
+            "emitente_ie": "inscrição estadual",
+            "emitente_im": "inscrição municipal (especialmente para serviços)",
             "emitente_endereco": "endereço completo",
             "emitente_municipio": "município",
             "emitente_uf": "UF",
@@ -94,17 +96,32 @@ class SimplePDFProcessor:
             
             "destinatario_cnpj": "CNPJ/CPF do destinatário",
             "destinatario_nome": "nome/razão social",
+            "destinatario_ie": "inscrição estadual",
+            "destinatario_im": "inscrição municipal (especialmente para serviços)",
             "destinatario_endereco": "endereço completo",
             "destinatario_municipio": "município",
             "destinatario_uf": "UF",
             "destinatario_cep": "CEP",
             
+            "tipo_documento": "produto|servico|misto (baseado no modelo: 55=produto, 57=serviço, 65=misto)",
+            
             "valor_total_produtos": "valor total dos produtos (número)",
+            "valor_total_servicos": "valor total dos serviços (número)",
             "valor_total_nf": "valor total da nota (número)",
+            
             "valor_icms": "valor do ICMS (número)",
             "valor_ipi": "valor do IPI (número)",
             "valor_pis": "valor do PIS (número)",
             "valor_cofins": "valor do COFINS (número)",
+            
+            "valor_issqn": "valor do ISSQN - imposto municipal sobre serviços (número)",
+            "valor_issrf": "valor do ISSRF - ISS retido na fonte (número)",
+            "valor_ir": "valor do IR retido - imposto de renda (número)",
+            "valor_inss": "valor do INSS retido - contribuição previdenciária (número)",
+            "valor_csll": "valor do CSLL retido - contribuição social (número)",
+            "valor_iss_retido": "valor do ISS retido na fonte (número)",
+            
+            "informacoes_adicionais": "conteúdo completo do campo informações adicionais da NFe",
             
             "protocolo_autorizacao": "protocolo de autorização",
             "ambiente": "produção ou homologação",
@@ -113,10 +130,19 @@ class SimplePDFProcessor:
                 {{
                     "numero_item": "número do item",
                     "codigo_produto": "código do produto",
-                    "descricao_produto": "descrição",
+                    "codigo_servico": "código específico do serviço (separado do produto)",
+                    "codigo_atividade": "código da atividade do serviço",
+                    "descricao_produto": "descrição do produto",
+                    "descricao_servico": "descrição específica do serviço (separada do produto)",
                     "quantidade_comercial": "quantidade (número)",
                     "valor_unitario_comercial": "valor unitário (número)",
-                    "valor_total_produto": "valor total (número)"
+                    "valor_total_produto": "valor total (número)",
+                    "valor_issqn": "valor ISSQN do item (número)",
+                    "valor_issrf": "valor ISSRF do item (número)",
+                    "valor_ir": "valor IR retido do item (número)",
+                    "valor_inss": "valor INSS retido do item (número)",
+                    "valor_csll": "valor CSLL retido do item (número)",
+                    "valor_iss_retido": "valor ISS retido do item (número)"
                 }}
             ]
         }}
