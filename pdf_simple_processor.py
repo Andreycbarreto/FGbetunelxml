@@ -147,6 +147,20 @@ class SimplePDFProcessor:
             ]
         }}
 
+        
+        INSTRUÇÕES ESPECIAIS PARA IMPOSTOS:
+        - Procure por impostos municipais/federais específicos:
+          * ISSQN, ISS, "Imposto sobre Serviços"
+          * ISSRF, "ISS Retido na Fonte", "ISS Ret. Fonte"
+          * IR, "Imposto de Renda", "IR Retido"
+          * INSS, "Contribuição Previdenciária", "INSS Retido"
+          * CSLL, "Contribuição Social", "CSLL Retido"
+        - Para documentos de serviço (modelo 57): foque em impostos municipais
+        - Separe impostos municipais dos tradicionais (ICMS, IPI, PIS, COFINS)
+        - Para cada imposto encontrado: extraia o valor numérico
+        
+        IMPORTANTE: NÃO confundir impostos tradicionais com impostos de serviços/municipais.
+
         Responda APENAS em formato JSON válido. Use valores null para campos não encontrados.
         """
         
