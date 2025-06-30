@@ -52,19 +52,34 @@ class NFEAnalysisAgent:
             Analyze the provided NFe XML content and identify:
 
             1. Document structure and version
-            2. Main sections present (IDE, EMIT, DEST, DET, TOTAL, etc.)
-            3. Data quality assessment
-            4. Any structural issues or missing sections
-            5. Complexity assessment for extraction
+            2. Document model (55=product, 57=service, 65=mixed) and classification
+            3. Main sections present (IDE, EMIT, DEST, DET, TOTAL, etc.)
+            4. Tax structure analysis (service taxes like ISSQN, IR, ISS retido)
+            5. Additional information fields presence
+            6. Data quality assessment
+            7. Any structural issues or missing sections
+            8. Complexity assessment for extraction
+
+            Special attention:
+            - Identify document model from <mod> tag
+            - Detect service vs product classification
+            - Check for service-specific tax fields
+            - Look for additional information sections
+            - Assess municipal vs state tax context
 
             Respond with JSON in this format:
             {
                 "structure_version": "version_info",
+                "document_model": "55|57|65",
+                "document_type": "produto|servico|misto",
                 "sections_identified": ["list", "of", "sections"],
+                "has_service_taxes": true/false,
+                "has_additional_info": true/false,
+                "tax_context": "municipal|estadual|misto",
                 "data_quality": "high|medium|low",
                 "structural_issues": ["list", "of", "issues"],
                 "complexity_score": 0.1-1.0,
-                "analysis_notes": ["detailed", "notes"]
+                "analysis_notes": ["detailed", "notes", "including", "document", "type", "reasoning"]
             }
             """
             
@@ -108,50 +123,85 @@ class NFEExtractionAgent:
         logger.info(f"{self.name}: Starting field extraction")
         
         try:
-            extraction_prompt = """
+            # Get analysis results for context
+            analyzed_data = state.get('analyzed_data', {})
+            document_model = analyzed_data.get('document_model', '55')
+            document_type = analyzed_data.get('document_type', 'produto')
+            
+            base_prompt = """
             You are an expert in Brazilian NFe data extraction and classification.
             Extract ALL relevant fields from the NFe XML according to the official structure.
-
+            
+            DOCUMENT CONTEXT:
+            - Model: """ + document_model + """ (""" + document_type + """)
+            - Special processing required for service documents (model 57)
+            
             Focus on these main sections:
-            1. IDENTIFICATION (IDE) - document info, dates, operation type
-            2. ISSUER (EMIT) - emitter company data and address
-            3. RECIPIENT (DEST) - recipient company data and address
-            4. ITEMS (DET) - all products/services with detailed tax info
-            5. TOTALS (TOTAL) - all financial totals and tax values
+            1. IDENTIFICATION (IDE) - document info, dates, operation type, model classification
+            2. ISSUER (EMIT) - emitter company data, IE/IM registration based on document type
+            3. RECIPIENT (DEST) - recipient company data, IE/IM registration based on document type
+            4. ITEMS (DET) - products/services with service-specific fields and tax info
+            5. TOTALS (TOTAL) - all financial totals including service taxes
             6. TRANSPORT (TRANSP) - shipping and transport info
-            7. PAYMENT (PAG) - payment method and terms
+            7. PAYMENT (PAG) - payment method, terms, due dates
             8. PROTOCOL (PROTNFE) - authorization protocol info
-
+            9. ADDITIONAL INFO (INFADFISCO/INFCPL) - additional information field
+            
+            SPECIAL EXTRACTION RULES:
+            - For service documents: prioritize municipal registration (IM) over state (IE)
+            - Extract service codes, activity codes separately from product codes
+            - Capture service taxes: ISSQN, IR retido, ISS retido na fonte
+            - Handle missing payment due dates (common in prepaid services)
+            - Extract additional information field content
+            - Separate service descriptions from product descriptions
+            
             For each field, provide:
             - Field name
             - Extracted value
             - Data type
             - Confidence level (0.0-1.0)
             - Source section in XML
+            - Special notes for service-specific fields
 
             Respond with JSON in this format:
             {
                 "identification": {
-                    "field_name": {"value": "extracted_value", "confidence": 0.95, "data_type": "string|number|date"},
-                    ...
+                    "model": {"value": "extracted_model", "confidence": 0.95, "data_type": "string"},
+                    "document_type": {"value": "produto|servico|misto", "confidence": 0.95, "data_type": "string"},
+                    "field_name": {"value": "extracted_value", "confidence": 0.95, "data_type": "string|number|date"}
                 },
-                "issuer": {...},
-                "recipient": {...},
+                "issuer": {
+                    "municipal_registration": {"value": "IM_value", "confidence": 0.95, "data_type": "string"},
+                    "state_registration": {"value": "IE_value", "confidence": 0.95, "data_type": "string"}
+                },
+                "recipient": {
+                    "municipal_registration": {"value": "IM_value", "confidence": 0.95, "data_type": "string"},
+                    "state_registration": {"value": "IE_value", "confidence": 0.95, "data_type": "string"}
+                },
                 "items": [
                     {
-                        "item_number": {...},
-                        "product_code": {...},
-                        ...
+                        "item_number": {},
+                        "product_code": {},
+                        "service_code": {"value": "service_code", "confidence": 0.95, "data_type": "string"},
+                        "activity_code": {"value": "activity_code", "confidence": 0.95, "data_type": "string"},
+                        "product_description": {},
+                        "service_description": {"value": "service_desc", "confidence": 0.95, "data_type": "string"},
+                        "issqn_tax": {"base": 0.00, "rate": 0.00, "value": 0.00, "confidence": 0.95},
+                        "ir_withheld": {"base": 0.00, "rate": 0.00, "value": 0.00, "confidence": 0.95},
+                        "iss_withheld": {"base": 0.00, "rate": 0.00, "value": 0.00, "confidence": 0.95}
                     }
                 ],
-                "totals": {...},
-                "transport": {...},
-                "payment": {...},
-                "protocol": {...},
-                "overall_confidence": 0.0-1.0,
+                "totals": {},
+                "transport": {},
+                "payment": {},
+                "protocol": {},
+                "additional_info": {"value": "additional_text", "confidence": 0.95, "data_type": "string"},
+                "overall_confidence": 0.95,
                 "extraction_notes": ["detailed", "notes"]
             }
             """
+            
+            extraction_prompt = base_prompt
             
             # Truncate XML content if too large to avoid API timeouts
             xml_content = state['xml_content']
@@ -210,18 +260,39 @@ class NFEValidationAgent:
         logger.info(f"{self.name}: Starting data validation")
         
         try:
+            # Get analysis and extraction context
+            analyzed_data = state.get('analyzed_data', {})
+            document_model = analyzed_data.get('document_model', '55')
+            document_type = analyzed_data.get('document_type', 'produto')
+            
             validation_prompt = """
             You are an expert in Brazilian NFe validation and compliance.
             Validate the extracted NFe data for:
 
-            1. Required field completeness
+            1. Required field completeness (based on document type)
             2. Data format compliance (CNPJ, dates, numbers)
             3. Mathematical consistency (totals, calculations)
-            4. Tax calculation accuracy
+            4. Tax calculation accuracy (including service taxes)
             5. Logical consistency between sections
             6. Compliance with NFe standards
+            7. Service document specific validations
+            8. Missing data inference and correction
 
-            Identify and fix any issues found.
+            SPECIAL VALIDATION RULES for document model """ + document_model + """ (""" + document_type + """):
+            - For service documents (model 57): validate municipal tax context
+            - Check IE vs IM registration appropriateness
+            - Validate service codes and activity codes format
+            - Verify ISSQN, IR, and ISS withheld calculations
+            - Handle missing payment due dates for prepaid services
+            - Ensure additional information field is captured
+            - Cross-validate service descriptions with tax classifications
+
+            CORRECTION GUIDELINES:
+            - Infer missing payment due dates based on payment method
+            - Correct registration type priority (IE vs IM) based on document type
+            - Fix service/product classification inconsistencies
+            - Standardize tax rate and base calculations
+            - Complete missing but inferrable data points
 
             Respond with JSON in this format:
             {
@@ -237,10 +308,17 @@ class NFEValidationAgent:
                         "correction": "applied_correction_if_any"
                     }
                 ],
-                "completeness_score": 0.0-1.0,
-                "accuracy_score": 0.0-1.0,
-                "final_confidence": 0.0-1.0,
-                "validation_notes": ["detailed", "notes"]
+                "service_specific_validations": [
+                    {
+                        "aspect": "registration_type|tax_classification|service_codes",
+                        "validation": "passed|failed",
+                        "notes": "validation_details"
+                    }
+                ],
+                "completeness_score": 0.95,
+                "accuracy_score": 0.95,
+                "final_confidence": 0.95,
+                "validation_notes": ["detailed", "notes", "including", "service", "specific", "aspects"]
             }
             """
             
