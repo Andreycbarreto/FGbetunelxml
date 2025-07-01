@@ -373,44 +373,44 @@ class PDFVisionProcessor:
         if 'documento' in consolidated:
             doc = consolidated['documento']
             flattened.update({
-                'numero_nf': doc.get('numero_nf'),
-                'serie': doc.get('serie'),
-                'chave_nfe': doc.get('chave_nfe'),
+                'numero_nf': self._validate_field_length(doc.get('numero_nf'), 20),
+                'serie': self._validate_field_length(doc.get('serie'), 10),
+                'chave_nfe': self._validate_field_length(doc.get('chave_nfe'), 44),
                 'data_emissao': self._parse_date(doc.get('data_emissao')),
                 'data_saida_entrada': self._parse_date(doc.get('data_saida_entrada')),
-                'tipo_operacao': doc.get('tipo_operacao'),
-                'natureza_operacao': doc.get('natureza_operacao'),
-                'modelo': doc.get('modelo'),
-                'tipo_documento': doc.get('tipo_documento')
+                'tipo_operacao': self._validate_field_length(doc.get('tipo_operacao'), 50),
+                'natureza_operacao': self._validate_field_length(doc.get('natureza_operacao'), 200),
+                'modelo': self._validate_field_length(doc.get('modelo'), 100),
+                'tipo_documento': self._validate_field_length(doc.get('tipo_documento'), 20)
             })
         
         # Emitente fields
         if 'emitente' in consolidated:
             emit = consolidated['emitente']
             flattened.update({
-                'emitente_cnpj': self._format_cnpj(emit.get('cnpj')),
-                'emitente_nome': emit.get('nome'),
-                'emitente_fantasia': emit.get('fantasia'),
-                'emitente_ie': emit.get('inscricao_estadual'),
-                'emitente_im': emit.get('inscricao_municipal'),
-                'emitente_endereco': emit.get('endereco'),
-                'emitente_municipio': emit.get('municipio'),
+                'emitente_cnpj': self._validate_field_length(self._format_cnpj(emit.get('cnpj')), 18),
+                'emitente_nome': self._validate_field_length(emit.get('nome'), 255),
+                'emitente_fantasia': self._validate_field_length(emit.get('fantasia'), 255),
+                'emitente_ie': self._validate_field_length(emit.get('inscricao_estadual'), 20),
+                'emitente_im': self._validate_field_length(emit.get('inscricao_municipal'), 20),
+                'emitente_endereco': emit.get('endereco'),  # TEXT field - no limit
+                'emitente_municipio': self._validate_field_length(emit.get('municipio'), 100),
                 'emitente_uf': self._validate_uf(emit.get('uf')),
-                'emitente_cep': emit.get('cep')
+                'emitente_cep': self._validate_field_length(emit.get('cep'), 10)
             })
         
         # Destinatario fields
         if 'destinatario' in consolidated:
             dest = consolidated['destinatario']
             flattened.update({
-                'destinatario_cnpj': self._format_cnpj(dest.get('cnpj')),
-                'destinatario_nome': dest.get('nome'),
-                'destinatario_ie': dest.get('inscricao_estadual'),
-                'destinatario_im': dest.get('inscricao_municipal'),
-                'destinatario_endereco': dest.get('endereco'),
-                'destinatario_municipio': dest.get('municipio'),
+                'destinatario_cnpj': self._validate_field_length(self._format_cnpj(dest.get('cnpj')), 18),
+                'destinatario_nome': self._validate_field_length(dest.get('nome'), 255),
+                'destinatario_ie': self._validate_field_length(dest.get('inscricao_estadual'), 20),
+                'destinatario_im': self._validate_field_length(dest.get('inscricao_municipal'), 20),
+                'destinatario_endereco': dest.get('endereco'),  # TEXT field - no limit
+                'destinatario_municipio': self._validate_field_length(dest.get('municipio'), 100),
                 'destinatario_uf': self._validate_uf(dest.get('uf')),
-                'destinatario_cep': dest.get('cep')
+                'destinatario_cep': self._validate_field_length(dest.get('cep'), 10)
             })
         
         # Valores fields - incluindo todos os impostos municipais e federais
@@ -454,16 +454,16 @@ class PDFVisionProcessor:
         if 'transporte' in consolidated:
             transp = consolidated['transporte']
             flattened.update({
-                'modalidade_frete': transp.get('modalidade_frete'),
-                'transportadora_cnpj': self._format_cnpj(transp.get('transportadora_cnpj')),
-                'transportadora_nome': transp.get('transportadora_nome')
+                'modalidade_frete': self._validate_field_length(transp.get('modalidade_frete'), 50),
+                'transportadora_cnpj': self._validate_field_length(self._format_cnpj(transp.get('transportadora_cnpj')), 18),
+                'transportadora_nome': self._validate_field_length(transp.get('transportadora_nome'), 255)
             })
         
         # Pagamento fields
         if 'pagamento' in consolidated:
             pag = consolidated['pagamento']
             flattened.update({
-                'forma_pagamento': pag.get('forma_pagamento'),
+                'forma_pagamento': self._validate_field_length(pag.get('forma_pagamento'), 150),
                 'data_vencimento': self._parse_date(pag.get('data_vencimento'))
             })
         
@@ -471,9 +471,9 @@ class PDFVisionProcessor:
         if 'autorizacao' in consolidated:
             auth = consolidated['autorizacao']
             flattened.update({
-                'protocolo_autorizacao': auth.get('protocolo_autorizacao'),
-                'status_autorizacao': auth.get('status_autorizacao'),
-                'ambiente': auth.get('ambiente')
+                'protocolo_autorizacao': self._validate_field_length(auth.get('protocolo_autorizacao'), 100),
+                'status_autorizacao': self._validate_field_length(auth.get('status_autorizacao'), 50),
+                'ambiente': self._validate_field_length(auth.get('ambiente'), 50)
             })
         
         # Informações adicionais
