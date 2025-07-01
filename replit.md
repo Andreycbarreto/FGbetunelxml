@@ -97,6 +97,17 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Universal PDF Processor for Different NFe Formats:
+  * Created UniversalPDFSimple class with adaptive format detection
+  * Intelligent layout detection: DANFE, NFSE, NFCe, government formats
+  * Format-specific extraction strategies with tailored GPT-4 Vision prompts
+  * Enhanced JSON parsing with markdown code block handling (json_cleaner.py)
+  * Integrated as first priority in async processing chain
+  * Supports any NFe PDF format with automatic adaptation
+  * Robust error handling and fallback to existing processors
+  * High-quality image conversion (2x DPI) for better OCR accuracy
+  * Layout-aware tax extraction (service vs product focus)
+  * Comprehensive field validation and Brazilian formatting
 - July 1, 2025. Complete Batch and Contract Management System:
   * Implemented comprehensive batch/contract system for organizing NFe documents
   * Created Batch model with contract name, item name, business unit, and cost center

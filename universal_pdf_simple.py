@@ -226,14 +226,7 @@ class UniversalPDFSimple:
             )
             
             content = response.choices[0].message.content
-            if content:
-                try:
-                    return json.loads(content)
-                except json.JSONDecodeError:
-                    self.logger.warning(f"Invalid JSON in data extraction: {content[:200]}")
-                    return {}
-            
-            return {}
+            return clean_and_parse_json(content, {})
             
         except Exception as e:
             self.logger.error(f"Data extraction failed: {str(e)}")
@@ -305,15 +298,8 @@ class UniversalPDFSimple:
             )
             
             content = response.choices[0].message.content
-            if content:
-                try:
-                    items = json.loads(content)
-                    return items if isinstance(items, list) else []
-                except json.JSONDecodeError:
-                    self.logger.warning(f"Invalid JSON in items extraction: {content[:200]}")
-                    return []
-            
-            return []
+            items = clean_and_parse_json(content, [])
+            return items if isinstance(items, list) else []
             
         except Exception as e:
             self.logger.error(f"Items extraction failed: {str(e)}")
@@ -393,29 +379,25 @@ class UniversalPDFSimple:
             )
             
             content = response.choices[0].message.content
-            if content:
-                try:
-                    tax_data = json.loads(content)
-                    # Ensure all expected fields exist
-                    expected_fields = [
-                        'valor_icms', 'valor_ipi', 'valor_pis', 'valor_cofins',
-                        'valor_iss', 'valor_ir', 'valor_inss', 'valor_csll', 'valor_issrf'
-                    ]
-                    
-                    for field in expected_fields:
-                        if field not in tax_data:
-                            tax_data[field] = 0.0
-                            
-                    return tax_data
-                except json.JSONDecodeError:
-                    self.logger.warning(f"Invalid JSON in tax extraction: {content[:200]}")
-            
-            # Return zero taxes as fallback
-            return {
+            fallback_taxes = {
                 'valor_icms': 0.0, 'valor_ipi': 0.0, 'valor_pis': 0.0,
                 'valor_cofins': 0.0, 'valor_iss': 0.0, 'valor_ir': 0.0,
                 'valor_inss': 0.0, 'valor_csll': 0.0, 'valor_issrf': 0.0
             }
+            
+            tax_data = clean_and_parse_json(content, fallback_taxes)
+            
+            # Ensure all expected fields exist
+            expected_fields = [
+                'valor_icms', 'valor_ipi', 'valor_pis', 'valor_cofins',
+                'valor_iss', 'valor_ir', 'valor_inss', 'valor_csll', 'valor_issrf'
+            ]
+            
+            for field in expected_fields:
+                if field not in tax_data:
+                    tax_data[field] = 0.0
+                    
+            return tax_data
             
         except Exception as e:
             self.logger.error(f"Tax extraction failed: {str(e)}")

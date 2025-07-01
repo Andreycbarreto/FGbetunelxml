@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def clean_and_parse_json(content: str, fallback_data=None):
+def clean_and_parse_json(content, fallback_data=None):
     """
     Clean and parse JSON content that may be wrapped in markdown code blocks
     
