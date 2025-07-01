@@ -465,9 +465,14 @@ class PDFVisionProcessor:
                     # Get service value for rate validation
                     total_service_value = self._parse_decimal(vals.get('valor_total_servicos', 0))
                     
-                    self.logger.info(f"Processing taxes with service value: {total_service_value}")
+                    self.logger.info(f"🚀 Starting REVOLUTIONARY tax processing with service value: {total_service_value}")
+                    self.logger.info(f"Image for taxes available: {bool(image_for_taxes)}")
                     final_taxes = extract_taxes_revolutionary(image_for_taxes, total_service_value)
-                    self.logger.info(f"FINAL tax processing results: {final_taxes}")
+                    self.logger.info(f"🎯 REVOLUTIONARY tax processing results: {final_taxes}")
+                    
+                    # Verificar se os impostos foram extraídos corretamente
+                    total_taxes = sum(final_taxes.values()) if final_taxes else 0
+                    self.logger.info(f"📊 Total taxes extracted: {total_taxes}")
                     flattened.update(final_taxes)
                 else:
                     # No image available - set all taxes to zero
