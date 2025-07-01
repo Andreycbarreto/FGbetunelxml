@@ -110,11 +110,11 @@ class NFERecord(db.Model):
     chave_nfe = db.Column(db.String(44), nullable=True)  # NFe key
     numero_nf = db.Column(db.String(20), nullable=True)
     serie = db.Column(db.String(10), nullable=True)
-    modelo = db.Column(db.String(5), nullable=True)
+    modelo = db.Column(db.String(100), nullable=True)  # Increased from 5 to 100
     data_emissao = db.Column(db.DateTime, nullable=True)
     data_saida_entrada = db.Column(db.DateTime, nullable=True)
-    tipo_operacao = db.Column(db.String(10), nullable=True)  # Entrada/Saída
-    natureza_operacao = db.Column(db.Text, nullable=True)
+    tipo_operacao = db.Column(db.String(50), nullable=True)  # Increased from 10 to 50
+    natureza_operacao = db.Column(db.String(200), nullable=True)  # Changed from Text to String(200)
     
     # Emitente fields
     emitente_cnpj = db.Column(db.String(18), nullable=True)
@@ -160,13 +160,13 @@ class NFERecord(db.Model):
     modalidade_frete = db.Column(db.String(50), nullable=True)
     transportadora_cnpj = db.Column(db.String(18), nullable=True)
     transportadora_nome = db.Column(db.String(255), nullable=True)
-    forma_pagamento = db.Column(db.String(100), nullable=True)
+    forma_pagamento = db.Column(db.String(150), nullable=True)  # Increased from 100 to 150
     data_vencimento = db.Column(db.DateTime, nullable=True)  # Payment due date
     
     # Protocol and status
-    protocolo_autorizacao = db.Column(db.String(50), nullable=True)
-    status_autorizacao = db.Column(db.String(20), nullable=True)
-    ambiente = db.Column(db.String(20), nullable=True)  # Produção/Homologação
+    protocolo_autorizacao = db.Column(db.String(100), nullable=True)  # Increased from 50 to 100
+    status_autorizacao = db.Column(db.String(50), nullable=True)  # Increased from 20 to 50
+    ambiente = db.Column(db.String(50), nullable=True)  # Increased from 20 to 50
     
     # Additional information fields
     informacoes_adicionais = db.Column(db.Text, nullable=True)  # Campo de informações adicionais da NFe
