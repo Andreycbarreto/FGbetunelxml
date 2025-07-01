@@ -183,77 +183,15 @@ class UniversalPDFSimple:
                 model="gpt-4o",
                 messages=[
                     {
-                        "role": "system",
-                        "content": f"""Você é especialista em extração de dados de documentos fiscais brasileiros.
-
-                        DOCUMENTO DETECTADO: {doc_type} - {layout_type}
-                        FOCO: {prompt_focus}
-                        
-                        Extraia TODOS os dados visíveis neste documento fiscal brasileiro.
-                        
-                        ESTRUTURA DE RESPOSTA OBRIGATÓRIA:
-                        {{
-                            "numero_nf": "número da nota fiscal",
-                            "serie": "série",
-                            "data_emissao": "DD/MM/AAAA",
-                            "chave_acesso": "chave de 44 dígitos",
-                            "razao_social_emitente": "nome da empresa emitente",
-                            "cnpj_emitente": "XX.XXX.XXX/XXXX-XX",
-                            "endereco_emitente": "endereço completo",
-                            "razao_social_destinatario": "nome do destinatário",
-                            "cnpj_destinatario": "XX.XXX.XXX/XXXX-XX",
-                            "endereco_destinatario": "endereço completo",
-                            "valor_total_produtos": 0.0,
-                            "valor_total_servicos": 0.0,
-                            "valor_total_nota": 0.0,
-                            "valor_icms": 0.0,
-                            "valor_ipi": 0.0,
-                            "valor_pis": 0.0,
-                            "valor_cofins": 0.0,
-                            "valor_ir": 0.0,
-                            "valor_inss": 0.0,
-                            "valor_csll": 0.0,
-                            "valor_issqn": 0.0,
-                            "base_calculo_icms": 0.0,
-                            "base_calculo_issqn": 0.0
-                        
-                        }}
-                        
-                        INSTRUÇÕES ESPECÍFICAS POR TIPO:
-                        
-                        DANFE (NFe tradicional):
-                        - Procure seção "CÁLCULO DO IMPOSTO" para valores de ICMS/IPI
-                        - "DADOS DOS PRODUTOS/SERVIÇOS" para itens
-                        - "IDENTIFICAÇÃO DO EMITENTE" e "DESTINATÁRIO/REMETENTE"
-                        
-                        NFS-e (Nota de Serviço):
-                        - Procure "DESCRIÇÃO DOS SERVIÇOS PRESTADOS"
-                        - Valores de retenções: IR, INSS, CSLL, COFINS, PIS, ISSQN
-                        - "TOMADOR DO SERVIÇO" para destinatário
-                        
-                        Terminal Portuário/Serviços Especiais:
-                        - Foque em serviços como "LEVANTE DE CONTÊINER", "SCANNER"
-                        - Valores unitários e totais por serviço
-                        - Retenções de impostos específicas
-                        
-                        REGRAS CRÍTICAS:
-                        1. Extraia valores EXATAMENTE como aparecem no documento
-                        2. Mantenha formato brasileiro: use vírgula como decimal
-                        3. CNPJ sempre formatado: XX.XXX.XXX/XXXX-XX
-                        4. Datas sempre DD/MM/AAAA
-                        5. Se um campo não existir, use null para texto ou 0.0 para números
-                        6. NUNCA invente ou estime dados que não estão visíveis
-                        7. Para valores de impostos, procure tabelas específicas de impostos/retenções
-                        8. Valor total da nota deve ser o valor final líquido ou bruto conforme mostrado
-                        
-                        Responda APENAS em JSON válido sem comentários ou explicações."""
-                    },
-                    {
                         "role": "user",
                         "content": [
                             {
                                 "type": "text",
-                                "text": f"Extraia todos os dados deste documento {doc_type}:"
+                                "text": f"""Extraia dados desta NFe brasileira em JSON:
+                                
+numero_nf, serie, data_emissao, razao_social_emitente, cnpj_emitente, razao_social_destinatario, cnpj_destinatario, valor_total_nota, valor_total_servicos
+
+Use null se não encontrar. Responda APENAS JSON válido."""
                             },
                             {
                                 "type": "image_url", 
@@ -262,8 +200,9 @@ class UniversalPDFSimple:
                         ]
                     }
                 ],
-                max_tokens=2500,
-                temperature=0.05
+                max_tokens=1000,
+                temperature=0,
+                timeout=30
             )
             
             content = response.choices[0].message.content
