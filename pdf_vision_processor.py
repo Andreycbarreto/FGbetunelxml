@@ -11,9 +11,7 @@ import json
 from typing import Dict, Any, List
 from openai import OpenAI
 import pymupdf
-from tax_table_extractor import extract_taxes_with_precision
-from precise_tax_reader import read_taxes_precisely
-from tax_confusion_corrector import correct_tax_confusion
+from final_tax_processor import process_taxes_final
 
 logger = logging.getLogger(__name__)
 
@@ -451,43 +449,27 @@ class PDFVisionProcessor:
                 'valor_tributos': self._parse_decimal(vals.get('valor_tributos'))
             })
             
-            # Use PRECISE tax reader - no more invented values!
-            self.logger.info("Using PRECISE tax reader to read only visible values")
+            # Use FINAL tax processor - comprehensive solution!
+            self.logger.info("Using FINAL tax processor for complete accuracy")
             try:
-                # Get image from the first page for tax extraction
+                # Get image and service value for processing
+                image_for_taxes = None
                 if hasattr(self, '_document_images') and self._document_images:
-                    # Use first page image for tax extraction
-                    first_page_image = self._document_images[0]
-                    self.logger.info("Reading taxes precisely from first page image")
-                    precise_taxes = read_taxes_precisely(first_page_image)
-                    self.logger.info(f"PRECISE tax reading results: {precise_taxes}")
-                    
-                    # Apply confusion correction based on service value
-                    total_service_value = self._parse_decimal(vals.get('valor_total_servicos', 0))
-                    if total_service_value > 0:
-                        self.logger.info(f"Applying confusion correction with service value: {total_service_value}")
-                        corrected_taxes = correct_tax_confusion(precise_taxes, total_service_value)
-                        self.logger.info(f"Tax confusion correction results: {corrected_taxes}")
-                        flattened.update(corrected_taxes)
-                    else:
-                        flattened.update(precise_taxes)
+                    image_for_taxes = self._document_images[0]
                 elif hasattr(self, '_current_image_base64') and self._current_image_base64:
-                    self.logger.info("Reading taxes precisely from current image")
-                    precise_taxes = read_taxes_precisely(self._current_image_base64)
-                    self.logger.info(f"PRECISE tax reading results: {precise_taxes}")
-                    
-                    # Apply confusion correction based on service value
+                    image_for_taxes = self._current_image_base64
+                
+                if image_for_taxes:
+                    # Get service value for rate validation
                     total_service_value = self._parse_decimal(vals.get('valor_total_servicos', 0))
-                    if total_service_value > 0:
-                        self.logger.info(f"Applying confusion correction with service value: {total_service_value}")
-                        corrected_taxes = correct_tax_confusion(precise_taxes, total_service_value)
-                        self.logger.info(f"Tax confusion correction results: {corrected_taxes}")
-                        flattened.update(corrected_taxes)
-                    else:
-                        flattened.update(precise_taxes)
+                    
+                    self.logger.info(f"Processing taxes with service value: {total_service_value}")
+                    final_taxes = process_taxes_final(image_for_taxes, total_service_value)
+                    self.logger.info(f"FINAL tax processing results: {final_taxes}")
+                    flattened.update(final_taxes)
                 else:
-                    # No image available - set all taxes to zero instead of inventing
-                    self.logger.warning("No image available - setting all taxes to zero (no invention)")
+                    # No image available - set all taxes to zero
+                    self.logger.warning("No image available - setting all taxes to zero")
                     flattened.update({
                         'valor_icms': 0.0,
                         'valor_ipi': 0.0,
@@ -501,9 +483,9 @@ class PDFVisionProcessor:
                         'valor_iss_retido': 0.0
                     })
             except Exception as e:
-                self.logger.error(f"Error in precise tax reading: {str(e)}")
+                self.logger.error(f"Error in final tax processing: {str(e)}")
                 # Set to zero instead of inventing values
-                self.logger.warning("Setting all taxes to zero due to error (preventing invented values)")
+                self.logger.warning("Setting all taxes to zero due to error")
                 flattened.update({
                     'valor_icms': 0.0,
                     'valor_ipi': 0.0,
@@ -570,11 +552,11 @@ class PDFVisionProcessor:
     def _parse_decimal(self, value):
         """Parse decimal value ensuring proper formatting."""
         if value is None:
-            return None
+            return 0.0
         try:
             return float(value)
         except (ValueError, TypeError):
-            return None
+            return 0.0
     
     def _format_cnpj(self, cnpj_str):
         """Format CNPJ removing all non-numeric characters."""
