@@ -158,8 +158,8 @@ class AsyncPDFProcessor:
                 
                 try:
                     # Try universal processor first - best for handling different formats
-                    from universal_pdf_processor import process_pdf_universal
-                    result = process_pdf_universal(job.file_path)
+                    from universal_pdf_simple import process_pdf_universal_simple
+                    result = process_pdf_universal_simple(job.file_path)
                     
                     if result.get('success') and result.get('confidence_score', 0) >= 0.7:
                         self.logger.info(f"Universal processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f})")
