@@ -28,50 +28,59 @@ class AdvancedItemExtractor:
             List of items with properly separated fields
         """
         
+        # Validate base64 image
+        if not base64_image or len(base64_image) < 100:
+            logger.warning("Invalid or empty base64 image provided")
+            return []
+        
         prompt = """
-        Analise esta nota fiscal brasileira e extraia os campos dos ITENS com máxima precisão.
+        Analise esta nota fiscal brasileira e extraia TODOS os itens com MÁXIMA PRECISÃO nos campos de serviço.
 
-        FOQUE na seção de ITENS/PRODUTOS/SERVIÇOS e extraia para cada item:
+        PROCURE na tabela/seção de ITENS por estas informações ESPECÍFICAS:
 
-        CAMPOS OBRIGATÓRIOS:
-        1. CÓDIGO DO SERVIÇO: Código numérico do serviço (ex: 14.07, 25.05, 1.05)
-           - Procure por "Cód. Serv.", "Código Serviço", números com ponto (XX.XX)
-           - DIFERENTE do código do produto/item
+        🔍 CÓDIGO DO SERVIÇO (formato: XX.XX):
+        - Procure números como: 14.07, 25.05, 1.05, 17.06, etc.
+        - Pode estar em colunas: "Cód.Serv.", "Código Serviço", "LC 116"
+        - É diferente do código do produto/NCM
 
-        2. CÓDIGO DA ATIVIDADE: Código da atividade econômica (CNAE)
-           - Procure por "Cód. Ativ.", "Código Atividade", "CNAE"
-           - Geralmente um número maior (ex: 6201500, 7319004)
+        🔍 CÓDIGO DA ATIVIDADE (CNAE - números longos):
+        - Procure números como: 6201500, 7319004, 6202300, etc.
+        - Pode estar em: "Cód.Ativ.", "Código Atividade", "CNAE"
+        - Geralmente 7 dígitos
 
-        3. DESCRIÇÃO DO SERVIÇO: Descrição completa do serviço prestado
-           - O texto que descreve o que foi feito/vendido
-           - Pode ser longo e detalhado
+        🔍 DESCRIÇÃO DO SERVIÇO:
+        - Texto completo que descreve o serviço
+        - Exemplos: "Desenvolvimento de software", "Consultoria em TI", etc.
+        - Pode ser longo - mantenha completo
 
-        4. OUTROS CAMPOS PADRÃO:
-           - Quantidade
-           - Valor unitário  
-           - Valor total
-           - Unidade de medida
+        🔍 OUTROS DADOS:
+        - Quantidade (normalmente 1 para serviços)
+        - Valor unitário
+        - Valor total
+        - Unidade (UN, HR, etc.)
 
-        INSTRUÇÕES ESPECÍFICAS:
-        - Se não encontrar um campo específico, retorne null
-        - NÃO invente códigos ou descrições
-        - Mantenha a descrição original completa
-        - Códigos de serviço são diferentes de códigos de produto
+        ⚠️ REGRAS CRÍTICAS:
+        - Se um campo não existir na nota, coloque null
+        - NÃO invente códigos - apenas o que está escrito
+        - Analise cada linha da tabela de itens
+        - Códigos de serviço SÃO DIFERENTES de códigos NCM/produto
 
-        RETORNE EM JSON:
+        FORMATO DE SAÍDA JSON:
         {
             "items": [
                 {
                     "codigo_servico": "14.07",
-                    "codigo_atividade": "6201500", 
-                    "descricao_servico": "Desenvolvimento de software sob encomenda",
+                    "codigo_atividade": "6201500",
+                    "descricao_servico": "Desenvolvimento de aplicações e websites sob encomenda",
                     "quantidade": 1.0,
-                    "valor_unitario": 1000.00,
-                    "valor_total": 1000.00,
+                    "valor_unitario": 3187.50,
+                    "valor_total": 3187.50,
                     "unidade": "UN"
                 }
             ]
         }
+
+        Procure com atenção na tabela visual da nota fiscal!
         """
         
         try:
@@ -100,12 +109,19 @@ class AdvancedItemExtractor:
                 
                 # Validar e limpar os dados
                 cleaned_items = []
-                for item in items:
+                for i, item in enumerate(items):
+                    logger.info(f"Raw item {i+1}: {item}")
                     cleaned_item = self._clean_item_data(item)
                     if cleaned_item:
+                        logger.info(f"Cleaned item {i+1}: {cleaned_item}")
                         cleaned_items.append(cleaned_item)
+                    else:
+                        logger.warning(f"Item {i+1} was filtered out during cleaning")
                 
-                logger.info(f"Extracted {len(cleaned_items)} items with service fields")
+                logger.info(f"Final result: {len(cleaned_items)} items extracted")
+                for i, item in enumerate(cleaned_items):
+                    logger.info(f"Item {i+1} - Service Code: '{item.get('codigo_servico', 'N/A')}', Activity Code: '{item.get('codigo_atividade', 'N/A')}', Description: '{item.get('descricao_servico', 'N/A')[:50]}...'")
+                
                 return cleaned_items
             else:
                 return []
@@ -122,10 +138,10 @@ class AdvancedItemExtractor:
                 'codigo_servico': self._clean_service_code(raw_item.get('codigo_servico')),
                 'codigo_atividade': self._clean_activity_code(raw_item.get('codigo_atividade')),
                 'descricao_servico': self._clean_description(raw_item.get('descricao_servico')),
-                'quantidade': self._parse_decimal(raw_item.get('quantidade', 1.0)),
-                'valor_unitario': self._parse_decimal(raw_item.get('valor_unitario', 0.0)),
-                'valor_total': self._parse_decimal(raw_item.get('valor_total', 0.0)),
-                'unidade': self._clean_string(raw_item.get('unidade', 'UN'), 10)
+                'quantidade_comercial': self._parse_decimal(raw_item.get('quantidade', 1.0)),
+                'valor_unitario_comercial': self._parse_decimal(raw_item.get('valor_unitario', 0.0)),
+                'valor_total_produto': self._parse_decimal(raw_item.get('valor_total', 0.0)),
+                'unidade_comercial': self._clean_string(raw_item.get('unidade', 'UN'), 10)
             }
             
             # Pelo menos descrição deve existir

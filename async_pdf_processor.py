@@ -303,14 +303,30 @@ class AsyncPDFProcessor:
                 
                 # Create NFE items
                 items_data = raw_data.get('items', [])
-                for item_data in items_data:
+                self.logger.info(f"Processing {len(items_data)} items for {job.original_filename}")
+                
+                for i, item_data in enumerate(items_data):
+                    self.logger.info(f"Item {i+1} raw data: {item_data}")
+                    
                     nfe_item = NFEItem()
                     nfe_item.nfe_record_id = nfe_record.id
                     
                     # Set all compatible fields from item_data
+                    fields_set = []
                     for key, value in item_data.items():
                         if hasattr(nfe_item, key):
                             setattr(nfe_item, key, value)
+                            fields_set.append(f"{key}={value}")
+                    
+                    self.logger.info(f"Item {i+1} fields set: {fields_set}")
+                    
+                    # Log specifically service-related fields
+                    service_fields = {
+                        'codigo_servico': getattr(nfe_item, 'codigo_servico', None),
+                        'codigo_atividade': getattr(nfe_item, 'codigo_atividade', None),
+                        'descricao_servico': getattr(nfe_item, 'descricao_servico', None)
+                    }
+                    self.logger.info(f"Item {i+1} service fields: {service_fields}")
                     
                     db.session.add(nfe_item)
                 
