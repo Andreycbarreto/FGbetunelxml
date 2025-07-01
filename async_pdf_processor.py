@@ -161,11 +161,17 @@ class AsyncPDFProcessor:
                 
                 # Check document format and use appropriate specialized processor
                 try:
+                    self.logger.info(f"Importing specialized processors for {job.original_filename}")
                     from danfe_processor import detect_if_danfe, process_danfe_pdf
                     from nfse_processor import detect_if_nfse, process_nfse_pdf
+                    self.logger.info(f"Specialized processors imported successfully")
                     
                     # Try DANFE detection first
-                    if detect_if_danfe(job.file_path):
+                    self.logger.info(f"Testing DANFE detection for {job.original_filename}")
+                    danfe_detected = detect_if_danfe(job.file_path)
+                    self.logger.info(f"DANFE detection result: {danfe_detected}")
+                    
+                    if danfe_detected:
                         self.logger.info(f"DANFE format detected for {job.original_filename}, using DANFE processor")
                         result = process_danfe_pdf(job.file_path, job.original_filename)
                         
@@ -173,24 +179,29 @@ class AsyncPDFProcessor:
                             self.logger.info(f"DANFE processing successful for {job.original_filename} (confidence: {result.get('confidence_score', 0):.1f})")
                             return result
                         else:
-                            self.logger.warning(f"DANFE processing failed for {job.original_filename}, trying fallback")
+                            self.logger.warning(f"DANFE processing failed for {job.original_filename}: {result.get('error', 'Unknown error')}, trying fallback")
                     
                     # Try NFS-e detection second
-                    elif detect_if_nfse(job.file_path):
-                        self.logger.info(f"NFS-e format detected for {job.original_filename}, using NFS-e processor")
-                        result = process_nfse_pdf(job.file_path, job.original_filename)
-                        
-                        if result['success']:
-                            self.logger.info(f"NFS-e processing successful for {job.original_filename} (confidence: {result.get('confidence_score', 0):.1f})")
-                            return result
-                        else:
-                            self.logger.warning(f"NFS-e processing failed for {job.original_filename}, trying fallback")
-                    
                     else:
-                        self.logger.info(f"Unknown format for {job.original_filename}, using standard vision processor")
+                        self.logger.info(f"Testing NFS-e detection for {job.original_filename}")
+                        nfse_detected = detect_if_nfse(job.file_path)
+                        self.logger.info(f"NFS-e detection result: {nfse_detected}")
+                        
+                        if nfse_detected:
+                            self.logger.info(f"NFS-e format detected for {job.original_filename}, using NFS-e processor")
+                            result = process_nfse_pdf(job.file_path, job.original_filename)
+                            
+                            if result['success']:
+                                self.logger.info(f"NFS-e processing successful for {job.original_filename} (confidence: {result.get('confidence_score', 0):.1f})")
+                                return result
+                            else:
+                                self.logger.warning(f"NFS-e processing failed for {job.original_filename}: {result.get('error', 'Unknown error')}, trying fallback")
+                        
+                        else:
+                            self.logger.info(f"No specialized format detected for {job.original_filename}, using standard vision processor")
                         
                 except Exception as format_e:
-                    self.logger.warning(f"Format detection/processing failed for {job.original_filename}: {str(format_e)}")
+                    self.logger.error(f"Format detection/processing failed for {job.original_filename}: {str(format_e)}", exc_info=True)
                 
                 # Fallback: Vision processor (working system)
                 self.logger.info(f"Using vision processor for {job.original_filename}")

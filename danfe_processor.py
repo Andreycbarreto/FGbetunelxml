@@ -9,7 +9,7 @@ import json
 import base64
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
-import fitz  # PyMuPDF
+import pymupdf as fitz  # PyMuPDF
 from date_utils import clean_date_fields
 from json_cleaner import clean_and_parse_json
 
