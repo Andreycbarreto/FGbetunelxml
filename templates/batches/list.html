@@ -70,7 +70,7 @@
                                             <small class="text-muted">{{ "%.1f"|format(batch.progress_percentage) }}%</small>
                                         </td>
                                         <td>
-                                            <strong>{{ "R$ {:,.2f}"|format(batch.total_value) }}</strong>
+                                            <strong>R$ {{ "%.2f"|format(batch.total_value or 0)|replace(".", ",") }}</strong>
                                         </td>
                                         <td>
                                             <small>{{ batch.created_at.strftime('%d/%m/%Y %H:%M') }}</small>

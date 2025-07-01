@@ -68,7 +68,7 @@
                     <div class="card">
                         <div class="card-body text-center">
                             <i class="feather-dollar-sign display-4 text-info mb-2"></i>
-                            <h5 class="card-title">{{ "%.2f"|format(batch.total_value)|replace(".", ",") }}</h5>
+                            <h5 class="card-title">{{ "%.2f"|format(batch.total_value or 0)|replace(".", ",") }}</h5>
                             <p class="text-muted mb-0">Valor Total (R$)</p>
                         </div>
                     </div>
