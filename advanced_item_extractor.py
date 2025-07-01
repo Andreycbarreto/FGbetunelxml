@@ -34,53 +34,60 @@ class AdvancedItemExtractor:
             return []
         
         prompt = """
-        Analise esta nota fiscal brasileira e extraia TODOS os itens com MÁXIMA PRECISÃO nos campos de serviço.
+        Analise esta nota fiscal brasileira e extraia os campos de ITENS/SERVIÇOS com foco em CÓDIGOS DE SERVIÇO.
 
-        PROCURE na tabela/seção de ITENS por estas informações ESPECÍFICAS:
+        BUSQUE ESPECIFICAMENTE estes dados na TABELA DE ITENS:
 
-        🔍 CÓDIGO DO SERVIÇO (formato: XX.XX):
-        - Procure números como: 14.07, 25.05, 1.05, 17.06, etc.
-        - Pode estar em colunas: "Cód.Serv.", "Código Serviço", "LC 116"
-        - É diferente do código do produto/NCM
+        🎯 CÓDIGO DO SERVIÇO (OBRIGATÓRIO):
+        ✅ FORMATO: XX.XX (exemplo: 14.07, 25.05, 17.06, 1.05)
+        ✅ ONDE PROCURAR:
+        - Coluna "Cód. Serviço" ou "Código do Serviço"
+        - Coluna "LC 116" (Lei Complementar 116)
+        - Coluna "Item LC 116"
+        - Pode estar próximo à descrição
+        - Comum para serviços: 1.05, 14.07, 17.06, 25.05
+        
+        🎯 CÓDIGO DA ATIVIDADE/CNAE (OBRIGATÓRIO):
+        ✅ FORMATO: Números de 7 dígitos (exemplo: 6201500, 7319004)
+        ✅ ONDE PROCURAR:
+        - Coluna "Cód. Atividade" ou "CNAE"
+        - Coluna "Código da Atividade"
+        - Campo "Atividade"
+        - Comum: 6201500, 7319004, 6202300
 
-        🔍 CÓDIGO DA ATIVIDADE (CNAE - números longos):
-        - Procure números como: 6201500, 7319004, 6202300, etc.
-        - Pode estar em: "Cód.Ativ.", "Código Atividade", "CNAE"
-        - Geralmente 7 dígitos
+        🎯 DESCRIÇÃO DO SERVIÇO (OBRIGATÓRIO):
+        ✅ Texto completo que descreve o serviço prestado
+        ✅ Manter toda a descrição original
 
-        🔍 DESCRIÇÃO DO SERVIÇO:
-        - Texto completo que descreve o serviço
-        - Exemplos: "Desenvolvimento de software", "Consultoria em TI", etc.
-        - Pode ser longo - mantenha completo
+        📋 INSTRUÇÕES DE BUSCA VISUAL:
+        1. Examine TODA a tabela de itens linha por linha
+        2. Procure por COLUNAS específicas com estes códigos
+        3. Os códigos podem estar em colunas separadas
+        4. Para desembaraço aduaneiro, código típico é 17.06
+        5. Se não encontrar o código, procure nas informações adicionais
 
-        🔍 OUTROS DADOS:
-        - Quantidade (normalmente 1 para serviços)
-        - Valor unitário
-        - Valor total
-        - Unidade (UN, HR, etc.)
+        ⚠️ IMPORTANTE:
+        - Se encontrar qualquer código de serviço XX.XX, inclua ele
+        - Se encontrar qualquer CNAE de 7 dígitos, inclua ele
+        - Não deixe campos vazios se os códigos estiverem visíveis
+        - Seja MUITO detalhista na busca visual
 
-        ⚠️ REGRAS CRÍTICAS:
-        - Se um campo não existir na nota, coloque null
-        - NÃO invente códigos - apenas o que está escrito
-        - Analise cada linha da tabela de itens
-        - Códigos de serviço SÃO DIFERENTES de códigos NCM/produto
-
-        FORMATO DE SAÍDA JSON:
+        JSON RESULTADO:
         {
             "items": [
                 {
-                    "codigo_servico": "14.07",
-                    "codigo_atividade": "6201500",
-                    "descricao_servico": "Desenvolvimento de aplicações e websites sob encomenda",
+                    "codigo_servico": "17.06",
+                    "codigo_atividade": "7319004",
+                    "descricao_servico": "Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres",
                     "quantidade": 1.0,
-                    "valor_unitario": 3187.50,
-                    "valor_total": 3187.50,
+                    "valor_unitario": 3187.80,
+                    "valor_total": 3187.80,
                     "unidade": "UN"
                 }
             ]
         }
 
-        Procure com atenção na tabela visual da nota fiscal!
+        EXAMINE CUIDADOSAMENTE TODAS AS COLUNAS DA TABELA!
         """
         
         try:
@@ -156,7 +163,8 @@ class AdvancedItemExtractor:
     
     def _clean_service_code(self, code) -> str:
         """Clean service code (format: XX.XX)"""
-        if not code or code == 'null':
+        if code is None or code == 'null' or code == '':
+            logger.warning("Service code is None/null - AI might not have found it in the document")
             return ''
         
         code_str = str(code).strip()
@@ -164,12 +172,20 @@ class AdvancedItemExtractor:
         import re
         cleaned = re.sub(r'[^\d.]', '', code_str)
         
-        # Limitar tamanho
+        # Validar formato XX.XX
+        if cleaned and '.' in cleaned and len(cleaned.split('.')) == 2:
+            parts = cleaned.split('.')
+            if len(parts[0]) in [1, 2] and len(parts[1]) in [1, 2]:
+                logger.info(f"Valid service code found: {cleaned}")
+                return cleaned[:20]
+        
+        logger.warning(f"Invalid service code format: {code_str} -> {cleaned}")
         return cleaned[:20] if cleaned else ''
     
     def _clean_activity_code(self, code) -> str:
         """Clean activity code (CNAE)"""
-        if not code or code == 'null':
+        if code is None or code == 'null' or code == '':
+            logger.warning("Activity code is None/null - AI might not have found it in the document")
             return ''
         
         code_str = str(code).strip()
@@ -177,8 +193,16 @@ class AdvancedItemExtractor:
         import re
         cleaned = re.sub(r'[^\d]', '', code_str)
         
-        # Limitar tamanho
-        return cleaned[:20] if cleaned else ''
+        # Validar se é um CNAE válido (geralmente 7 dígitos)
+        if cleaned and len(cleaned) >= 6 and len(cleaned) <= 8:
+            logger.info(f"Valid activity code found: {cleaned}")
+            return cleaned[:20]
+        elif cleaned:
+            logger.warning(f"Activity code found but unusual format: {code_str} -> {cleaned}")
+            return cleaned[:20]
+        
+        logger.warning(f"No valid activity code found: {code_str}")
+        return ''
     
     def _clean_description(self, desc) -> str:
         """Clean service description"""
