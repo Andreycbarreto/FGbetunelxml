@@ -97,6 +97,15 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Revolutionary Two-Stage Tax Table Extraction System:
+  * Created specialized tax table extractor with line-by-line reading approach
+  * Stage 1: Extract each tax line individually from visual table (name + value + section)
+  * Stage 2: Map extracted lines to correct database fields using precise name matching
+  * Eliminates IR vs PIS confusion through section-aware extraction
+  * Enhanced visual processing: "Impostos Federais/Estaduais" vs "Impostos Municipais/Retidos"
+  * Precise tax mapping with fallback patterns for different name formats
+  * Integrated with main PDF processor for automatic tax correction
+  * Comprehensive field validation to prevent database truncation errors
 - July 1, 2025. Advanced Multi-Agent System with Line-by-Line Tax Table Reading:
   * Created specialized 3-agent advanced system for maximum accuracy
   * Tax Expert Agent: Deep Brazilian tax knowledge with fiscal logic validation
