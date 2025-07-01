@@ -34,60 +34,86 @@ class AdvancedItemExtractor:
             return []
         
         prompt = """
-        Analise esta nota fiscal brasileira e extraia os campos de ITENS/SERVIÇOS com foco em CÓDIGOS DE SERVIÇO.
+        Analise esta nota fiscal brasileira e extraia TODOS os campos detalhados dos ITENS/SERVIÇOS.
 
-        BUSQUE ESPECIFICAMENTE estes dados na TABELA DE ITENS:
+        🔍 INSTRUÇÕES DE BUSCA - EXAMINE ESTAS SEÇÕES:
 
-        🎯 CÓDIGO DO SERVIÇO (OBRIGATÓRIO):
-        ✅ FORMATO: XX.XX (exemplo: 14.07, 25.05, 17.06, 1.05)
-        ✅ ONDE PROCURAR:
-        - Coluna "Cód. Serviço" ou "Código do Serviço"
-        - Coluna "LC 116" (Lei Complementar 116)
-        - Coluna "Item LC 116"
-        - Pode estar próximo à descrição
-        - Comum para serviços: 1.05, 14.07, 17.06, 25.05
-        
-        🎯 CÓDIGO DA ATIVIDADE/CNAE (OBRIGATÓRIO):
-        ✅ FORMATO: Números de 7 dígitos (exemplo: 6201500, 7319004)
-        ✅ ONDE PROCURAR:
-        - Coluna "Cód. Atividade" ou "CNAE"
-        - Coluna "Código da Atividade"
-        - Campo "Atividade"
-        - Comum: 6201500, 7319004, 6202300
+        1️⃣ TABELA PRINCIPAL DE ITENS:
+        - Coluna "CÓDIGOS": onde estão "Serviço:" e "Atividade:"
+        - Coluna "PRODUTO/SERVIÇO": descrição completa
+        - Colunas de valores e quantidades
 
-        🎯 DESCRIÇÃO DO SERVIÇO (OBRIGATÓRIO):
-        ✅ Texto completo que descreve o serviço prestado
-        ✅ Manter toda a descrição original
+        2️⃣ SEÇÃO DETALHADA "DESCRIÇÃO DOS SERVIÇOS PRESTADOS":
+        - Código do serviço (ex: 3301)
+        - Local de prestação (ex: 7435)
+        - Alíquota (ex: 2%)
+        - Valor do serviço
+        - Detalhamento de impostos (IR, INSS, CSLL, COFINS, PIS)
+        - Valor ISS, Base de cálculo, etc.
 
-        📋 INSTRUÇÕES DE BUSCA VISUAL:
-        1. Examine TODA a tabela de itens linha por linha
-        2. Procure por COLUNAS específicas com estes códigos
-        3. Os códigos podem estar em colunas separadas
-        4. Para desembaraço aduaneiro, código típico é 17.06
-        5. Se não encontrar o código, procure nas informações adicionais
+        🎯 CAMPOS OBRIGATÓRIOS A EXTRAIR:
 
-        ⚠️ IMPORTANTE:
-        - Se encontrar qualquer código de serviço XX.XX, inclua ele
-        - Se encontrar qualquer CNAE de 7 dígitos, inclua ele
-        - Não deixe campos vazios se os códigos estiverem visíveis
-        - Seja MUITO detalhista na busca visual
+        ✅ CÓDIGOS BÁSICOS:
+        - codigo_servico: formato XX.XX (busque "Serviço: XXXX" e formate como XX.XX)
+        - codigo_atividade: números longos (busque "Atividade: XXXXXXX")
+        - descricao_servico: texto completo da descrição
 
-        JSON RESULTADO:
+        ✅ DETALHES DO SERVIÇO (da seção detalhada):
+        - servico_codigo: código numérico (ex: 3301)
+        - servico_local_prestacao: código local (ex: 7435) 
+        - servico_aliquota: percentual (ex: 2.0)
+        - servico_valor: valor total do serviço
+        - servico_natureza_operacao: texto da natureza
+        - servico_discriminacao: discriminação detalhada
+
+        ✅ IMPOSTOS DETALHADOS:
+        - tax_ir: valor IR
+        - tax_inss: valor INSS
+        - tax_csll: valor CSLL
+        - tax_cofins: valor COFINS
+        - tax_pis: valor PIS
+        - tax_issqn: valor ISSQN/ISS
+        - tax_base_calculo: base de cálculo
+        - tax_valor_liquido: valor líquido final
+
+        ✅ VALORES COMERCIAIS:
+        - quantidade_comercial, valor_unitario_comercial, valor_total_produto, unidade_comercial
+
+        📋 REGRAS DE FORMATAÇÃO:
+        - Código serviço: se encontrar "3301", formate como "33.01"
+        - Valores: sempre números decimais
+        - Textos: manter formatação original
+
+        JSON RESULTADO COMPLETO:
         {
             "items": [
                 {
-                    "codigo_servico": "17.06",
-                    "codigo_atividade": "7319004",
+                    "codigo_servico": "33.01",
+                    "codigo_atividade": "77400000",
                     "descricao_servico": "Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres",
-                    "quantidade": 1.0,
-                    "valor_unitario": 3187.80,
-                    "valor_total": 3187.80,
-                    "unidade": "UN"
+                    "servico_codigo": "3301",
+                    "servico_local_prestacao": "7435",
+                    "servico_aliquota": 2.0,
+                    "servico_valor": 3187.80,
+                    "servico_natureza_operacao": "Exigível",
+                    "servico_discriminacao": "DIMDOC/0425...",
+                    "tax_ir": 47.82,
+                    "tax_inss": 0.0,
+                    "tax_csll": 31.88,
+                    "tax_cofins": 95.63,
+                    "tax_pis": 20.72,
+                    "tax_issqn": 63.76,
+                    "tax_base_calculo": 3187.80,
+                    "tax_valor_liquido": 2991.75,
+                    "quantidade_comercial": 1.0,
+                    "valor_unitario_comercial": 3187.80,
+                    "valor_total_produto": 3187.80,
+                    "unidade_comercial": "UN"
                 }
             ]
         }
 
-        EXAMINE CUIDADOSAMENTE TODAS AS COLUNAS DA TABELA!
+        PROCURE EM TODAS AS SEÇÕES DO DOCUMENTO - TABELA E DETALHAMENTO!
         """
         
         try:
@@ -142,13 +168,40 @@ class AdvancedItemExtractor:
         
         try:
             cleaned = {
+                # Basic service fields
                 'codigo_servico': self._clean_service_code(raw_item.get('codigo_servico')),
                 'codigo_atividade': self._clean_activity_code(raw_item.get('codigo_atividade')),
                 'descricao_servico': self._clean_description(raw_item.get('descricao_servico')),
-                'quantidade_comercial': self._parse_decimal(raw_item.get('quantidade', 1.0)),
-                'valor_unitario_comercial': self._parse_decimal(raw_item.get('valor_unitario', 0.0)),
-                'valor_total_produto': self._parse_decimal(raw_item.get('valor_total', 0.0)),
-                'unidade_comercial': self._clean_string(raw_item.get('unidade', 'UN'), 10)
+                
+                # Detailed service fields
+                'servico_codigo': self._clean_string(raw_item.get('servico_codigo'), 10),
+                'servico_local_prestacao': self._clean_string(raw_item.get('servico_local_prestacao'), 10),
+                'servico_aliquota': self._parse_decimal(raw_item.get('servico_aliquota')),
+                'servico_valor': self._parse_decimal(raw_item.get('servico_valor')),
+                'servico_natureza_operacao': self._clean_string(raw_item.get('servico_natureza_operacao'), 255),
+                'servico_discriminacao': self._clean_description(raw_item.get('servico_discriminacao')),
+                'servico_descricao_incondicional': self._parse_decimal(raw_item.get('servico_descricao_incondicional')),
+                'servico_valor_deducao': self._parse_decimal(raw_item.get('servico_valor_deducao')),
+                'servico_valor_iss': self._parse_decimal(raw_item.get('servico_valor_iss')),
+                
+                # Tax fields
+                'tax_ir': self._parse_decimal(raw_item.get('tax_ir')),
+                'tax_inss': self._parse_decimal(raw_item.get('tax_inss')),
+                'tax_csll': self._parse_decimal(raw_item.get('tax_csll')),
+                'tax_cofins': self._parse_decimal(raw_item.get('tax_cofins')),
+                'tax_pis': self._parse_decimal(raw_item.get('tax_pis')),
+                'tax_issqn': self._parse_decimal(raw_item.get('tax_issqn')),
+                'tax_base_calculo': self._parse_decimal(raw_item.get('tax_base_calculo')),
+                'tax_valor_liquido': self._parse_decimal(raw_item.get('tax_valor_liquido')),
+                'tax_outras_retencoes': self._parse_decimal(raw_item.get('tax_outras_retencoes')),
+                'tax_total_tributos_federais': self._parse_decimal(raw_item.get('tax_total_tributos_federais')),
+                'tax_descricao_condicional': self._parse_decimal(raw_item.get('tax_descricao_condicional')),
+                
+                # Commercial fields
+                'quantidade_comercial': self._parse_decimal(raw_item.get('quantidade_comercial', raw_item.get('quantidade', 1.0))),
+                'valor_unitario_comercial': self._parse_decimal(raw_item.get('valor_unitario_comercial', raw_item.get('valor_unitario', 0.0))),
+                'valor_total_produto': self._parse_decimal(raw_item.get('valor_total_produto', raw_item.get('valor_total', 0.0))),
+                'unidade_comercial': self._clean_string(raw_item.get('unidade_comercial', raw_item.get('unidade', 'UN')), 10)
             }
             
             # Pelo menos descrição deve existir
@@ -172,12 +225,24 @@ class AdvancedItemExtractor:
         import re
         cleaned = re.sub(r'[^\d.]', '', code_str)
         
-        # Validar formato XX.XX
-        if cleaned and '.' in cleaned and len(cleaned.split('.')) == 2:
+        # Se já tem formato XX.XX, validar
+        if '.' in cleaned and len(cleaned.split('.')) == 2:
             parts = cleaned.split('.')
             if len(parts[0]) in [1, 2] and len(parts[1]) in [1, 2]:
                 logger.info(f"Valid service code found: {cleaned}")
                 return cleaned[:20]
+        
+        # Se é um número de 4 dígitos (ex: 3301), formatar como XX.XX
+        elif cleaned and cleaned.isdigit() and len(cleaned) == 4:
+            formatted = f"{cleaned[:2]}.{cleaned[2:]}"
+            logger.info(f"Formatted service code: {cleaned} -> {formatted}")
+            return formatted
+        
+        # Se é um número de 3 dígitos (ex: 301), formatar como X.XX
+        elif cleaned and cleaned.isdigit() and len(cleaned) == 3:
+            formatted = f"{cleaned[:1]}.{cleaned[1:]}"
+            logger.info(f"Formatted service code: {cleaned} -> {formatted}")
+            return formatted
         
         logger.warning(f"Invalid service code format: {code_str} -> {cleaned}")
         return cleaned[:20] if cleaned else ''

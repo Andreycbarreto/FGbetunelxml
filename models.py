@@ -192,12 +192,36 @@ class NFEItem(db.Model):
     # Item identification
     numero_item = db.Column(db.Integer, nullable=True)
     codigo_produto = db.Column(db.String(100), nullable=True)
-    codigo_servico = db.Column(db.String(100), nullable=True)  # Service code
-    codigo_atividade = db.Column(db.String(100), nullable=True)  # Activity code
+    codigo_servico = db.Column(db.String(10), nullable=True)  # Service code (XX.XX format)
+    codigo_atividade = db.Column(db.String(20), nullable=True)  # Activity code/CNAE
     descricao_produto = db.Column(db.Text, nullable=True)
     descricao_servico = db.Column(db.Text, nullable=True)  # Service description
     ncm = db.Column(db.String(20), nullable=True)
     cfop = db.Column(db.String(10), nullable=True)
+    
+    # Service-specific fields from detailed view
+    servico_codigo = db.Column(db.String(10), nullable=True)  # Código do serviço (3301)
+    servico_local_prestacao = db.Column(db.String(10), nullable=True)  # Local de prestação (7435)
+    servico_aliquota = db.Column(Numeric(5, 2), nullable=True)  # Alíquota (2%)
+    servico_valor = db.Column(Numeric(15, 2), nullable=True)  # Valor do serviço
+    servico_descricao_incondicional = db.Column(Numeric(15, 2), nullable=True)  # Desc. Incondicional
+    servico_valor_deducao = db.Column(Numeric(15, 2), nullable=True)  # Valor dedução
+    servico_valor_iss = db.Column(Numeric(15, 2), nullable=True)  # Valor ISS
+    servico_natureza_operacao = db.Column(db.String(255), nullable=True)  # Natureza da operação
+    servico_discriminacao = db.Column(db.Text, nullable=True)  # Discriminação dos serviços
+    
+    # Tax details from the detailed breakdown
+    tax_ir = db.Column(Numeric(15, 2), nullable=True)  # IR
+    tax_inss = db.Column(Numeric(15, 2), nullable=True)  # INSS  
+    tax_csll = db.Column(Numeric(15, 2), nullable=True)  # CSLL
+    tax_cofins = db.Column(Numeric(15, 2), nullable=True)  # COFINS
+    tax_pis = db.Column(Numeric(15, 2), nullable=True)  # PIS
+    tax_outras_retencoes = db.Column(Numeric(15, 2), nullable=True)  # Outras Retenções
+    tax_total_tributos_federais = db.Column(Numeric(15, 2), nullable=True)  # Total Trib. Federais
+    tax_descricao_condicional = db.Column(Numeric(15, 2), nullable=True)  # Desc. Condicional
+    tax_base_calculo = db.Column(Numeric(15, 2), nullable=True)  # Base de Cálculo
+    tax_issqn = db.Column(Numeric(15, 2), nullable=True)  # ISSQN
+    tax_valor_liquido = db.Column(Numeric(15, 2), nullable=True)  # Valor Líquido
     
     # Commercial quantities and values
     unidade_comercial = db.Column(db.String(10), nullable=True)
