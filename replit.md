@@ -97,6 +97,13 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Advanced Item Field Extraction - Service Code Separation:
+  * Created AdvancedItemExtractor for precise service field separation
+  * Specialized extraction of: código de serviço, código da atividade, descrição do serviço
+  * Enhanced prompts to distinguish service codes from product codes
+  * Field validation and length limits to prevent database truncation
+  * Automatic fallback to basic item processing if advanced extraction fails
+  * Integrated with main PDF processor for comprehensive item analysis
 - July 1, 2025. Final Solution: Comprehensive Tax Processor with Auto-Correction:
   * Created FinalTaxProcessor - unified solution combining precise reading + auto-correction
   * Enhanced prompts with specific IR vs INSS distinction rules and examples

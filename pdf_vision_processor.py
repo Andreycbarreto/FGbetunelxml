@@ -12,6 +12,7 @@ from typing import Dict, Any, List
 from openai import OpenAI
 import pymupdf
 from final_tax_processor import process_taxes_final
+from advanced_item_extractor import extract_advanced_item_fields
 
 logger = logging.getLogger(__name__)
 
@@ -528,14 +529,38 @@ class PDFVisionProcessor:
         # Informações adicionais
         flattened['informacoes_adicionais'] = consolidated.get('informacoes_adicionais')
         
-        # Items - processar cada item com todos os detalhes tributários
-        items = consolidated.get('items', [])
-        processed_items = []
-        for item in items:
-            processed_item = self._process_item_details(item)
-            processed_items.append(processed_item)
-        
-        flattened['items'] = processed_items
+        # Items - usar extrator avançado para campos de serviço precisos
+        self.logger.info("Using advanced item extractor for service field separation")
+        try:
+            # Get image for advanced item extraction
+            image_for_items = None
+            if hasattr(self, '_document_images') and self._document_images:
+                image_for_items = self._document_images[0]
+            elif hasattr(self, '_current_image_base64') and self._current_image_base64:
+                image_for_items = self._current_image_base64
+            
+            if image_for_items:
+                advanced_items = extract_advanced_item_fields(image_for_items)
+                self.logger.info(f"Advanced item extraction found {len(advanced_items)} items")
+                flattened['items'] = advanced_items
+            else:
+                # Fallback to basic item processing
+                items = consolidated.get('items', [])
+                processed_items = []
+                for item in items:
+                    processed_item = self._process_item_details(item)
+                    processed_items.append(processed_item)
+                flattened['items'] = processed_items
+                
+        except Exception as e:
+            self.logger.error(f"Error in advanced item extraction: {str(e)}")
+            # Fallback to basic processing
+            items = consolidated.get('items', [])
+            processed_items = []
+            for item in items:
+                processed_item = self._process_item_details(item)
+                processed_items.append(processed_item)
+            flattened['items'] = processed_items
         
         return flattened
     
