@@ -156,36 +156,18 @@ class AsyncPDFProcessor:
                     self.logger.info(f"Retry {attempt}/{max_retries} for {job.original_filename} in {wait_time}s")
                     time.sleep(wait_time)
                 
-                # First attempt: Enhanced universal processor (intelligent format detection)
-                self.logger.info(f"Attempting enhanced universal processing with format detection for {job.original_filename}")
+                # TEMPORARY FIX: Skip universal processors that cause timeout
+                # Universal processors are causing API timeouts, falling back to working processors
+                self.logger.info(f"Using vision processor (bypassing universal processors due to timeout issues) for {job.original_filename}")
                 
-                try:
-                    # Try enhanced processor first - best for handling different formats with intelligence
-                    result = process_pdf_enhanced_universal(job.file_path, job.original_filename)
-                    
-                    if result.get('success') and result.get('confidence_score', 0) >= 0.8:
-                        self.logger.info(f"Enhanced universal processing successful for {job.original_filename} (format: {result.get('document_format', 'unknown')}, confidence: {result['confidence_score']:.1f})")
-                        return result
-                    else:
-                        self.logger.warning(f"Enhanced universal processing had lower confidence for {job.original_filename}, trying standard universal")
-                        
-                except Exception as enhanced_e:
-                    self.logger.warning(f"Enhanced universal processing failed for {job.original_filename}: {str(enhanced_e)}")
+                # First attempt: Vision processor (working system)
+                result = self.vision_processor.process_pdf_with_vision(job.file_path)
                 
-                # Second attempt: Standard universal processor (fallback)
-                try:
-                    # Try universal processor as fallback
-                    from universal_pdf_simple import process_pdf_universal_simple
-                    result = process_pdf_universal_simple(job.file_path)
-                    
-                    if result.get('success') and result.get('confidence_score', 0) >= 0.7:
-                        self.logger.info(f"Standard universal processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f})")
-                        return result
-                    else:
-                        self.logger.warning(f"Standard universal processing had lower confidence for {job.original_filename}, trying multi-agent")
-                        
-                except Exception as universal_e:
-                    self.logger.warning(f"Standard universal processing failed for {job.original_filename}: {str(universal_e)}")
+                if result['success']:
+                    self.logger.info(f"Vision processing successful for {job.original_filename}")
+                    return result
+                else:
+                    self.logger.warning(f"Vision processing failed for {job.original_filename}, trying multi-agent")
                 
                 # Second attempt: Multi-agent validation system (if available)
                 self.logger.info(f"Attempting enhanced multi-agent processing for {job.original_filename}")

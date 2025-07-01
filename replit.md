@@ -97,6 +97,13 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Critical Fix: OpenAI API Timeout Issue Resolution:
+  * Identified and resolved timeout issues with universal PDF processors
+  * Temporarily disabled enhanced/universal processors causing API timeouts
+  * Fallback to working vision processor until timeout issue is resolved
+  * Added comprehensive logging to track processing pipeline and data extraction
+  * Enhanced debugging with detailed field-level extraction monitoring
+  * System now bypasses problematic processors and uses reliable vision processing
 - July 1, 2025. Critical Fix: Brazilian Date Format Compatibility:
   * Fixed PostgreSQL datetime overflow error caused by Brazilian date format "dd/mm/yyyy"
   * Created date_utils.py with robust Brazilian to ISO date conversion
