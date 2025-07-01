@@ -105,6 +105,16 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
   * Applied date cleaning to all processors: universal_pdf_simple, async_pdf_processor
   * Comprehensive date field validation and PostgreSQL compatibility
   * Prevents database errors and ensures reliable data storage
+- July 1, 2025. Enhanced Universal PDF Processor for Multiple NFe Formats:
+  * Upgraded universal processor with format-specific extraction strategies
+  * Added intelligent prompts for DANFE, NFS-e, and Terminal Portuário documents
+  * Enhanced field mapping with comprehensive Brazilian tax fields coverage
+  * Specific instructions for different document sections (CÁLCULO DO IMPOSTO, DESCRIÇÃO DOS SERVIÇOS)
+  * Improved item extraction for services vs products with specialized prompts
+  * Format-aware processing: detects and adapts to document layout automatically
+  * Better handling of Terminal Portuário services (LEVANTE DE CONTÊINER, SCANNER)
+  * Enhanced NFS-e processing for service-specific tax fields (IR, INSS, CSLL, COFINS, PIS, ISSQN)
+  * Comprehensive field validation and Brazilian formatting preservation
 - July 1, 2025. Universal PDF Processor for Different NFe Formats:
   * Created UniversalPDFSimple class with adaptive format detection
   * Intelligent layout detection: DANFE, NFSE, NFCe, government formats
