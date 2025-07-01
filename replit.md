@@ -97,6 +97,17 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Advanced 4-Agent Tax Validation System:
+  * Implemented specialized tax validation agent with deep Brazilian fiscal knowledge
+  * Added document type identification (service vs product vs mixed)
+  * Created category-specific tax extraction with dedicated prompts for:
+    - Service taxes: ISSQN, IR, INSS, CSLL, ISSRF
+    - Product taxes: ICMS, IPI, PIS, COFINS
+  * Implemented cross-validation between extraction methods
+  * Added fiscal logic validation with rate checking and consistency rules
+  * Enhanced multi-agent flow: Conservative → Aggressive → Consolidator → Tax Specialist
+  * Added automatic tax name correction and value validation
+  * Improved confidence scoring with weighted tax validation results
 - July 1, 2025. Multi-Stage Specialized Processing System:
   * Implemented 4-stage specialized extraction system for maximum accuracy
   * Stage 1: Document header (emitente, destinatário, identificação)
