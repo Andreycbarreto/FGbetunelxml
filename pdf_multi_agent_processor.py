@@ -17,14 +17,14 @@ import base64
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def safe_json_parse(content: str) -> Dict[str, Any]:
+def safe_json_parse(content) -> Dict[str, Any]:
     """Safely parse JSON content with fallback"""
     if not content:
         return {}
     try:
         return json.loads(content)
     except (json.JSONDecodeError, TypeError):
-        logger.warning(f"Failed to parse JSON content: {content[:100]}...")
+        logger.warning(f"Failed to parse JSON content: {str(content)[:100]}...")
         return {}
 
 @dataclass

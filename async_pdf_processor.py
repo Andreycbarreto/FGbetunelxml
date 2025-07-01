@@ -14,7 +14,7 @@ from threading import Thread
 import queue
 from dataclasses import dataclass
 from pdf_vision_processor import PDFVisionProcessor
-from pdf_multi_agent_processor import process_pdf_with_multi_agent_validation
+from pdf_multi_agent_simple import process_pdf_with_multi_agent_validation
 
 logger = logging.getLogger(__name__)
 
@@ -153,27 +153,20 @@ class AsyncPDFProcessor:
                     self.logger.info(f"Retry {attempt}/{max_retries} for {job.original_filename} in {wait_time}s")
                     time.sleep(wait_time)
                 
-                # First attempt: Multi-agent validation system
-                self.logger.info(f"Attempting multi-agent processing for {job.original_filename}")
+                # First attempt: Multi-agent validation system (if available)
+                self.logger.info(f"Attempting enhanced processing for {job.original_filename}")
+                multi_agent_success = False
+                
                 try:
-                    # Convert PDF to images first
-                    images = self.vision_processor._pdf_to_images(job.file_path)
-                    if not images:
-                        raise Exception("Failed to convert PDF to images")
+                    # Try multi-agent processing first  
+                    result = process_pdf_with_multi_agent_validation(job.file_path)
                     
-                    # Convert images to base64
-                    base64_images = []
-                    for image in images:
-                        base64_images.append(self.vision_processor._image_to_base64(image))
-                    
-                    # Process with multi-agent validation
-                    result = process_pdf_with_multi_agent_validation(base64_images)
-                    
-                    if result['success'] and result['confidence_score'] >= 70:
+                    if result.get('success') and result.get('confidence_score', 0) >= 70:
                         self.logger.info(f"Multi-agent processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f}%)")
+                        multi_agent_success = True
                         return result
                     else:
-                        self.logger.warning(f"Multi-agent processing had low confidence ({result.get('confidence_score', 0):.1f}%) for {job.original_filename}, trying single-agent fallback")
+                        self.logger.warning(f"Multi-agent processing had low confidence for {job.original_filename}, trying single-agent fallback")
                         
                 except Exception as e:
                     self.logger.warning(f"Multi-agent processing failed for {job.original_filename}: {str(e)}, trying single-agent fallback")

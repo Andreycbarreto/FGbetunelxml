@@ -23,4 +23,6 @@ dependencies = [
     "pymupdf4llm>=0.0.25",
     "pymupdf>=1.26.1",
     "markdown>=3.8.2",
+    "fitz>=0.0.1.dev2",
+    "pillow>=11.3.0",
 ]
