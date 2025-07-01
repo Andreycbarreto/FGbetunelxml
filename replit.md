@@ -108,6 +108,9 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
   * Enhanced field mapping for service-specific data: codigo_servico, codigo_atividade, descricao_servico
   * Improved tax identification with document type-based validation (product vs service)
   * Critical tax rate validation: PIS (0.65%), COFINS (3.0%), IR (1.5%), INSS (11%)
+  * Enhanced GPT-4 Vision prompts with specific tax identification rules
+  * Detailed section mapping: Impostos Federais/Estaduais vs Impostos Municipais/Retidos
+  * Anti-confusion safeguards: IR vs PIS distinction with explicit name matching
   * Conflict resolution system: Rate-based identification overrides name-based when conflicts occur
   * Implemented fallback hierarchy: Advanced → Standard Multi-Agent → Vision → Simple
   * Database field expansion to prevent truncation errors

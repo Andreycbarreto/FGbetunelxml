@@ -138,6 +138,31 @@ class PDFVisionProcessor:
             - Para impostos municipais (ISSQN, ISS retido): procure na seção específica de serviços
             - Para impostos federais: procure na seção de totais da NFe
 
+            ATENÇÃO CRÍTICA PARA IDENTIFICAÇÃO DE IMPOSTOS:
+            Examine CUIDADOSAMENTE cada linha da tabela de impostos. NUNCA confunda:
+            
+            1. IR (Imposto de Renda):
+               - Alíquotas: 1,5%, 3,0%, 4,8%
+               - Aparece como: "IR", "I.R.", "IRRF", "Imp. Renda", "IR Retido"
+               - Valores típicos: R$ 30,00 a R$ 200,00
+            
+            2. PIS (Programa Integração Social):
+               - Alíquotas: 0,65%, 1,65%
+               - Aparece como: "PIS", "P.I.S.", "Contrib. PIS"
+               - Valores típicos: R$ 10,00 a R$ 50,00
+            
+            3. INSS (Previdência Social):
+               - Alíquota: SEMPRE 11,0%
+               - Aparece como: "INSS", "I.N.S.S.", "Contrib. Prev.", "Prev. Social"
+               - Valores típicos: R$ 100,00 a R$ 500,00
+            
+            4. COFINS (Contribuição Social):
+               - Alíquotas: 3,0%, 7,6%
+               - Aparece como: "COFINS", "C.O.F.I.N.S."
+               - Valores típicos: R$ 50,00 a R$ 300,00
+            
+            REGRA FUNDAMENTAL: Leia o NOME EXATO do imposto na NFe, não faça suposições baseadas apenas no valor.
+
             IMPORTANTE: Identifique se é NFe de PRODUTO (modelo 55) ou SERVIÇO (modelo 57) para extrair os campos corretos.
 
             Retorne um JSON com esta estrutura COMPLETA:
@@ -180,13 +205,13 @@ class PDFVisionProcessor:
                     "valor_total_nf": "float - valor total da NFe",
                     "valor_icms": "float - valor do ICMS",
                     "valor_ipi": "float - valor do IPI",
-                    "valor_pis": "float - valor do PIS",
-                    "valor_cofins": "float - valor do COFINS",
-                    "valor_issqn": "float - valor do ISSQN (imposto municipal)",
-                    "valor_issrf": "float - valor do ISS retido fonte",
-                    "valor_ir": "float - valor do IR",
-                    "valor_inss": "float - valor do INSS",
-                    "valor_csll": "float - valor do CSLL",
+                    "valor_pis": "float - valor do PIS (procure na seção Impostos Federais/Estaduais)",
+                    "valor_cofins": "float - valor do COFINS (procure na seção Impostos Federais/Estaduais)",
+                    "valor_issqn": "float - valor do ISSQN (procure na seção Impostos Municipais/Retidos)",
+                    "valor_issrf": "float - valor do ISS retido fonte (procure na seção Impostos Municipais/Retidos)",
+                    "valor_ir": "float - valor do IR RETIDO (procure especificamente por 'IR Retido' na seção Impostos Municipais/Retidos)",
+                    "valor_inss": "float - valor do INSS RETIDO (procure especificamente por 'INSS Retido' na seção Impostos Municipais/Retidos)",
+                    "valor_csll": "float - valor do CSLL RETIDO (procure especificamente por 'CSLL Retido' na seção Impostos Municipais/Retidos)",
                     "valor_iss_retido": "float - valor do ISS retido",
                     "valor_frete": "float - valor do frete",
                     "valor_seguro": "float - valor do seguro",
@@ -857,13 +882,13 @@ class PDFVisionProcessor:
                     "valor_total_nf": "float - valor total da NFe (pode ser bruto ou líquido)",
                     "valor_icms": "float - ICMS da nota",
                     "valor_ipi": "float - IPI da nota",
-                    "valor_pis": "float - PIS da nota",
-                    "valor_cofins": "float - COFINS da nota",
-                    "valor_issqn": "float - ISSQN (ISS) da nota",
-                    "valor_issrf": "float - ISS retido na fonte",
-                    "valor_ir": "float - IR retido",
-                    "valor_inss": "float - INSS retido",
-                    "valor_csll": "float - CSLL retido",
+                    "valor_pis": "float - PIS da nota (seção Impostos Federais/Estaduais)",
+                    "valor_cofins": "float - COFINS da nota (seção Impostos Federais/Estaduais)",
+                    "valor_issqn": "float - ISSQN (ISS) da nota (seção Impostos Municipais/Retidos)",
+                    "valor_issrf": "float - ISS retido na fonte (busque por 'ISSRF' ou 'ISS Ret. Fonte')",
+                    "valor_ir": "float - IR retido (busque ESPECIFICAMENTE por 'IR Retido' - NÃO confundir com PIS)",
+                    "valor_inss": "float - INSS retido (busque por 'INSS Retido' - alíquota 11%)",
+                    "valor_csll": "float - CSLL retido (busque por 'CSLL Retido')",
                     "valor_iss_retido": "float - ISS retido",
                     "valor_frete": "float - valor do frete",
                     "valor_seguro": "float - valor do seguro",
@@ -881,10 +906,16 @@ class PDFVisionProcessor:
                 }
             }
             
-            ATENÇÃO: Se for NFe de SERVIÇOS, procure especialmente por:
+            ATENÇÃO CRÍTICA: Se for NFe de SERVIÇOS, procure especialmente por:
             - Seção "Cálculo do ISS"
-            - Valores de retenção (IR, INSS, CSLL, ISS)
+            - Seção "Impostos Municipais/Retidos" para IR, INSS, CSLL
             - Valor bruto vs valor líquido do serviço
+            
+            REGRA FUNDAMENTAL PARA EVITAR CONFUSÕES:
+            - Na seção "Impostos Municipais/Retidos", se vir uma linha com "IR" ou "IR Retido", mapeie para valor_ir
+            - Na seção "Impostos Federais/Estaduais", se vir uma linha com "PIS", mapeie para valor_pis
+            - NUNCA troque IR por PIS ou vice-versa
+            - Leia o NOME EXATO do imposto na NFe, não apenas o valor
             """
             
             response = self.client.chat.completions.create(
