@@ -534,8 +534,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
     
-    // Update processing status periodically
-    setInterval(updateProcessingStatus, 10000);
+    // Update processing status periodically - more frequent when processing
+    let statusInterval;
+    
+    function startStatusUpdates() {
+        if (statusInterval) clearInterval(statusInterval);
+        statusInterval = setInterval(updateProcessingStatus, 5000); // Check every 5 seconds
+    }
+    
+    // Start with immediate check
+    updateProcessingStatus();
+    startStatusUpdates();
     
     function updateProcessingStatus() {
         fetch('/api/processing_status')
@@ -557,11 +566,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="feather-pause me-2"></i>
                     ${data.pending_files} arquivo(s) aguardando processamento
                 `;
-            } else if (total > 0) {
+            } else if (total > 0 && processed === total) {
                 processingStatus.innerHTML = `
                     <i class="feather-check me-2"></i>
-                    Todos os arquivos foram processados
+                    Todos os arquivos foram processados - Atualizando página...
                 `;
+                
+                // Auto refresh page after 2 seconds when processing is complete
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             }
         })
         .catch(error => {

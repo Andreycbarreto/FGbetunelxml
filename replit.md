@@ -97,6 +97,12 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Auto Page Refresh Enhancement:
+  * Added automatic page refresh when processing reaches 100% completion
+  * Enhanced status checking frequency from 10 to 5 seconds for faster response
+  * User-friendly message shows "Atualizando página..." before refresh
+  * 2-second delay before refresh to allow users to see completion message
+  * Applied to both processing.html template and global app.js for consistency
 - July 1, 2025. Revolutionary Tax Consolidation Fix - From Items to Document:
   * Identified critical issue: taxes extracted correctly at item level but not transferred to document
   * Created automatic tax consolidation system from items to document level

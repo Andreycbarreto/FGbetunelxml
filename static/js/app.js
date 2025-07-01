@@ -135,9 +135,12 @@ window.NFEApp = {
 
     // Processing status updates
     initProcessingUpdates: function() {
-        // Auto-refresh processing status every 10 seconds on processing page
+        // Auto-refresh processing status more frequently on processing page
         if (window.location.pathname.includes('/processing')) {
-            setInterval(this.updateProcessingStatus.bind(this), 10000);
+            // Start with immediate check
+            this.updateProcessingStatus();
+            // Then check every 5 seconds for faster response
+            setInterval(this.updateProcessingStatus.bind(this), 5000);
         }
     },
 
@@ -147,6 +150,23 @@ window.NFEApp = {
             .then(data => {
                 this.updateStatusDisplay(data);
                 this.updateProgressBar(data);
+                
+                // Auto refresh when processing is complete
+                if (data.total_files > 0 && data.processed_files === data.total_files && 
+                    data.processing_files === 0 && data.pending_files === 0) {
+                    
+                    const statusElement = document.getElementById('processingStatus');
+                    if (statusElement) {
+                        statusElement.innerHTML = `
+                            <i class="feather-check me-2"></i>
+                            Todos os arquivos foram processados - Atualizando página...
+                        `;
+                    }
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                }
             })
             .catch(error => {
                 console.error('Error updating processing status:', error);
