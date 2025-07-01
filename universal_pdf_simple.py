@@ -267,7 +267,12 @@ class UniversalPDFSimple:
             )
             
             content = response.choices[0].message.content
-            return clean_and_parse_json(content, {})
+            self.logger.info(f"GPT Response for document data (first 500 chars): {content[:500] if content else 'None'}")
+            
+            parsed_data = clean_and_parse_json(content, {})
+            self.logger.info(f"Parsed document data keys: {list(parsed_data.keys()) if parsed_data else 'No data'}")
+            
+            return parsed_data
             
         except Exception as e:
             self.logger.error(f"Data extraction failed: {str(e)}")

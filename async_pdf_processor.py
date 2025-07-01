@@ -316,6 +316,13 @@ class AsyncPDFProcessor:
             
             with app.app_context():
                 raw_data = result['data']
+                self.logger.info(f"Raw data received for {job.original_filename}: keys={list(raw_data.keys()) if raw_data else 'No data'}")
+                
+                # Log main document fields that should be filled
+                main_fields = ['numero_nf', 'serie', 'razao_social_emitente', 'cnpj_emitente', 'valor_total_nota']
+                for field in main_fields:
+                    value = raw_data.get(field, 'NOT_FOUND')
+                    self.logger.info(f"Document field {field}: {value}")
                 
                 # Clean date fields to convert Brazilian format to PostgreSQL compatible ISO format
                 raw_data = clean_date_fields(raw_data)

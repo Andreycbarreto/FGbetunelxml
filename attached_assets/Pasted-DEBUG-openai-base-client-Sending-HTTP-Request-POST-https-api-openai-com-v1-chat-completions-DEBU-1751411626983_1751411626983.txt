@@ -1,0 +1,34 @@
+DEBUG:openai._base_client:Sending HTTP Request: POST https://api.openai.com/v1/chat/completions
+DEBUG:httpcore.http11:send_request_headers.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:send_request_headers.complete
+DEBUG:httpcore.http11:send_request_body.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:send_request_body.complete
+DEBUG:httpcore.http11:receive_response_headers.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 01 Jul 2025 23:12:54 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'bizarte'), (b'openai-processing-ms', b'3926'), (b'openai-version', b'2020-10-01'), (b'x-envoy-upstream-service-time', b'3829'), (b'x-ratelimit-limit-input-images', b'250000'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'30000000'), (b'x-ratelimit-remaining-input-images', b'249999'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'29998747'), (b'x-ratelimit-reset-input-images', b'0s'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'2ms'), (b'x-request-id', b'req_364adc4ca5d72869d4943336660197e4'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'95899729ec274a0a-SEA'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG:httpcore.http11:receive_response_body.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:receive_response_body.complete
+DEBUG:httpcore.http11:response_closed.started
+DEBUG:httpcore.http11:response_closed.complete
+DEBUG:openai._base_client:HTTP Response: POST https://api.openai.com/v1/chat/completions "200 OK" Headers({'date': 'Tue, 01 Jul 2025 23:12:54 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-expose-headers': 'X-Request-ID', 'openai-organization': 'bizarte', 'openai-processing-ms': '3926', 'openai-version': '2020-10-01', 'x-envoy-upstream-service-time': '3829', 'x-ratelimit-limit-input-images': '250000', 'x-ratelimit-limit-requests': '10000', 'x-ratelimit-limit-tokens': '30000000', 'x-ratelimit-remaining-input-images': '249999', 'x-ratelimit-remaining-requests': '9999', 'x-ratelimit-remaining-tokens': '29998747', 'x-ratelimit-reset-input-images': '0s', 'x-ratelimit-reset-requests': '6ms', 'x-ratelimit-reset-tokens': '2ms', 'x-request-id': 'req_364adc4ca5d72869d4943336660197e4', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'cf-cache-status': 'DYNAMIC', 'x-content-type-options': 'nosniff', 'server': 'cloudflare', 'cf-ray': '95899729ec274a0a-SEA', 'content-encoding': 'gzip', 'alt-svc': 'h3=":443"; ma=86400'})
+DEBUG:openai._base_client:request_id: req_364adc4ca5d72869d4943336660197e4
+DEBUG:date_utils:Converted data_emissao: 2025-06-12 -> 2025-06-12
+INFO:universal_pdf_simple:Universal PDF processing completed successfully
+INFO:async_pdf_processor:Standard universal processing successful for 3.2.2 NFe TERMINAL PORTUARIO.pdf (confidence: 0.9)
+DEBUG:date_utils:Converted data_emissao: 2012-06-25 -> 2012-06-25
+INFO:async_pdf_processor:Processing 2 items for 3.2.2 NFe TERMINAL PORTUARIO.pdf
+INFO:async_pdf_processor:Consolidated taxes from items: {'valor_ir': 0.0, 'valor_inss': 0.0, 'valor_pis': 0.0, 'valor_cofins': 0.0, 'valor_csll': 0.0, 'valor_issqn': 0.0}
+INFO:async_pdf_processor:Set document valor_ir = 0.0
+INFO:async_pdf_processor:Set document valor_inss = 0.0
+INFO:async_pdf_processor:Set document valor_pis = 0.0
+INFO:async_pdf_processor:Set document valor_cofins = 0.0
+INFO:async_pdf_processor:Set document valor_csll = 0.0
+INFO:async_pdf_processor:Set document valor_issqn = 0.0
+INFO:async_pdf_processor:Item 1 raw data: {'codigo': '', 'descricao': 'LEVANTE DE CONTÊINER', 'quantidade': 7, 'unidade': '', 'valor_unitario': '237,20', 'valor_total': '1.660,40', 'ncm': '', 'cfop': '', 'cst': '', 'codigo_servico': '20.01', 'aliquota': '5%', 'local_prestacao': 'SÃO GONÇALO DO AMARANTE-CE'}
+INFO:async_pdf_processor:Item 1 fields set: ['ncm=', 'cfop=', 'codigo_servico=20.01']
+INFO:async_pdf_processor:Item 1 service fields: {'codigo_servico': '20.01', 'codigo_atividade': None, 'descricao_servico': None}
+INFO:async_pdf_processor:Item 2 raw data: {'codigo': '', 'descricao': 'UTILIZAÇÃO DE SCANNER - IMP', 'quantidade': 7, 'unidade': '', 'valor_unitario': '342,13', 'valor_total': '2.394,91', 'ncm': '', 'cfop': '', 'cst': '', 'codigo_servico': '20.01', 'aliquota': '5%', 'local_prestacao': 'SÃO GONÇALO DO AMARANTE-CE'}
+INFO:async_pdf_processor:Item 2 fields set: ['ncm=', 'cfop=', 'codigo_servico=20.01']
+INFO:async_pdf_processor:Item 2 service fields: {'codigo_servico': '20.01', 'codigo_atividade': None, 'descricao_servico': None}
+INFO:async_pdf_processor:Saved processing result for 3.2.2 NFe TERMINAL PORTUARIO.pdf - Record ID: 251, Items: 2
+INFO:async_pdf_processor:Successfully processed PDF: 3.2.2 NFe TERMINAL PORTUARIO.pdf
