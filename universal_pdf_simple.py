@@ -12,6 +12,7 @@ from typing import Dict, Any, List, Optional
 from openai import OpenAI
 import pymupdf
 from json_cleaner import clean_and_parse_json
+from date_utils import clean_date_fields
 
 logger = logging.getLogger(__name__)
 
@@ -445,6 +446,9 @@ class UniversalPDFSimple:
         for field in monetary_fields:
             if field in data:
                 data[field] = self._clean_monetary_value(data[field])
+        
+        # Clean date fields to convert Brazilian format to PostgreSQL compatible ISO format
+        data = clean_date_fields(data)
         
         return data
     

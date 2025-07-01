@@ -15,6 +15,8 @@ import queue
 from dataclasses import dataclass
 from pdf_vision_processor import PDFVisionProcessor
 from pdf_multi_agent_simple import process_pdf_with_multi_agent_validation
+from universal_pdf_simple import process_pdf_universal_simple
+from date_utils import clean_date_fields
 
 logger = logging.getLogger(__name__)
 
@@ -299,6 +301,9 @@ class AsyncPDFProcessor:
             
             with app.app_context():
                 raw_data = result['data']
+                
+                # Clean date fields to convert Brazilian format to PostgreSQL compatible ISO format
+                raw_data = clean_date_fields(raw_data)
                 
                 # Create NFE record
                 nfe_record = NFERecord()
