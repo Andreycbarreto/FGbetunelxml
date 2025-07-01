@@ -97,6 +97,16 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Multi-Stage Specialized Processing System:
+  * Implemented 4-stage specialized extraction system for maximum accuracy
+  * Stage 1: Document header (emitente, destinatário, identificação)
+  * Stage 2: Fiscal values with enhanced bruto vs líquido recognition
+  * Stage 3: Detailed items extraction with commercial values focus
+  * Stage 4: Authorization and additional information capture
+  * Enhanced template layout for better visibility of tax totals and additional info
+  * Added specialized value handling for service documents (bruto values)
+  * Improved visual presentation with proper Bootstrap components
+  * Fixed display issues with additional information and tax totals sections
 - July 1, 2025. Major OCR Vision processing enhancement:
   * Completely redesigned GPT-4 Vision prompt for comprehensive NFe extraction
   * Added specialized prompts for Brazilian tax recognition (municipal vs federal)
