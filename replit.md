@@ -97,6 +97,13 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Critical Fix: Precise Tax Reader (No More Invented Values):
+  * Created PreciseTaxReader class to eliminate AI hallucination of tax values
+  * Strict instructions: "Read ONLY what's clearly visible, do NOT invent values"
+  * Zero-fallback approach: If value not found, return 0.0 instead of guessing
+  * Replaced complex multi-stage extraction with simple, direct reading
+  * Focus on accuracy over completeness to prevent false data
+  * Integrated with main PDF processor as primary tax extraction method
 - July 1, 2025. Revolutionary Two-Stage Tax Table Extraction System:
   * Created specialized tax table extractor with line-by-line reading approach
   * Stage 1: Extract each tax line individually from visual table (name + value + section)
