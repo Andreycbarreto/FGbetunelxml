@@ -50,6 +50,13 @@ class PDFVisionProcessor:
                 page_data = self._analyze_page_with_vision(image_data, i+1)
                 if page_data:
                     all_extracted_data.append(page_data)
+                
+                # Analyze items section separately for better accuracy
+                items_data = self._analyze_items_section(image_data, i+1)
+                if items_data and 'items' in items_data:
+                    if 'items' not in page_data:
+                        page_data['items'] = []
+                    page_data['items'].extend(items_data['items'])
             
             # Consolidate data from all pages
             consolidated_data = self._consolidate_nfe_data(all_extracted_data)
@@ -230,11 +237,32 @@ class PDFVisionProcessor:
                 ]
             }
 
-            ATENÇÃO ESPECIAL:
-            - Se for NFe de serviços, foque nos campos de serviço e impostos municipais
-            - Se for NFe de produtos, foque nos campos de produto e impostos estaduais/federais
-            - Procure por seções específicas de impostos retidos (IR, INSS, CSLL, ISS)
-            - Verifique se há informações adicionais no rodapé da nota
+            INSTRUÇÕES CRÍTICAS PARA ITENS:
+            - Localize a seção "DADOS DOS PRODUTOS/SERVIÇOS" na NFe
+            - Para cada item, extraia TODOS os valores da tabela de produtos/serviços
+            - Valores comerciais: quantidade, valor unitário, valor total SEMPRE presentes
+            - Valores tributários: procure na seção de impostos de cada item
+            - IMPORTANTE: Se há vários itens, liste TODOS eles no array "items"
+            - Verifique se existem páginas adicionais com mais itens
+            - Para serviços: procure códigos de atividade e descrições específicas
+            
+            LOCALIZAÇÕES DOS VALORES DOS ITENS:
+            - Quantidade: coluna "Qtde" ou "Quantidade"
+            - Valor Unitário: coluna "Vl. Unit." ou "Valor Unitário"
+            - Valor Total: coluna "Vl. Total" ou "Valor Total"
+            - NCM: coluna "NCM/SH" 
+            - CFOP: coluna "CFOP"
+            - Impostos: seção inferior da tabela ou seção específica de tributos
+            
+            SE FOR NFe DE SERVIÇOS:
+            - Procure campos de serviço e impostos municipais (ISSQN)
+            - Códigos de serviço municipal e atividade
+            
+            SE FOR NFe DE PRODUTOS:
+            - Foque em impostos estaduais/federais (ICMS, IPI, PIS, COFINS)
+            - Códigos NCM obrigatórios
+            
+            ATENÇÃO: Analise TODA a estrutura de itens da NFe, não apenas o primeiro item!
             """
             
             response = self.client.chat.completions.create(
@@ -290,15 +318,20 @@ class PDFVisionProcessor:
         consolidated = all_page_data[0].copy()
         consolidated.pop('page_number', None)
         
-        # Merge items from all pages
+        # Merge items from all pages with validation
         all_items = []
         for page_data in all_page_data:
             items = page_data.get('items', [])
-            all_items.extend(items)
+            # Validate and clean items data
+            for item in items:
+                validated_item = self._validate_item_data(item)
+                if validated_item:
+                    all_items.append(validated_item)
         
         # Update consolidated data
         if all_items:
             consolidated['items'] = all_items
+            self.logger.info(f"Consolidated {len(all_items)} items from all pages")
         
         # Flatten structure for database compatibility
         flattened = {}
@@ -485,6 +518,47 @@ class PDFVisionProcessor:
         
         return processed
     
+    def _validate_item_data(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate and ensure item data has required commercial values."""
+        if not item:
+            return None
+            
+        # Essential fields that must have valid values
+        required_fields = ['quantidade_comercial', 'valor_unitario_comercial', 'valor_total_produto']
+        
+        # Check if item has essential commercial data
+        has_essential_data = False
+        for field in required_fields:
+            value = item.get(field)
+            if value is not None and value != 0:
+                has_essential_data = True
+                break
+        
+        if not has_essential_data:
+            self.logger.warning(f"Item missing essential commercial data: {item}")
+            return None
+        
+        # Ensure numeric values are properly formatted
+        validated = {}
+        for key, value in item.items():
+            if key in ['quantidade_comercial', 'valor_unitario_comercial', 'valor_total_produto',
+                      'base_calculo_icms', 'aliquota_icms', 'valor_icms', 'valor_ipi',
+                      'valor_pis', 'valor_cofins', 'valor_issqn']:
+                validated[key] = self._parse_decimal(value)
+            else:
+                validated[key] = value
+        
+        # Calculate missing total if we have quantity and unit price
+        qtd = validated.get('quantidade_comercial')
+        unit_price = validated.get('valor_unitario_comercial')
+        total = validated.get('valor_total_produto')
+        
+        if qtd and unit_price and not total:
+            validated['valor_total_produto'] = round(float(qtd) * float(unit_price), 2)
+            self.logger.info(f"Calculated missing total: {validated['valor_total_produto']}")
+        
+        return validated
+    
     def _detect_document_type(self, image_base64: str) -> str:
         """Quick detection of document type to optimize processing."""
         try:
@@ -513,8 +587,11 @@ class PDFVisionProcessor:
                 max_tokens=50
             )
             
-            result = response.choices[0].message.content.strip().lower()
-            return result if result in ['service', 'product', 'mixed'] else 'general'
+            content = response.choices[0].message.content
+            if content:
+                result = content.strip().lower()
+                return result if result in ['service', 'product', 'mixed'] else 'general'
+            return 'general'
             
         except Exception as e:
             self.logger.warning(f"Could not detect document type: {str(e)}")
@@ -548,6 +625,110 @@ class PDFVisionProcessor:
         - Identifique se há produtos, serviços ou ambos
         - Extraia todos os impostos (municipais e estaduais)
         """
+    
+    def _analyze_items_section(self, image_base64: str, page_num: int) -> Dict[str, Any]:
+        """Analyze specifically the items section of the NFe for detailed product/service extraction."""
+        try:
+            items_prompt = """
+            Você é um especialista em extrair dados de itens de Notas Fiscais Eletrônicas brasileiras.
+            
+            FOCO EXCLUSIVO: Analise APENAS a seção de ITENS/PRODUTOS/SERVIÇOS desta NFe.
+            
+            LOCALIZAÇÃO: Procure pela tabela que contém:
+            - "DADOS DOS PRODUTOS E SERVIÇOS" ou
+            - "DISCRIMINAÇÃO DOS SERVIÇOS" ou 
+            - Tabela com colunas: Código, Descrição, Qtde, Vl.Unit., Vl.Total, etc.
+            
+            EXTRAÇÃO OBRIGATÓRIA para cada item encontrado:
+            1. Número do item (sequencial: 1, 2, 3...)
+            2. Código do produto/serviço
+            3. Descrição completa
+            4. Quantidade (SEMPRE presente)
+            5. Valor unitário (SEMPRE presente) 
+            6. Valor total (SEMPRE presente)
+            7. Unidade de medida
+            8. NCM (se produto)
+            9. CFOP
+            10. Informações tributárias específicas de cada item
+            
+            ATENÇÃO ESPECIAL AOS VALORES:
+            - Quantidade: procure na coluna "Qtde", "Quantidade", "Quant."
+            - Valor Unitário: procure na coluna "Vl. Unit.", "Valor Unit.", "V.Unit"
+            - Valor Total: procure na coluna "Vl. Total", "Valor Total", "V.Total"
+            - Unidade: procure na coluna "Un", "Unid", "Unidade"
+            
+            IMPORTANTE:
+            - Se encontrar múltiplos itens, liste TODOS no array
+            - Valores monetários sempre com ponto decimal (ex: 123.45)
+            - Se um campo não estiver visível, use null
+            - Mantenha a ordem sequencial dos itens
+            
+            Retorne APENAS um JSON com esta estrutura:
+            {
+                "items": [
+                    {
+                        "numero_item": 1,
+                        "codigo_produto": "string",
+                        "codigo_servico": "string",
+                        "descricao_produto": "string completa",
+                        "descricao_servico": "string completa",
+                        "quantidade_comercial": float,
+                        "valor_unitario_comercial": float,
+                        "valor_total_produto": float,
+                        "unidade_comercial": "string",
+                        "ncm": "string",
+                        "cfop": "string",
+                        "origem_mercadoria": "string",
+                        "situacao_tributaria_icms": "string",
+                        "base_calculo_icms": float,
+                        "aliquota_icms": float,
+                        "valor_icms": float,
+                        "valor_ipi": float,
+                        "valor_pis": float,
+                        "valor_cofins": float,
+                        "valor_issqn": float
+                    }
+                ]
+            }
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": items_prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                        ]
+                    }
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=3000
+            )
+            
+            content = response.choices[0].message.content
+            if content:
+                result = json.loads(content)
+                items = result.get('items', [])
+                self.logger.info(f"Successfully extracted {len(items)} items from page {page_num}")
+                
+                # Log detailed item information for debugging
+                for i, item in enumerate(items):
+                    qtd = item.get('quantidade_comercial')
+                    unit_price = item.get('valor_unitario_comercial')
+                    total = item.get('valor_total_produto')
+                    desc = item.get('descricao_produto', item.get('descricao_servico', 'N/A'))[:50]
+                    
+                    self.logger.info(f"Item {i+1}: {desc} - Qtd: {qtd}, Unit: {unit_price}, Total: {total}")
+                
+                return result
+            else:
+                return {}
+                
+        except Exception as e:
+            self.logger.error(f"Error analyzing items section on page {page_num}: {str(e)}")
+            return {}
 
 def process_nfe_pdf_with_vision(file_path: str) -> Dict[str, Any]:
     """
