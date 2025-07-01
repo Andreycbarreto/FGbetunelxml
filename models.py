@@ -97,6 +97,7 @@ class UploadedFile(db.Model):
     error_message = db.Column(db.Text, nullable=True)
     processing_started_at = db.Column(db.DateTime, nullable=True)
     processing_completed_at = db.Column(db.DateTime, nullable=True)
+    batch_id = db.Column(db.Integer, db.ForeignKey('batches.id'), nullable=True)  # Link to batch
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -105,6 +106,7 @@ class NFERecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
     uploaded_file_id = db.Column(db.Integer, db.ForeignKey('uploaded_files.id'), nullable=False)
+    batch_id = db.Column(db.Integer, db.ForeignKey('batches.id'), nullable=True)  # Link to batch
     
     # Identification fields
     chave_nfe = db.Column(db.String(44), nullable=True)  # NFe key
@@ -287,3 +289,85 @@ class NFEItem(db.Model):
     valor_csll = db.Column(Numeric(15, 2), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+class BatchStatus(enum.Enum):
+    """Status of a batch/contract"""
+    OPEN = "open"           # Batch is open for adding files
+    PROCESSING = "processing"  # Files are being processed
+    COMPLETED = "completed"    # All files processed
+    CLOSED = "closed"         # Batch closed for editing
+
+
+class Batch(db.Model):
+    """Model for grouping NFe documents into batches/contracts"""
+    __tablename__ = 'batches'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nome_contrato = db.Column(db.String(255), nullable=False)     # Contract/process name
+    nome_item = db.Column(db.String(255), nullable=False)         # Item name (for RM system)
+    unidade_negocio = db.Column(db.String(100), nullable=False)   # Business unit
+    centro_custo = db.Column(db.String(50), nullable=False)       # Cost center
+    
+    # Status and metadata
+    status = db.Column(db.Enum(BatchStatus), nullable=False, default=BatchStatus.OPEN)
+    descricao = db.Column(db.Text)                                # Optional description
+    
+    # Ownership and tracking
+    created_by = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    closed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    creator = db.relationship('User', backref='created_batches')
+    files = db.relationship('UploadedFile', backref='batch', lazy='dynamic')
+    nfe_records = db.relationship('NFERecord', backref='batch', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<Batch {self.nome_contrato}>'
+    
+    @property
+    def total_files(self):
+        """Total number of files in this batch"""
+        return self.files.count()
+    
+    @property
+    def processed_files(self):
+        """Number of successfully processed files"""
+        return self.files.filter_by(status='completed').count()
+    
+    @property
+    def pending_files(self):
+        """Number of files pending processing"""
+        return self.files.filter(UploadedFile.status.in_(['pending', 'processing'])).count()
+    
+    @property
+    def failed_files(self):
+        """Number of files that failed processing"""
+        return self.files.filter_by(status='error').count()
+    
+    @property
+    def progress_percentage(self):
+        """Processing progress as percentage"""
+        if self.total_files == 0:
+            return 0
+        return (self.processed_files / self.total_files) * 100
+    
+    @property
+    def total_value(self):
+        """Total value of all NFe records in this batch"""
+        total = db.session.query(db.func.sum(NFERecord.valor_total_servicos)).filter(
+            NFERecord.batch_id == self.id
+        ).scalar()
+        return total or 0
+    
+    def can_be_edited(self):
+        """Check if batch can still be edited"""
+        return self.status in [BatchStatus.OPEN, BatchStatus.PROCESSING]
+    
+    def close_batch(self):
+        """Close the batch for editing"""
+        self.status = BatchStatus.CLOSED
+        self.closed_at = datetime.now()
+        db.session.commit()
