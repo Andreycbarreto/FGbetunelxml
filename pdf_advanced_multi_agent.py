@@ -9,7 +9,7 @@ import os
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from pdf_vision_processor import PDFVisionProcessor
-from tax_disambiguation_agent import enhance_tax_extraction_with_disambiguation
+from comprehensive_tax_validator import apply_comprehensive_tax_validation
 import re
 
 logger = logging.getLogger(__name__)
@@ -351,20 +351,20 @@ class AdvancedMultiAgentProcessor:
                 tax_analysis, item_analysis, base64_image
             )
             
-            # Step 4: IR/INSS Disambiguation (specialized fix)
-            logger.info("Step 4: Running IR/INSS disambiguation...")
-            pre_disambiguation_result = self._combine_results(
+            # Step 4: Comprehensive Tax Validation (all taxes)
+            logger.info("Step 4: Running comprehensive tax validation...")
+            pre_validation_result = self._combine_results(
                 vision_result, tax_analysis, item_analysis, validation_result
             )
             
-            # Apply specialized IR/INSS disambiguation
-            final_result = enhance_tax_extraction_with_disambiguation(
-                base64_image, pre_disambiguation_result
+            # Apply comprehensive tax validation to fix all tax confusions
+            final_result = apply_comprehensive_tax_validation(
+                base64_image, pre_validation_result
             )
             
             # Step 5: Final processing notes update
             processing_notes = final_result.get('processing_notes', [])
-            processing_notes.append("Advanced multi-agent processing with IR/INSS disambiguation completed")
+            processing_notes.append("Advanced multi-agent processing with comprehensive tax validation completed")
             final_result['processing_notes'] = processing_notes
             
             logger.info(f"Advanced processing complete - Final confidence: {final_result.get('confidence_score', 0)}%")
