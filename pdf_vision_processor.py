@@ -395,7 +395,7 @@ class PDFVisionProcessor:
                 'emitente_im': emit.get('inscricao_municipal'),
                 'emitente_endereco': emit.get('endereco'),
                 'emitente_municipio': emit.get('municipio'),
-                'emitente_uf': emit.get('uf'),
+                'emitente_uf': self._validate_uf(emit.get('uf')),
                 'emitente_cep': emit.get('cep')
             })
         
@@ -409,7 +409,7 @@ class PDFVisionProcessor:
                 'destinatario_im': dest.get('inscricao_municipal'),
                 'destinatario_endereco': dest.get('endereco'),
                 'destinatario_municipio': dest.get('municipio'),
-                'destinatario_uf': dest.get('uf'),
+                'destinatario_uf': self._validate_uf(dest.get('uf')),
                 'destinatario_cep': dest.get('cep')
             })
         
@@ -515,6 +515,27 @@ class PDFVisionProcessor:
             return None
         # Remove all non-numeric characters
         return ''.join(filter(str.isdigit, str(cnpj_str)))
+    
+    def _validate_uf(self, uf_str):
+        """Validate and clean UF (state) string."""
+        if not uf_str or uf_str == 'string' or len(str(uf_str)) > 2:
+            return None
+        uf = str(uf_str).strip().upper()
+        # Lista de UFs válidos no Brasil
+        valid_ufs = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
+                     'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 
+                     'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
+        return uf if uf in valid_ufs else None
+    
+    def _validate_field_length(self, value, max_length):
+        """Validate field length to prevent database truncation errors."""
+        if not value or value == 'string':
+            return None
+        str_value = str(value).strip()
+        if len(str_value) > max_length:
+            self.logger.warning(f"Field value truncated from {len(str_value)} to {max_length} chars: {str_value[:50]}...")
+            return str_value[:max_length]
+        return str_value
     
     def _process_item_details(self, item: Dict[str, Any]) -> Dict[str, Any]:
         """Process individual item details with all tax information."""
