@@ -456,10 +456,23 @@ class PDFVisionProcessor:
             try:
                 # Get image and service value for processing
                 image_for_taxes = None
+                self.logger.info(f"🔍 Checking for images - _document_images: {hasattr(self, '_document_images')}")
+                self.logger.info(f"🔍 _current_image_base64: {hasattr(self, '_current_image_base64')}")
+                
                 if hasattr(self, '_document_images') and self._document_images:
                     image_for_taxes = self._document_images[0]
+                    self.logger.info(f"✅ Using _document_images[0] for tax processing")
                 elif hasattr(self, '_current_image_base64') and self._current_image_base64:
                     image_for_taxes = self._current_image_base64
+                    self.logger.info(f"✅ Using _current_image_base64 for tax processing")
+                else:
+                    # Try to get from base64_images if available
+                    base64_images = flattened.get('base64_images', [])
+                    if base64_images:
+                        image_for_taxes = base64_images[0]
+                        self.logger.info(f"✅ Using base64_images[0] for tax processing")
+                    else:
+                        self.logger.warning("❌ No images available for tax processing")
                 
                 if image_for_taxes:
                     # Get service value for rate validation
