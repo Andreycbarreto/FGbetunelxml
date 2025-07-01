@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Lote - {{ batch.nome_contrato }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-2">
+                        <i class="feather-package me-2"></i>
+                        {{ batch.nome_contrato }}
+                    </h1>
+                    <p class="text-muted mb-0">{{ batch.nome_item }}</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('batches_list') }}" class="btn btn-outline-secondary me-2">
+                        <i class="feather-arrow-left me-1"></i>Voltar
+                    </a>
+                    {% if batch.can_be_edited() %}
+                    <a href="{{ url_for('batch_edit', batch_id=batch.id) }}" class="btn btn-primary me-2">
+                        <i class="feather-edit me-1"></i>Editar
+                    </a>
+                    {% endif %}
+                    {% if batch.status.value == 'open' %}
+                    <a href="{{ url_for('batch_close', batch_id=batch.id) }}" class="btn btn-warning">
+                        <i class="feather-lock me-1"></i>Fechar Lote
+                    </a>
+                    {% elif batch.status.value == 'closed' %}
+                    <a href="{{ url_for('batch_reopen', batch_id=batch.id) }}" class="btn btn-success">
+                        <i class="feather-unlock me-1"></i>Reabrir Lote
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Batch Info Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="feather-file display-4 text-primary mb-2"></i>
+                            <h5 class="card-title">{{ batch.total_files }}</h5>
+                            <p class="text-muted mb-0">Total de Arquivos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="feather-check-circle display-4 text-success mb-2"></i>
+                            <h5 class="card-title">{{ batch.processed_files }}</h5>
+                            <p class="text-muted mb-0">Processados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="feather-clock display-4 text-warning mb-2"></i>
+                            <h5 class="card-title">{{ batch.pending_files }}</h5>
+                            <p class="text-muted mb-0">Pendentes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="feather-dollar-sign display-4 text-info mb-2"></i>
+                            <h5 class="card-title">{{ "%.2f"|format(batch.total_value)|replace(".", ",") }}</h5>
+                            <p class="text-muted mb-0">Valor Total (R$)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">Progresso do Processamento</h6>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ "%.1f"|format(batch.progress_percentage) }}%" 
+                             aria-valuenow="{{ batch.progress_percentage }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                            {{ "%.1f"|format(batch.progress_percentage) }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="feather-info me-2"></i>
+                        Informações do Lote
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Nome do Contrato</label>
+                                <div class="form-control-plaintext">{{ batch.nome_contrato }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Item (RM)</label>
+                                <div class="form-control-plaintext">{{ batch.nome_item }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Unidade de Negócio</label>
+                                <div class="form-control-plaintext">{{ batch.unidade_negocio or '-' }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Centro de Custo</label>
+                                <div class="form-control-plaintext">{{ batch.centro_custo or '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Status</label>
+                                <div>
+                                    {% if batch.status.value == 'open' %}
+                                        <span class="badge bg-success">Aberto</span>
+                                    {% elif batch.status.value == 'processing' %}
+                                        <span class="badge bg-warning">Processando</span>
+                                    {% elif batch.status.value == 'completed' %}
+                                        <span class="badge bg-info">Concluído</span>
+                                    {% elif batch.status.value == 'closed' %}
+                                        <span class="badge bg-secondary">Fechado</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Criado em</label>
+                                <div class="form-control-plaintext">{{ batch.created_at.strftime('%d/%m/%Y às %H:%M') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files List -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="feather-file-text me-2"></i>
+                        Arquivos no Lote
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if batch.files %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Arquivo</th>
+                                    <th>Tipo</th>
+                                    <th>Status</th>
+                                    <th>Processado em</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in batch.files %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="feather-{% if file.file_type == 'xml' %}code{% else %}file{% endif %} me-2"></i>
+                                            <div>
+                                                <div class="fw-medium">{{ file.original_filename }}</div>
+                                                <small class="text-muted">{{ "%.1f"|format(file.file_size / 1024) }} KB</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if file.file_type == 'xml' %}bg-primary{% else %}bg-info{% endif %}">
+                                            {{ file.file_type.upper() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if file.status.value == 'completed' %}
+                                            <span class="badge bg-success">
+                                                <i class="feather-check me-1"></i>Processado
+                                            </span>
+                                        {% elif file.status.value == 'processing' %}
+                                            <span class="badge bg-warning">
+                                                <i class="feather-clock me-1"></i>Processando
+                                            </span>
+                                        {% elif file.status.value == 'pending' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="feather-clock me-1"></i>Pendente
+                                            </span>
+                                        {% elif file.status.value == 'error' %}
+                                            <span class="badge bg-danger">
+                                                <i class="feather-x me-1"></i>Erro
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if file.processing_completed_at %}
+                                            {{ file.processing_completed_at.strftime('%d/%m/%Y %H:%M') }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if file.status.value == 'completed' %}
+                                            {% set nfe_record = file.nfe_records[0] if file.nfe_records else none %}
+                                            {% if nfe_record %}
+                                            <a href="{{ url_for('view_nfe', nfe_id=nfe_record.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="feather-eye me-1"></i>Ver
+                                            </a>
+                                            {% endif %}
+                                        {% elif file.status.value == 'error' %}
+                                            <button class="btn btn-sm btn-outline-warning" 
+                                                    title="{{ file.error_message or 'Erro no processamento' }}">
+                                                <i class="feather-info me-1"></i>Detalhes
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="feather-folder display-1 text-muted mb-3"></i>
+                        <h5>Nenhum arquivo no lote</h5>
+                        <p class="text-muted">
+                            Este lote ainda não possui arquivos. 
+                            <a href="{{ url_for('upload_page') }}">Faça upload de arquivos</a> 
+                            e selecione este lote para organizá-los.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Auto refresh if there are pending files
+{% if batch.pending_files > 0 %}
+setTimeout(function() {
+    location.reload();
+}, 10000); // Refresh every 10 seconds
+{% endif %}
+</script>
+{% endblock %}

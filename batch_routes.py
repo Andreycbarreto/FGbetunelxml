@@ -30,15 +30,14 @@ def batch_new():
     """Create a new batch"""
     if request.method == 'POST':
         try:
-            batch = Batch(
-                nome_contrato=request.form.get('nome_contrato'),
-                nome_item=request.form.get('nome_item'),
-                unidade_negocio=request.form.get('unidade_negocio'),
-                centro_custo=request.form.get('centro_custo'),
-                descricao=request.form.get('descricao'),
-                created_by=current_user.id,
-                status=BatchStatus.OPEN
-            )
+            batch = Batch()
+            batch.nome_contrato = request.form.get('nome_contrato')
+            batch.nome_item = request.form.get('nome_item')
+            batch.unidade_negocio = request.form.get('unidade_negocio')
+            batch.centro_custo = request.form.get('centro_custo')
+            batch.descricao = request.form.get('descricao')
+            batch.created_by = current_user.id
+            batch.status = BatchStatus.OPEN
             
             db.session.add(batch)
             db.session.commit()

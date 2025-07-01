@@ -335,17 +335,17 @@ class Batch(db.Model):
     @property
     def processed_files(self):
         """Number of successfully processed files"""
-        return self.files.filter_by(status='completed').count()
+        return self.files.filter_by(status=ProcessingStatus.COMPLETED).count()
     
     @property
     def pending_files(self):
         """Number of files pending processing"""
-        return self.files.filter(UploadedFile.status.in_(['pending', 'processing'])).count()
+        return self.files.filter(UploadedFile.status.in_([ProcessingStatus.PENDING, ProcessingStatus.PROCESSING])).count()
     
     @property
     def failed_files(self):
         """Number of files that failed processing"""
-        return self.files.filter_by(status='error').count()
+        return self.files.filter_by(status=ProcessingStatus.ERROR).count()
     
     @property
     def progress_percentage(self):
