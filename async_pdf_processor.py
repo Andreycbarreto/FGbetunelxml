@@ -14,6 +14,7 @@ from threading import Thread
 import queue
 from dataclasses import dataclass
 from pdf_vision_processor import PDFVisionProcessor
+from pdf_multi_agent_processor import process_pdf_with_multi_agent_validation
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +153,33 @@ class AsyncPDFProcessor:
                     self.logger.info(f"Retry {attempt}/{max_retries} for {job.original_filename} in {wait_time}s")
                     time.sleep(wait_time)
                 
-                # Attempt processing with vision processor first
+                # First attempt: Multi-agent validation system
+                self.logger.info(f"Attempting multi-agent processing for {job.original_filename}")
+                try:
+                    # Convert PDF to images first
+                    images = self.vision_processor._pdf_to_images(job.file_path)
+                    if not images:
+                        raise Exception("Failed to convert PDF to images")
+                    
+                    # Convert images to base64
+                    base64_images = []
+                    for image in images:
+                        base64_images.append(self.vision_processor._image_to_base64(image))
+                    
+                    # Process with multi-agent validation
+                    result = process_pdf_with_multi_agent_validation(base64_images)
+                    
+                    if result['success'] and result['confidence_score'] >= 70:
+                        self.logger.info(f"Multi-agent processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f}%)")
+                        return result
+                    else:
+                        self.logger.warning(f"Multi-agent processing had low confidence ({result.get('confidence_score', 0):.1f}%) for {job.original_filename}, trying single-agent fallback")
+                        
+                except Exception as e:
+                    self.logger.warning(f"Multi-agent processing failed for {job.original_filename}: {str(e)}, trying single-agent fallback")
+                
+                # Fallback: Single-agent vision processor
+                self.logger.info(f"Attempting single-agent vision processing for {job.original_filename}")
                 result = self.vision_processor.process_pdf_with_vision(job.file_path)
                 
                 if result['success']:
@@ -164,7 +191,7 @@ class AsyncPDFProcessor:
                     # Check if this is an API-related error that should trigger fallback
                     api_errors = ['502', 'bad gateway', 'timeout', 'rate limit', 'cloudflare', 'connection']
                     if any(err in error_msg.lower() for err in api_errors):
-                        self.logger.info(f"API error detected for {job.original_filename}, trying fallback processor")
+                        self.logger.info(f"API error detected for {job.original_filename}, trying simple processor")
                         
                         # Try fallback processor
                         try:
