@@ -102,8 +102,10 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
   * Tax Expert Agent: Deep Brazilian tax knowledge with fiscal logic validation
   * Item Extraction Agent: Comprehensive item field extraction with service codes
   * Validation Agent: Cross-validation and automatic error correction
+  * IR/INSS Disambiguation Agent: Specialized agent to prevent IR vs INSS confusion
   * Enhanced field mapping for service-specific data: codigo_servico, codigo_atividade, descricao_servico
   * Improved tax identification with document type-based validation (product vs service)
+  * Critical tax rate validation: IR (0.9-4.8%) vs INSS (11%) with automatic correction
   * Added automatic tax name correction and consistency checking
   * Implemented fallback hierarchy: Advanced → Standard Multi-Agent → Vision → Simple
   * Database field expansion to prevent truncation errors

@@ -9,6 +9,7 @@ import os
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from pdf_vision_processor import PDFVisionProcessor
+from tax_disambiguation_agent import enhance_tax_extraction_with_disambiguation
 import re
 
 logger = logging.getLogger(__name__)
@@ -40,17 +41,24 @@ class TaxExpertAgent:
            
         3. IMPOSTOS DE SERVIÇOS (quando aplicável):
            - ISSQN/ISS: Imposto sobre Serviços (municipal)
-           - IR: Imposto de Renda retido na fonte
-           - INSS: Contribuição Previdenciária retida
+           - IR: Imposto de Renda retido na fonte (FEDERAL - siglas: IR, IRRF, I.R.)
+           - INSS: Contribuição Previdenciária retida (PREVIDENCIÁRIO - siglas: INSS, Prev. Social)
            - CSLL: Contribuição Social sobre Lucro Líquido
            - ISSRF: ISS Retido na Fonte
            
-        4. REGRAS DE VALIDAÇÃO:
+        ATENÇÃO ESPECIAL IR vs INSS:
+           - IR: Alíquotas 0.9%, 1.5%, 3.0%, 4.8% - NUNCA 11%
+           - INSS: Alíquota típica 11% - NUNCA percentuais baixos como 1.5%
+           - IR aparece como "Imposto de Renda", "IRRF", "I.R."
+           - INSS aparece como "INSS", "Contribuição Previdenciária", "Prev. Social"
+           
+        4. REGRAS DE VALIDAÇÃO CRÍTICAS:
            - Valores devem ser numéricos e positivos
            - Soma dos impostos não pode exceder valor total
            - ISS/ISSQN é sempre municipal (2-5% típico)
-           - IR retido é federal (0.9-4.8% típico)
-           - INSS retido é previdenciário (11% típico)
+           - IR retido é federal (0.9-4.8% típico) - SE ENCONTRAR 11% É INSS!
+           - INSS retido é previdenciário (11% típico) - SE ENCONTRAR 1.5% É IR!
+           - NUNCA confundir: valor com alíquota 11% = INSS, valor com alíquota baixa = IR
            
         5. BUSQUE SEÇÕES ESPECÍFICAS:
            - "Cálculo do Imposto"
@@ -343,10 +351,21 @@ class AdvancedMultiAgentProcessor:
                 tax_analysis, item_analysis, base64_image
             )
             
-            # Step 4: Combine and finalize
-            final_result = self._combine_results(
+            # Step 4: IR/INSS Disambiguation (specialized fix)
+            logger.info("Step 4: Running IR/INSS disambiguation...")
+            pre_disambiguation_result = self._combine_results(
                 vision_result, tax_analysis, item_analysis, validation_result
             )
+            
+            # Apply specialized IR/INSS disambiguation
+            final_result = enhance_tax_extraction_with_disambiguation(
+                base64_image, pre_disambiguation_result
+            )
+            
+            # Step 5: Final processing notes update
+            processing_notes = final_result.get('processing_notes', [])
+            processing_notes.append("Advanced multi-agent processing with IR/INSS disambiguation completed")
+            final_result['processing_notes'] = processing_notes
             
             logger.info(f"Advanced processing complete - Final confidence: {final_result.get('confidence_score', 0)}%")
             return final_result
