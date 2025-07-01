@@ -11,6 +11,7 @@ import json
 from typing import Dict, Any, List
 from openai import OpenAI
 import pymupdf
+from tax_table_extractor import extract_taxes_with_precision
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class PDFVisionProcessor:
             timeout=60.0  # 60 second timeout
         )
         self.logger = logging.getLogger(__name__)
+        self._current_image_base64 = None  # Store current image for tax extraction
     
     def process_pdf_with_vision(self, file_path: str) -> Dict[str, Any]:
         """
@@ -114,6 +116,9 @@ class PDFVisionProcessor:
     def _analyze_page_with_vision(self, image_base64: str, page_num: int) -> Dict[str, Any]:
         """Analyze a PDF page image using GPT-4 Vision."""
         try:
+            # Store current image for tax extraction
+            self._current_image_base64 = image_base64
+            
             # First, detect document type to optimize prompt
             doc_type = self._detect_document_type(image_base64)
             
@@ -430,25 +435,55 @@ class PDFVisionProcessor:
                 if valor_servicos != valor_total_nf:
                     self.logger.info(f"Service document detected - using BRUTO value: {valor_servicos}")
             
+            # Use standard extraction for non-tax values
             flattened.update({
                 'valor_total_produtos': self._parse_decimal(vals.get('valor_total_produtos')),
                 'valor_total_servicos': valor_servicos,
                 'valor_total_nf': valor_total_nf,
-                'valor_icms': self._parse_decimal(vals.get('valor_icms')),
-                'valor_ipi': self._parse_decimal(vals.get('valor_ipi')),
-                'valor_pis': self._parse_decimal(vals.get('valor_pis')),
-                'valor_cofins': self._parse_decimal(vals.get('valor_cofins')),
-                'valor_issqn': self._parse_decimal(vals.get('valor_issqn')),
-                'valor_issrf': self._parse_decimal(vals.get('valor_issrf')),
-                'valor_ir': self._parse_decimal(vals.get('valor_ir')),
-                'valor_inss': self._parse_decimal(vals.get('valor_inss')),
-                'valor_csll': self._parse_decimal(vals.get('valor_csll')),
-                'valor_iss_retido': self._parse_decimal(vals.get('valor_iss_retido')),
                 'valor_frete': self._parse_decimal(vals.get('valor_frete')),
                 'valor_seguro': self._parse_decimal(vals.get('valor_seguro')),
                 'valor_desconto': self._parse_decimal(vals.get('valor_desconto')),
                 'valor_tributos': self._parse_decimal(vals.get('valor_tributos'))
             })
+            
+            # Use specialized tax extractor for precise tax identification
+            self.logger.info("Using specialized tax table extractor for precise tax identification")
+            try:
+                # Get image from the first page for tax extraction
+                if hasattr(self, '_current_image_base64') and self._current_image_base64:
+                    precise_taxes = extract_taxes_with_precision(self._current_image_base64)
+                    self.logger.info(f"Precise tax extraction results: {precise_taxes}")
+                    flattened.update(precise_taxes)
+                else:
+                    # Fallback to standard extraction if no image available
+                    self.logger.warning("No image available for precise tax extraction, using standard method")
+                    flattened.update({
+                        'valor_icms': self._parse_decimal(vals.get('valor_icms')),
+                        'valor_ipi': self._parse_decimal(vals.get('valor_ipi')),
+                        'valor_pis': self._parse_decimal(vals.get('valor_pis')),
+                        'valor_cofins': self._parse_decimal(vals.get('valor_cofins')),
+                        'valor_issqn': self._parse_decimal(vals.get('valor_issqn')),
+                        'valor_issrf': self._parse_decimal(vals.get('valor_issrf')),
+                        'valor_ir': self._parse_decimal(vals.get('valor_ir')),
+                        'valor_inss': self._parse_decimal(vals.get('valor_inss')),
+                        'valor_csll': self._parse_decimal(vals.get('valor_csll')),
+                        'valor_iss_retido': self._parse_decimal(vals.get('valor_iss_retido'))
+                    })
+            except Exception as e:
+                self.logger.error(f"Error in precise tax extraction: {str(e)}")
+                # Fallback to standard extraction
+                flattened.update({
+                    'valor_icms': self._parse_decimal(vals.get('valor_icms')),
+                    'valor_ipi': self._parse_decimal(vals.get('valor_ipi')),
+                    'valor_pis': self._parse_decimal(vals.get('valor_pis')),
+                    'valor_cofins': self._parse_decimal(vals.get('valor_cofins')),
+                    'valor_issqn': self._parse_decimal(vals.get('valor_issqn')),
+                    'valor_issrf': self._parse_decimal(vals.get('valor_issrf')),
+                    'valor_ir': self._parse_decimal(vals.get('valor_ir')),
+                    'valor_inss': self._parse_decimal(vals.get('valor_inss')),
+                    'valor_csll': self._parse_decimal(vals.get('valor_csll')),
+                    'valor_iss_retido': self._parse_decimal(vals.get('valor_iss_retido'))
+                })
         
         # Transporte fields
         if 'transporte' in consolidated:
