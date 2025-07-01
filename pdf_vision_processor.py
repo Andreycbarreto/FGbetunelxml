@@ -43,20 +43,28 @@ class PDFVisionProcessor:
             if not pdf_images:
                 raise Exception("Failed to convert PDF to images")
             
-            # Analyze each page with GPT-4 Vision
+            # Process each page with specialized multi-stage analysis
             all_extracted_data = []
             for i, image_data in enumerate(pdf_images):
-                self.logger.info(f"Analyzing page {i+1}/{len(pdf_images)} with GPT-4 Vision")
-                page_data = self._analyze_page_with_vision(image_data, i+1)
-                if page_data:
-                    all_extracted_data.append(page_data)
+                self.logger.info(f"Processing page {i+1}/{len(pdf_images)} with multi-stage analysis")
                 
-                # Analyze items section separately for better accuracy
-                items_data = self._analyze_items_section(image_data, i+1)
-                if items_data and 'items' in items_data:
-                    if 'items' not in page_data:
-                        page_data['items'] = []
-                    page_data['items'].extend(items_data['items'])
+                # Stage 1: Extract document header data
+                header_data = self._extract_header_data(image_data, i+1)
+                
+                # Stage 2: Extract fiscal values and taxes
+                fiscal_data = self._extract_fiscal_data(image_data, i+1)
+                
+                # Stage 3: Extract items with commercial values
+                items_data = self._extract_items_detailed(image_data, i+1)
+                
+                # Stage 4: Extract additional information
+                additional_data = self._extract_additional_info(image_data, i+1)
+                
+                # Combine all data from stages
+                combined_data = self._combine_extraction_stages(header_data, fiscal_data, items_data, additional_data, i+1)
+                
+                if combined_data:
+                    all_extracted_data.append(combined_data)
             
             # Consolidate data from all pages
             consolidated_data = self._consolidate_nfe_data(all_extracted_data)
@@ -728,6 +736,308 @@ class PDFVisionProcessor:
                 
         except Exception as e:
             self.logger.error(f"Error analyzing items section on page {page_num}: {str(e)}")
+            return {}
+    
+    def _extract_header_data(self, image_base64: str, page_num: int) -> Dict[str, Any]:
+        """Extract document header information (emitente, destinatário, identificação)."""
+        try:
+            header_prompt = """
+            FOCO EXCLUSIVO: Extraia APENAS os dados do CABEÇALHO da NFe.
+            
+            Procure pelas seções:
+            - IDENTIFICAÇÃO DA NOTA FISCAL
+            - DADOS DO EMITENTE 
+            - DADOS DO DESTINATÁRIO
+            - CHAVE DE ACESSO
+            
+            Retorne JSON com esta estrutura exata:
+            {
+                "documento": {
+                    "numero_nf": "string",
+                    "serie": "string", 
+                    "chave_nfe": "string de 44 dígitos",
+                    "data_emissao": "YYYY-MM-DD",
+                    "data_saida_entrada": "YYYY-MM-DD",
+                    "tipo_operacao": "string",
+                    "natureza_operacao": "string",
+                    "modelo": "string"
+                },
+                "emitente": {
+                    "cnpj": "apenas números",
+                    "nome": "string",
+                    "fantasia": "string",
+                    "inscricao_estadual": "string",
+                    "inscricao_municipal": "string",
+                    "endereco": "string completo",
+                    "municipio": "string",
+                    "uf": "string",
+                    "cep": "string"
+                },
+                "destinatario": {
+                    "cnpj": "apenas números",
+                    "nome": "string",
+                    "inscricao_estadual": "string", 
+                    "inscricao_municipal": "string",
+                    "endereco": "string completo",
+                    "municipio": "string",
+                    "uf": "string",
+                    "cep": "string"
+                }
+            }
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": header_prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                        ]
+                    }
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=2000
+            )
+            
+            content = response.choices[0].message.content
+            if content:
+                result = json.loads(content)
+                self.logger.info(f"Successfully extracted header data from page {page_num}")
+                return result
+            return {}
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting header data from page {page_num}: {str(e)}")
+            return {}
+    
+    def _extract_fiscal_data(self, image_base64: str, page_num: int) -> Dict[str, Any]:
+        """Extract fiscal values and tax information."""
+        try:
+            fiscal_prompt = """
+            FOCO EXCLUSIVO: Extraia APENAS os VALORES FISCAIS e IMPOSTOS da NFe.
+            
+            Procure pelas seções:
+            - CÁLCULO DO IMPOSTO
+            - DADOS ADICIONAIS
+            - TOTAIS DA NOTA FISCAL
+            - VALORES DE IMPOSTOS (ICMS, IPI, PIS, COFINS, ISS, etc.)
+            
+            IMPORTANTE: Extraia todos os valores monetários com ponto decimal.
+            
+            Retorne JSON:
+            {
+                "valores": {
+                    "valor_total_produtos": float,
+                    "valor_total_servicos": float,
+                    "valor_total_nf": float,
+                    "valor_icms": float,
+                    "valor_ipi": float,
+                    "valor_pis": float,
+                    "valor_cofins": float,
+                    "valor_issqn": float,
+                    "valor_issrf": float,
+                    "valor_ir": float,
+                    "valor_inss": float,
+                    "valor_csll": float,
+                    "valor_iss_retido": float,
+                    "valor_frete": float,
+                    "valor_seguro": float,
+                    "valor_desconto": float,
+                    "valor_tributos": float
+                },
+                "transporte": {
+                    "modalidade_frete": "string",
+                    "transportadora_cnpj": "string",
+                    "transportadora_nome": "string"
+                },
+                "pagamento": {
+                    "forma_pagamento": "string",
+                    "data_vencimento": "YYYY-MM-DD"
+                }
+            }
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": fiscal_prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                        ]
+                    }
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=2000
+            )
+            
+            content = response.choices[0].message.content
+            if content:
+                result = json.loads(content)
+                self.logger.info(f"Successfully extracted fiscal data from page {page_num}")
+                return result
+            return {}
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting fiscal data from page {page_num}: {str(e)}")
+            return {}
+    
+    def _extract_items_detailed(self, image_base64: str, page_num: int) -> Dict[str, Any]:
+        """Extract items with detailed commercial and tax values."""
+        try:
+            items_prompt = """
+            FOCO EXCLUSIVO: Extraia APENAS os ITENS/PRODUTOS/SERVIÇOS da tabela principal.
+            
+            Localize a tabela com colunas como:
+            - Código, Descrição, Quantidade, Valor Unitário, Valor Total
+            - NCM, CFOP, Unidade
+            
+            CRÍTICO: Para cada item, extraia:
+            1. Todos os valores comerciais (quantidade, valor unitário, valor total)
+            2. Códigos de identificação
+            3. Descrição completa
+            
+            Se for SERVIÇO, procure:
+            - Código do serviço municipal
+            - Código de atividade
+            - Descrição do serviço
+            
+            Retorne JSON:
+            {
+                "items": [
+                    {
+                        "numero_item": 1,
+                        "codigo_produto": "string",
+                        "codigo_servico": "string", 
+                        "codigo_atividade": "string",
+                        "descricao_produto": "string completa",
+                        "descricao_servico": "string completa",
+                        "quantidade_comercial": float,
+                        "valor_unitario_comercial": float,
+                        "valor_total_produto": float,
+                        "unidade_comercial": "string",
+                        "ncm": "string",
+                        "cfop": "string"
+                    }
+                ]
+            }
+            
+            ATENÇÃO: Se não conseguir ver valores comerciais claramente, use null mas mantenha o item.
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": items_prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                        ]
+                    }
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=3000
+            )
+            
+            content = response.choices[0].message.content
+            if content:
+                result = json.loads(content)
+                items = result.get('items', [])
+                self.logger.info(f"Successfully extracted {len(items)} items from page {page_num}")
+                
+                # Log each item for debugging
+                for i, item in enumerate(items):
+                    qtd = item.get('quantidade_comercial')
+                    unit_price = item.get('valor_unitario_comercial')
+                    total = item.get('valor_total_produto')
+                    desc = str(item.get('descricao_produto') or item.get('descricao_servico') or 'N/A')[:50]
+                    self.logger.info(f"Item {i+1}: {desc} - Qtd: {qtd}, Unit: {unit_price}, Total: {total}")
+                
+                return result
+            return {}
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting items from page {page_num}: {str(e)}")
+            return {}
+    
+    def _extract_additional_info(self, image_base64: str, page_num: int) -> Dict[str, Any]:
+        """Extract authorization and additional information."""
+        try:
+            additional_prompt = """
+            FOCO EXCLUSIVO: Extraia informações de AUTORIZAÇÃO e DADOS ADICIONAIS.
+            
+            Procure por:
+            - Protocolo de autorização
+            - Status de autorização  
+            - Ambiente (Produção/Homologação)
+            - Informações adicionais (texto no rodapé)
+            
+            Retorne JSON:
+            {
+                "autorizacao": {
+                    "protocolo_autorizacao": "string",
+                    "status_autorizacao": "string", 
+                    "ambiente": "string"
+                },
+                "informacoes_adicionais": "string - texto completo das informações adicionais"
+            }
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": additional_prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                        ]
+                    }
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=1000
+            )
+            
+            content = response.choices[0].message.content
+            if content:
+                result = json.loads(content)
+                self.logger.info(f"Successfully extracted additional info from page {page_num}")
+                return result
+            return {}
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting additional info from page {page_num}: {str(e)}")
+            return {}
+    
+    def _combine_extraction_stages(self, header_data: Dict, fiscal_data: Dict, items_data: Dict, additional_data: Dict, page_num: int) -> Dict[str, Any]:
+        """Combine data from all extraction stages."""
+        try:
+            combined = {}
+            
+            # Merge all sections
+            if header_data:
+                combined.update(header_data)
+            
+            if fiscal_data:
+                combined.update(fiscal_data)
+                
+            if items_data:
+                combined.update(items_data)
+                
+            if additional_data:
+                combined.update(additional_data)
+            
+            combined['page_number'] = page_num
+            
+            self.logger.info(f"Successfully combined all data for page {page_num}")
+            return combined
+            
+        except Exception as e:
+            self.logger.error(f"Error combining extraction stages for page {page_num}: {str(e)}")
             return {}
 
 def process_nfe_pdf_with_vision(file_path: str) -> Dict[str, Any]:
