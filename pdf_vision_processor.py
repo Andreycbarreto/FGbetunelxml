@@ -391,10 +391,24 @@ class PDFVisionProcessor:
         # Valores fields - incluindo todos os impostos municipais e federais
         if 'valores' in consolidated:
             vals = consolidated['valores']
+            
+            # Parse service values with special handling for bruto vs líquido
+            valor_servicos = self._parse_decimal(vals.get('valor_total_servicos'))
+            valor_total_nf = self._parse_decimal(vals.get('valor_total_nf'))
+            
+            # Log values for debugging
+            self.logger.info(f"Service value extraction: valor_servicos={valor_servicos}, valor_total_nf={valor_total_nf}")
+            
+            # Special handling for service documents
+            if valor_servicos and valor_total_nf:
+                # If service value exists and is different from total, it's likely bruto
+                if valor_servicos != valor_total_nf:
+                    self.logger.info(f"Service document detected - using BRUTO value: {valor_servicos}")
+            
             flattened.update({
                 'valor_total_produtos': self._parse_decimal(vals.get('valor_total_produtos')),
-                'valor_total_servicos': self._parse_decimal(vals.get('valor_total_servicos')),
-                'valor_total_nf': self._parse_decimal(vals.get('valor_total_nf')),
+                'valor_total_servicos': valor_servicos,
+                'valor_total_nf': valor_total_nf,
                 'valor_icms': self._parse_decimal(vals.get('valor_icms')),
                 'valor_ipi': self._parse_decimal(vals.get('valor_ipi')),
                 'valor_pis': self._parse_decimal(vals.get('valor_pis')),
@@ -816,47 +830,61 @@ class PDFVisionProcessor:
         """Extract fiscal values and tax information."""
         try:
             fiscal_prompt = """
-            FOCO EXCLUSIVO: Extraia APENAS os VALORES FISCAIS e IMPOSTOS da NFe.
+            FOCO EXCLUSIVO: Extraia VALORES FISCAIS COMPLETOS da NFe - VALORES BRUTOS E LÍQUIDOS.
             
             Procure pelas seções:
-            - CÁLCULO DO IMPOSTO
-            - DADOS ADICIONAIS
-            - TOTAIS DA NOTA FISCAL
-            - VALORES DE IMPOSTOS (ICMS, IPI, PIS, COFINS, ISS, etc.)
+            - CÁLCULO DO IMPOSTO (seção detalhada)
+            - TOTAIS DA NOTA FISCAL (caixa de valores)
+            - DADOS ADICIONAIS (informações importantes)
+            - RETENÇÕES E DEDUÇÕES
             
-            IMPORTANTE: Extraia todos os valores monetários com ponto decimal.
+            CRITICAL: Para SERVIÇOS, identifique:
+            - Valor BRUTO dos serviços (antes das deduções)
+            - Valor LÍQUIDO (após deduções de impostos retidos)
+            - Valor total da nota (pode ser bruto ou líquido)
+            
+            CRITICAL: Para PRODUTOS, identifique:
+            - Valor total dos produtos
+            - Impostos incidentes (ICMS, IPI, PIS, COFINS)
+            
+            Extraia EXATAMENTE como aparece na nota:
             
             Retorne JSON:
             {
                 "valores": {
-                    "valor_total_produtos": float,
-                    "valor_total_servicos": float,
-                    "valor_total_nf": float,
-                    "valor_icms": float,
-                    "valor_ipi": float,
-                    "valor_pis": float,
-                    "valor_cofins": float,
-                    "valor_issqn": float,
-                    "valor_issrf": float,
-                    "valor_ir": float,
-                    "valor_inss": float,
-                    "valor_csll": float,
-                    "valor_iss_retido": float,
-                    "valor_frete": float,
-                    "valor_seguro": float,
-                    "valor_desconto": float,
-                    "valor_tributos": float
+                    "valor_total_produtos": "float - valor total de produtos",
+                    "valor_total_servicos": "float - valor BRUTO de serviços",
+                    "valor_total_nf": "float - valor total da NFe (pode ser bruto ou líquido)",
+                    "valor_icms": "float - ICMS da nota",
+                    "valor_ipi": "float - IPI da nota",
+                    "valor_pis": "float - PIS da nota",
+                    "valor_cofins": "float - COFINS da nota",
+                    "valor_issqn": "float - ISSQN (ISS) da nota",
+                    "valor_issrf": "float - ISS retido na fonte",
+                    "valor_ir": "float - IR retido",
+                    "valor_inss": "float - INSS retido",
+                    "valor_csll": "float - CSLL retido",
+                    "valor_iss_retido": "float - ISS retido",
+                    "valor_frete": "float - valor do frete",
+                    "valor_seguro": "float - valor do seguro",
+                    "valor_desconto": "float - descontos aplicados",
+                    "valor_tributos": "float - valor aproximado total de tributos"
                 },
                 "transporte": {
-                    "modalidade_frete": "string",
-                    "transportadora_cnpj": "string",
-                    "transportadora_nome": "string"
+                    "modalidade_frete": "string - modalidade de frete",
+                    "transportadora_cnpj": "string - CNPJ transportadora",
+                    "transportadora_nome": "string - nome transportadora"
                 },
                 "pagamento": {
-                    "forma_pagamento": "string",
-                    "data_vencimento": "YYYY-MM-DD"
+                    "forma_pagamento": "string - forma de pagamento",
+                    "data_vencimento": "YYYY-MM-DD - data vencimento"
                 }
             }
+            
+            ATENÇÃO: Se for NFe de SERVIÇOS, procure especialmente por:
+            - Seção "Cálculo do ISS"
+            - Valores de retenção (IR, INSS, CSLL, ISS)
+            - Valor bruto vs valor líquido do serviço
             """
             
             response = self.client.chat.completions.create(

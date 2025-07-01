@@ -436,6 +436,14 @@
                                                 {{ record.valor_total_produtos | currency if record.valor_total_produtos else 'N/A' }}
                                             </td>
                                         </tr>
+                                        {% if record.valor_total_servicos %}
+                                        <tr class="table-info">
+                                            <td><strong>Valor Serviços (Bruto):</strong></td>
+                                            <td class="text-end">
+                                                <strong>{{ record.valor_total_servicos | currency }}</strong>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
                                         <tr>
                                             <td><strong>Valor Frete:</strong></td>
                                             <td class="text-end">
@@ -539,10 +547,10 @@
                                     </table>
                                     
                                     <div class="mt-3">
-                                        <div class="table table-warning">
-                                            <div class="d-flex justify-content-between align-items-center p-2">
-                                                <strong>Total Tributos:</strong>
-                                                <strong>
+                                        <div class="alert alert-warning border-warning">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong><i class="feather-alert-triangle me-2"></i>Total Tributos:</strong>
+                                                <strong class="text-dark">
                                                     {{ record.valor_tributos | currency if record.valor_tributos else 'N/A' }}
                                                 </strong>
                                             </div>
@@ -634,21 +642,25 @@
                                 </div>
                             </div>
                             
-                            <!-- Informações Adicionais Section -->
-                            {% if record.informacoes_adicionais %}
+                            <!-- Informações Adicionais Section - Always Show -->
                             <div class="row mt-4">
                                 <div class="col-12">
                                     <h6 class="border-bottom pb-2 mb-3">
                                         <i class="feather-info me-2"></i>Informações Adicionais da NFe
                                     </h6>
-                                    <div class="card bg-light">
+                                    <div class="card border-info">
                                         <div class="card-body">
-                                            <p class="mb-0" style="white-space: pre-wrap;">{{ record.informacoes_adicionais }}</p>
+                                            {% if record.informacoes_adicionais %}
+                                                <p class="mb-0 text-dark" style="white-space: pre-wrap; line-height: 1.5;">{{ record.informacoes_adicionais }}</p>
+                                            {% else %}
+                                                <p class="mb-0 text-muted fst-italic">
+                                                    <i class="feather-alert-circle me-2"></i>Nenhuma informação adicional encontrada nesta NFe
+                                                </p>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            {% endif %}
                             </div>
                         </div>
                     </div>
