@@ -34,13 +34,24 @@ class PreciseTaxReader:
         4. Procure por uma tabela de impostos/tributos no documento
         5. Identifique cada linha da tabela com nome do imposto e valor
 
+        ATENÇÃO ESPECIAL - CONFUSÃO COMUM IR vs INSS:
+        - IR (Imposto de Renda): aparece como "IR", "I.R.", "IRRF", "IR RETIDO" 
+        - INSS: aparece como "INSS", "I.N.S.S.", "INSS RETIDO"
+        - São impostos DIFERENTES - não confunda!
+        - IR é sobre renda, INSS é sobre previdência
+
         IMPOSTOS PARA PROCURAR (retorne 0.0 se não encontrar):
-        - PIS: Procure por "PIS" na tabela de impostos federais
-        - COFINS: Procure por "COFINS" na tabela de impostos federais  
-        - IR: Procure por "IR" ou "IRRF" na tabela de impostos retidos
-        - INSS: Procure por "INSS" na tabela de impostos retidos
-        - ISSQN: Procure por "ISSQN" ou "ISS" na tabela de impostos municipais
-        - CSLL: Procure por "CSLL" na tabela de impostos
+        - PIS: Procure EXATAMENTE por "PIS" na tabela
+        - COFINS: Procure EXATAMENTE por "COFINS" na tabela
+        - IR: Procure por "IR", "I.R.", "IRRF", "IR RETIDO" - NÃO confunda com INSS!
+        - INSS: Procure por "INSS", "I.N.S.S.", "INSS RETIDO" - NÃO confunda com IR!
+        - ISSQN: Procure por "ISSQN", "ISS", "ISS RETIDO"
+        - CSLL: Procure por "CSLL", "C.S.L.L."
+
+        REGRAS DE IDENTIFICAÇÃO:
+        1. Se vir "IR" ou "I.R." = é IR (Imposto de Renda)
+        2. Se vir "INSS" ou "I.N.S.S." = é INSS (Previdência)
+        3. Nunca misture os dois - são completamente diferentes!
 
         RESPONDA EM JSON:
         {
@@ -50,10 +61,11 @@ class PreciseTaxReader:
             "valor_inss": 0.0,
             "valor_issqn": 0.0,
             "valor_csll": 0.0,
-            "found_values": ["lista dos impostos que você encontrou"]
+            "found_values": ["lista dos impostos que você encontrou"],
+            "identification_notes": "descreva brevemente o que você viu para IR e INSS"
         }
 
-        IMPORTANTE: Apenas retorne valores que você pode VER claramente no documento.
+        IMPORTANTE: Leia com CUIDADO o nome de cada imposto. IR ≠ INSS!
         """
         
         try:
@@ -79,6 +91,7 @@ class PreciseTaxReader:
             if content:
                 result = json.loads(content)
                 logger.info(f"Found tax values: {result.get('found_values', [])}")
+                logger.info(f"IR vs INSS identification: {result.get('identification_notes', 'N/A')}")
                 
                 # Extract only numeric values
                 taxes = {

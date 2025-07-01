@@ -13,6 +13,7 @@ from openai import OpenAI
 import pymupdf
 from tax_table_extractor import extract_taxes_with_precision
 from precise_tax_reader import read_taxes_precisely
+from tax_confusion_corrector import correct_tax_confusion
 
 logger = logging.getLogger(__name__)
 
@@ -460,12 +461,30 @@ class PDFVisionProcessor:
                     self.logger.info("Reading taxes precisely from first page image")
                     precise_taxes = read_taxes_precisely(first_page_image)
                     self.logger.info(f"PRECISE tax reading results: {precise_taxes}")
-                    flattened.update(precise_taxes)
+                    
+                    # Apply confusion correction based on service value
+                    total_service_value = self._parse_decimal(vals.get('valor_total_servicos', 0))
+                    if total_service_value > 0:
+                        self.logger.info(f"Applying confusion correction with service value: {total_service_value}")
+                        corrected_taxes = correct_tax_confusion(precise_taxes, total_service_value)
+                        self.logger.info(f"Tax confusion correction results: {corrected_taxes}")
+                        flattened.update(corrected_taxes)
+                    else:
+                        flattened.update(precise_taxes)
                 elif hasattr(self, '_current_image_base64') and self._current_image_base64:
                     self.logger.info("Reading taxes precisely from current image")
                     precise_taxes = read_taxes_precisely(self._current_image_base64)
                     self.logger.info(f"PRECISE tax reading results: {precise_taxes}")
-                    flattened.update(precise_taxes)
+                    
+                    # Apply confusion correction based on service value
+                    total_service_value = self._parse_decimal(vals.get('valor_total_servicos', 0))
+                    if total_service_value > 0:
+                        self.logger.info(f"Applying confusion correction with service value: {total_service_value}")
+                        corrected_taxes = correct_tax_confusion(precise_taxes, total_service_value)
+                        self.logger.info(f"Tax confusion correction results: {corrected_taxes}")
+                        flattened.update(corrected_taxes)
+                    else:
+                        flattened.update(precise_taxes)
                 else:
                     # No image available - set all taxes to zero instead of inventing
                     self.logger.warning("No image available - setting all taxes to zero (no invention)")
