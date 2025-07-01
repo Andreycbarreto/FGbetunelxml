@@ -12,6 +12,7 @@ from typing import Dict, Any, List
 from openai import OpenAI
 import pymupdf
 from tax_table_extractor import extract_taxes_with_precision
+from precise_tax_reader import read_taxes_precisely
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,9 @@ class PDFVisionProcessor:
             
             if not pdf_images:
                 raise Exception("Failed to convert PDF to images")
+            
+            # Store images for precise tax extraction
+            self._document_images = pdf_images
             
             # Process each page with specialized multi-stage analysis
             all_extracted_data = []
@@ -446,43 +450,52 @@ class PDFVisionProcessor:
                 'valor_tributos': self._parse_decimal(vals.get('valor_tributos'))
             })
             
-            # Use specialized tax extractor for precise tax identification
-            self.logger.info("Using specialized tax table extractor for precise tax identification")
+            # Use PRECISE tax reader - no more invented values!
+            self.logger.info("Using PRECISE tax reader to read only visible values")
             try:
                 # Get image from the first page for tax extraction
-                if hasattr(self, '_current_image_base64') and self._current_image_base64:
-                    precise_taxes = extract_taxes_with_precision(self._current_image_base64)
-                    self.logger.info(f"Precise tax extraction results: {precise_taxes}")
+                if hasattr(self, '_document_images') and self._document_images:
+                    # Use first page image for tax extraction
+                    first_page_image = self._document_images[0]
+                    self.logger.info("Reading taxes precisely from first page image")
+                    precise_taxes = read_taxes_precisely(first_page_image)
+                    self.logger.info(f"PRECISE tax reading results: {precise_taxes}")
+                    flattened.update(precise_taxes)
+                elif hasattr(self, '_current_image_base64') and self._current_image_base64:
+                    self.logger.info("Reading taxes precisely from current image")
+                    precise_taxes = read_taxes_precisely(self._current_image_base64)
+                    self.logger.info(f"PRECISE tax reading results: {precise_taxes}")
                     flattened.update(precise_taxes)
                 else:
-                    # Fallback to standard extraction if no image available
-                    self.logger.warning("No image available for precise tax extraction, using standard method")
+                    # No image available - set all taxes to zero instead of inventing
+                    self.logger.warning("No image available - setting all taxes to zero (no invention)")
                     flattened.update({
-                        'valor_icms': self._parse_decimal(vals.get('valor_icms')),
-                        'valor_ipi': self._parse_decimal(vals.get('valor_ipi')),
-                        'valor_pis': self._parse_decimal(vals.get('valor_pis')),
-                        'valor_cofins': self._parse_decimal(vals.get('valor_cofins')),
-                        'valor_issqn': self._parse_decimal(vals.get('valor_issqn')),
-                        'valor_issrf': self._parse_decimal(vals.get('valor_issrf')),
-                        'valor_ir': self._parse_decimal(vals.get('valor_ir')),
-                        'valor_inss': self._parse_decimal(vals.get('valor_inss')),
-                        'valor_csll': self._parse_decimal(vals.get('valor_csll')),
-                        'valor_iss_retido': self._parse_decimal(vals.get('valor_iss_retido'))
+                        'valor_icms': 0.0,
+                        'valor_ipi': 0.0,
+                        'valor_pis': 0.0,
+                        'valor_cofins': 0.0,
+                        'valor_issqn': 0.0,
+                        'valor_issrf': 0.0,
+                        'valor_ir': 0.0,
+                        'valor_inss': 0.0,
+                        'valor_csll': 0.0,
+                        'valor_iss_retido': 0.0
                     })
             except Exception as e:
-                self.logger.error(f"Error in precise tax extraction: {str(e)}")
-                # Fallback to standard extraction
+                self.logger.error(f"Error in precise tax reading: {str(e)}")
+                # Set to zero instead of inventing values
+                self.logger.warning("Setting all taxes to zero due to error (preventing invented values)")
                 flattened.update({
-                    'valor_icms': self._parse_decimal(vals.get('valor_icms')),
-                    'valor_ipi': self._parse_decimal(vals.get('valor_ipi')),
-                    'valor_pis': self._parse_decimal(vals.get('valor_pis')),
-                    'valor_cofins': self._parse_decimal(vals.get('valor_cofins')),
-                    'valor_issqn': self._parse_decimal(vals.get('valor_issqn')),
-                    'valor_issrf': self._parse_decimal(vals.get('valor_issrf')),
-                    'valor_ir': self._parse_decimal(vals.get('valor_ir')),
-                    'valor_inss': self._parse_decimal(vals.get('valor_inss')),
-                    'valor_csll': self._parse_decimal(vals.get('valor_csll')),
-                    'valor_iss_retido': self._parse_decimal(vals.get('valor_iss_retido'))
+                    'valor_icms': 0.0,
+                    'valor_ipi': 0.0,
+                    'valor_pis': 0.0,
+                    'valor_cofins': 0.0,
+                    'valor_issqn': 0.0,
+                    'valor_issrf': 0.0,
+                    'valor_ir': 0.0,
+                    'valor_inss': 0.0,
+                    'valor_csll': 0.0,
+                    'valor_iss_retido': 0.0
                 })
         
         # Transporte fields
