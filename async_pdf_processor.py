@@ -153,12 +153,29 @@ class AsyncPDFProcessor:
                     self.logger.info(f"Retry {attempt}/{max_retries} for {job.original_filename} in {wait_time}s")
                     time.sleep(wait_time)
                 
-                # First attempt: Multi-agent validation system (if available)
-                self.logger.info(f"Attempting enhanced processing for {job.original_filename}")
+                # First attempt: Universal PDF processor (adaptive to any format)
+                self.logger.info(f"Attempting universal format-adaptive processing for {job.original_filename}")
+                
+                try:
+                    # Try universal processor first - best for handling different formats
+                    from universal_pdf_processor import process_pdf_universal
+                    result = process_pdf_universal(job.file_path)
+                    
+                    if result.get('success') and result.get('confidence_score', 0) >= 0.7:
+                        self.logger.info(f"Universal processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f})")
+                        return result
+                    else:
+                        self.logger.warning(f"Universal processing had lower confidence for {job.original_filename}, trying enhanced multi-agent")
+                        
+                except Exception as universal_e:
+                    self.logger.warning(f"Universal processing failed for {job.original_filename}: {str(universal_e)}")
+                
+                # Second attempt: Multi-agent validation system (if available)
+                self.logger.info(f"Attempting enhanced multi-agent processing for {job.original_filename}")
                 multi_agent_success = False
                 
                 try:
-                    # Try advanced multi-agent processing first  
+                    # Try advanced multi-agent processing  
                     from pdf_multi_agent_simple import process_pdf_with_advanced_agents
                     result = process_pdf_with_advanced_agents(job.file_path)
                     
