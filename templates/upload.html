@@ -149,6 +149,58 @@
                     
                     <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="xmlUploadForm">
                         <input type="hidden" name="file_type" value="xml">
+                        
+                        <!-- Batch Selection -->
+                        <div class="mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-2">
+                                                <i class="feather-package me-2"></i>
+                                                Organizar por Lote/Contrato
+                                            </h6>
+                                            <div class="form-check form-check-inline me-4">
+                                                <input class="form-check-input" type="radio" name="batch_option" id="xml_no_batch" value="none" checked>
+                                                <label class="form-check-label" for="xml_no_batch">
+                                                    Sem lote específico
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="batch_option" id="xml_use_batch" value="existing">
+                                                <label class="form-check-label" for="xml_use_batch">
+                                                    Adicionar a lote existente
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <a href="{{ url_for('batch_new') }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="feather-plus me-1"></i>
+                                                Novo Lote
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="xml_batch_selection" class="mt-3" style="display: none;">
+                                        <select class="form-select" name="batch_id" id="xml_batch_select">
+                                            <option value="">Selecione um lote...</option>
+                                            {% for batch in open_batches %}
+                                            <option value="{{ batch.id }}">
+                                                {{ batch.nome_contrato }} - {{ batch.nome_item }}
+                                                ({{ batch.total_files }} arquivos, {{ "%.1f"|format(batch.progress_percentage) }}%)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if not open_batches %}
+                                        <div class="alert alert-info mt-2 mb-0">
+                                            <i class="feather-info me-2"></i>
+                                            Nenhum lote aberto encontrado. <a href="{{ url_for('batch_new') }}">Crie um novo lote</a> para organizar seus arquivos.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="upload-area mb-4">
                             <div class="upload-zone" id="xmlUploadZone">
                                 <div class="upload-content text-center py-5">
@@ -220,6 +272,58 @@
                     
                     <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="pdfUploadForm">
                         <input type="hidden" name="file_type" value="pdf">
+                        
+                        <!-- Batch Selection -->
+                        <div class="mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-2">
+                                                <i class="feather-package me-2"></i>
+                                                Organizar por Lote/Contrato
+                                            </h6>
+                                            <div class="form-check form-check-inline me-4">
+                                                <input class="form-check-input" type="radio" name="batch_option" id="pdf_no_batch" value="none" checked>
+                                                <label class="form-check-label" for="pdf_no_batch">
+                                                    Sem lote específico
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="batch_option" id="pdf_use_batch" value="existing">
+                                                <label class="form-check-label" for="pdf_use_batch">
+                                                    Adicionar a lote existente
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <a href="{{ url_for('batch_new') }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="feather-plus me-1"></i>
+                                                Novo Lote
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="pdf_batch_selection" class="mt-3" style="display: none;">
+                                        <select class="form-select" name="batch_id" id="pdf_batch_select">
+                                            <option value="">Selecione um lote...</option>
+                                            {% for batch in open_batches %}
+                                            <option value="{{ batch.id }}">
+                                                {{ batch.nome_contrato }} - {{ batch.nome_item }}
+                                                ({{ batch.total_files }} arquivos, {{ "%.1f"|format(batch.progress_percentage) }}%)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if not open_batches %}
+                                        <div class="alert alert-info mt-2 mb-0">
+                                            <i class="feather-info me-2"></i>
+                                            Nenhum lote aberto encontrado. <a href="{{ url_for('batch_new') }}">Crie um novo lote</a> para organizar seus arquivos.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="upload-area mb-4">
                             <div class="upload-zone" id="pdfUploadZone">
                                 <div class="upload-content text-center py-5">
@@ -325,6 +429,33 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let xmlSelectedFiles = [];
     let pdfSelectedFiles = [];
+    
+    // Batch selection functionality
+    setupBatchSelection('xml_no_batch', 'xml_use_batch', 'xml_batch_selection', 'xml_batch_select');
+    setupBatchSelection('pdf_no_batch', 'pdf_use_batch', 'pdf_batch_selection', 'pdf_batch_select');
+    
+    function setupBatchSelection(noBatchId, useBatchId, selectionId, selectId) {
+        const noBatch = document.getElementById(noBatchId);
+        const useBatch = document.getElementById(useBatchId);
+        const selection = document.getElementById(selectionId);
+        const select = document.getElementById(selectId);
+        
+        // Show/hide batch selection
+        useBatch.addEventListener('change', function() {
+            if (this.checked) {
+                selection.style.display = 'block';
+                select.required = true;
+            }
+        });
+        
+        noBatch.addEventListener('change', function() {
+            if (this.checked) {
+                selection.style.display = 'none';
+                select.required = false;
+                select.value = '';
+            }
+        });
+    }
     
     // Document type switching
     xmlType.addEventListener('change', function() {

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Lotes e Contratos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="feather-package me-2"></i>
+                    Lotes e Contratos
+                </h2>
+                <a href="{{ url_for('batch_new') }}" class="btn btn-primary">
+                    <i class="feather-plus me-2"></i>
+                    Novo Lote
+                </a>
+            </div>
+
+            {% if batches.items %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nome do Contrato</th>
+                                        <th>Item</th>
+                                        <th>Un. Negócio</th>
+                                        <th>Centro Custo</th>
+                                        <th>Status</th>
+                                        <th>Arquivos</th>
+                                        <th>Progresso</th>
+                                        <th>Valor Total</th>
+                                        <th>Criado</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for batch in batches.items %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ batch.nome_contrato }}</strong>
+                                        </td>
+                                        <td>{{ batch.nome_item }}</td>
+                                        <td>{{ batch.unidade_negocio }}</td>
+                                        <td>{{ batch.centro_custo }}</td>
+                                        <td>
+                                            {% if batch.status.value == 'open' %}
+                                                <span class="badge bg-success">Aberto</span>
+                                            {% elif batch.status.value == 'processing' %}
+                                                <span class="badge bg-warning">Processando</span>
+                                            {% elif batch.status.value == 'completed' %}
+                                                <span class="badge bg-info">Concluído</span>
+                                            {% elif batch.status.value == 'closed' %}
+                                                <span class="badge bg-secondary">Fechado</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ batch.total_files }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {{ batch.progress_percentage }}%"
+                                                     aria-valuenow="{{ batch.progress_percentage }}" 
+                                                     aria-valuemin="0" aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">{{ "%.1f"|format(batch.progress_percentage) }}%</small>
+                                        </td>
+                                        <td>
+                                            <strong>{{ "R$ {:,.2f}"|format(batch.total_value) }}</strong>
+                                        </td>
+                                        <td>
+                                            <small>{{ batch.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('batch_detail', batch_id=batch.id) }}" 
+                                                   class="btn btn-outline-primary" 
+                                                   data-bs-toggle="tooltip" title="Ver Detalhes">
+                                                    <i class="feather-eye"></i>
+                                                </a>
+                                                {% if batch.can_be_edited() %}
+                                                    <a href="{{ url_for('batch_edit', batch_id=batch.id) }}" 
+                                                       class="btn btn-outline-secondary"
+                                                       data-bs-toggle="tooltip" title="Editar">
+                                                        <i class="feather-edit"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if batches.pages > 1 %}
+                <nav aria-label="Navegação de páginas" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if batches.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('batches_list', page=batches.prev_num) }}">Anterior</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Anterior</span>
+                            </li>
+                        {% endif %}
+
+                        {% for page_num in batches.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != batches.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('batches_list', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if batches.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('batches_list', page=batches.next_num) }}">Próximo</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Próximo</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="feather-package text-muted" style="font-size: 3rem;"></i>
+                        <h4 class="text-muted mt-3">Nenhum lote encontrado</h4>
+                        <p class="text-muted">Crie seu primeiro lote para organizar suas notas fiscais por contrato.</p>
+                        <a href="{{ url_for('batch_new') }}" class="btn btn-primary">
+                            <i class="feather-plus me-2"></i>
+                            Criar Primeiro Lote
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

@@ -97,6 +97,18 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Complete Batch and Contract Management System:
+  * Implemented comprehensive batch/contract system for organizing NFe documents
+  * Created Batch model with contract name, item name, business unit, and cost center
+  * Added batch_id foreign keys to UploadedFile and NFERecord models
+  * Built complete CRUD interface: create, list, edit, view batch details
+  * Enhanced upload page with batch selection for both XML and PDF uploads
+  * Added batch status tracking (OPEN, PROCESSING, COMPLETED, CLOSED)
+  * Implemented progress tracking and total value calculation per batch
+  * Created API endpoints for batch statistics and management
+  * Added "Lotes" menu item for easy navigation
+  * Comprehensive permission system: users can only access their own batches
+  * Batch validation: only open batches can receive new files
 - July 1, 2025. Auto Page Refresh Enhancement:
   * Added automatic page refresh when processing reaches 100% completion
   * Enhanced status checking frequency from 10 to 5 seconds for faster response

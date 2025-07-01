@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Lote{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="feather-package me-2"></i>
+                        Criar Novo Lote/Contrato
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nome_contrato" class="form-label">
+                                        Nome do Contrato/Processo <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="nome_contrato" 
+                                           name="nome_contrato" 
+                                           required
+                                           placeholder="Ex: Contrato 2025-001 - Importação"
+                                           value="{{ request.form.get('nome_contrato', '') }}">
+                                    <div class="form-text">
+                                        Nome identificador do contrato ou processo
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nome_item" class="form-label">
+                                        Nome do Item (RM) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="nome_item" 
+                                           name="nome_item" 
+                                           required
+                                           placeholder="Ex: Despesas de Importação"
+                                           value="{{ request.form.get('nome_item', '') }}">
+                                    <div class="form-text">
+                                        Nome do produto que será vinculado no sistema RM
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="unidade_negocio" class="form-label">
+                                        Unidade de Negócio <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="unidade_negocio" name="unidade_negocio" required>
+                                        <option value="">Selecione a unidade de negócio</option>
+                                        <option value="Matriz" {{ 'selected' if request.form.get('unidade_negocio') == 'Matriz' }}>Matriz</option>
+                                        <option value="Filial SP" {{ 'selected' if request.form.get('unidade_negocio') == 'Filial SP' }}>Filial SP</option>
+                                        <option value="Filial RJ" {{ 'selected' if request.form.get('unidade_negocio') == 'Filial RJ' }}>Filial RJ</option>
+                                        <option value="Filial BH" {{ 'selected' if request.form.get('unidade_negocio') == 'Filial BH' }}>Filial BH</option>
+                                        <option value="Comercial" {{ 'selected' if request.form.get('unidade_negocio') == 'Comercial' }}>Comercial</option>
+                                        <option value="Operações" {{ 'selected' if request.form.get('unidade_negocio') == 'Operações' }}>Operações</option>
+                                        <option value="Logística" {{ 'selected' if request.form.get('unidade_negocio') == 'Logística' }}>Logística</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="centro_custo" class="form-label">
+                                        Centro de Custo <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="centro_custo" 
+                                           name="centro_custo" 
+                                           required
+                                           placeholder="Ex: 001001"
+                                           value="{{ request.form.get('centro_custo', '') }}">
+                                    <div class="form-text">
+                                        Código do centro de custo para contabilização
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descricao" class="form-label">Descrição (Opcional)</label>
+                            <textarea class="form-control" 
+                                      id="descricao" 
+                                      name="descricao" 
+                                      rows="3"
+                                      placeholder="Descrição adicional sobre este lote ou contrato...">{{ request.form.get('descricao', '') }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('batches_list') }}" class="btn btn-secondary">
+                                <i class="feather-arrow-left me-2"></i>
+                                Voltar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="feather-save me-2"></i>
+                                Criar Lote
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="feather-help-circle me-2"></i>
+                        Como funciona?
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="feather-package text-primary" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">1. Crie o Lote</h6>
+                                <p class="small text-muted">
+                                    Defina as informações do contrato ou processo que agrupará as notas fiscais.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="feather-upload text-success" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">2. Adicione Arquivos</h6>
+                                <p class="small text-muted">
+                                    Faça upload dos XMLs e PDFs relacionados ao lote criado.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="feather-download text-info" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">3. Exporte Relatório</h6>
+                                <p class="small text-muted">
+                                    Gere relatórios consolidados por lote para integração com sistemas ERP.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on first input
+    document.getElementById('nome_contrato').focus();
+    
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const required = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        required.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+    
+    // Remove invalid class on input
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+});
+</script>
+{% endblock %}
