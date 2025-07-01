@@ -301,9 +301,19 @@ class AsyncPDFProcessor:
                 db.session.add(nfe_record)
                 db.session.flush()  # Get the ID
                 
-                # Create NFE items
+                # Create NFE items and consolidate taxes
                 items_data = raw_data.get('items', [])
                 self.logger.info(f"Processing {len(items_data)} items for {job.original_filename}")
+                
+                # Consolidate taxes from items to document level
+                consolidated_taxes = self._consolidate_taxes_from_items(items_data)
+                self.logger.info(f"Consolidated taxes from items: {consolidated_taxes}")
+                
+                # Apply consolidated taxes to document
+                for tax_field, tax_value in consolidated_taxes.items():
+                    if hasattr(nfe_record, tax_field):
+                        setattr(nfe_record, tax_field, tax_value)
+                        self.logger.info(f"Set document {tax_field} = {tax_value}")
                 
                 for i, item_data in enumerate(items_data):
                     self.logger.info(f"Item {i+1} raw data: {item_data}")
@@ -356,6 +366,30 @@ class AsyncPDFProcessor:
             # Max retries reached
             self.logger.error(f"Max retries reached for {job.original_filename}: {error_message}")
             self._update_file_status(job.file_id, 'error', f'Processing failed after {job.max_retries} retries: {error_message}')
+    
+    def _consolidate_taxes_from_items(self, items_data: List[Dict]) -> Dict[str, float]:
+        """Consolidate tax values from items to document level"""
+        tax_mapping = {
+            'tax_ir': 'valor_ir',
+            'tax_inss': 'valor_inss', 
+            'tax_pis': 'valor_pis',
+            'tax_cofins': 'valor_cofins',
+            'tax_csll': 'valor_csll',
+            'tax_issqn': 'valor_issqn'
+        }
+        
+        consolidated = {}
+        
+        for item_tax, doc_tax in tax_mapping.items():
+            total_value = 0.0
+            for item in items_data:
+                item_value = item.get(item_tax, 0.0)
+                if item_value:
+                    total_value += float(item_value)
+            
+            consolidated[doc_tax] = total_value
+            
+        return consolidated
 
 # Global instance
 async_pdf_processor = AsyncPDFProcessor()

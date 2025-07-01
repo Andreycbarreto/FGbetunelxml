@@ -97,6 +97,13 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Revolutionary Tax Consolidation Fix - From Items to Document:
+  * Identified critical issue: taxes extracted correctly at item level but not transferred to document
+  * Created automatic tax consolidation system from items to document level
+  * Maps item taxes (tax_ir, tax_pis, etc.) to document fields (valor_ir, valor_pis, etc.)
+  * Sums all tax values from items and applies totals to NFE record
+  * Comprehensive logging shows tax consolidation process
+  * Fixes the "zero taxes" display issue by ensuring document-level tax fields are populated
 - July 1, 2025. Revolutionary Multi-Stage Tax Extraction System (100% Accuracy):
   * Created revolutionary 5-stage tax extraction system combining multiple AI techniques
   * Stage 1: Visual Table Recognition with GPT-4 Vision for precise tax reading
