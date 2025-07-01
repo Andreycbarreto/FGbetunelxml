@@ -97,6 +97,14 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Critical Fix: Brazilian Date Format Compatibility:
+  * Fixed PostgreSQL datetime overflow error caused by Brazilian date format "dd/mm/yyyy"
+  * Created date_utils.py with robust Brazilian to ISO date conversion
+  * Supports multiple date formats: dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy, dd/mm/yy
+  * Intelligent 2-digit year handling (00-30 = 2000-2030, 31-99 = 1931-1999)
+  * Applied date cleaning to all processors: universal_pdf_simple, async_pdf_processor
+  * Comprehensive date field validation and PostgreSQL compatibility
+  * Prevents database errors and ensures reliable data storage
 - July 1, 2025. Universal PDF Processor for Different NFe Formats:
   * Created UniversalPDFSimple class with adaptive format detection
   * Intelligent layout detection: DANFE, NFSE, NFCe, government formats

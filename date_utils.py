@@ -72,16 +72,17 @@ def convert_brazilian_date_to_iso(date_str: str) -> Optional[str]:
                 logger.warning(f"Failed to parse date {date_str}: {e}")
                 continue
     
-    # Try ISO format (already correct)
-    iso_pattern = r'(\d{4})[/\-\.](\d{1,2})[/\-\.](\d{1,2})'
-    match = re.search(iso_pattern, date_str)
-    if match:
-        year, month, day = match.groups()
-        try:
-            dt = datetime(int(year), int(month), int(day))
-            return dt.strftime('%Y-%m-%d')
-        except (ValueError, TypeError):
-            pass
+    # Try ISO format (already correct) - only if it looks like year first
+    if re.match(r'^\d{4}[/\-\.]', date_str):
+        iso_pattern = r'(\d{4})[/\-\.](\d{1,2})[/\-\.](\d{1,2})'
+        match = re.search(iso_pattern, date_str)
+        if match:
+            year, month, day = match.groups()
+            try:
+                dt = datetime(int(year), int(month), int(day))
+                return dt.strftime('%Y-%m-%d')
+            except (ValueError, TypeError):
+                pass
     
     logger.warning(f"Could not parse date: {date_str}")
     return None
