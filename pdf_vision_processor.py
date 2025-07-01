@@ -100,85 +100,130 @@ class PDFVisionProcessor:
         """Analyze a PDF page image using GPT-4 Vision."""
         try:
             prompt = """
-            Analyze esta imagem de uma Nota Fiscal Eletrônica (NFe) brasileira e extraia TODAS as informações estruturadas.
-            
-            IMPORTANTE: 
-            - Extraia valores monetários com formatação correta (use ponto para decimais, ex: 1234.56)
-            - Extraia datas no formato YYYY-MM-DD
-            - Extraia CNPJs sem formatação (apenas números)
-            - Seja preciso com todos os números e códigos
-            - Se um campo não estiver visível, use null
-            
-            Retorne um JSON com esta estrutura exata:
+            Você é um especialista em processamento de Notas Fiscais Eletrônicas brasileiras. Analise esta imagem de NFe e extraia TODAS as informações de forma precisa e completa.
+
+            INSTRUÇÕES CRÍTICAS:
+            - Examine cada seção da nota fiscal cuidadosamente
+            - Valores monetários: use ponto decimal (ex: 1234.56), sem separadores de milhares
+            - Datas: formato YYYY-MM-DD (ex: 2024-12-30)
+            - CNPJs/CPFs: apenas números, sem formatação
+            - Códigos: exatamente como aparecem na imagem
+            - Campos não visíveis ou em branco: use null
+            - Para impostos municipais (ISSQN, ISS retido): procure na seção específica de serviços
+            - Para impostos federais: procure na seção de totais da NFe
+
+            IMPORTANTE: Identifique se é NFe de PRODUTO (modelo 55) ou SERVIÇO (modelo 57) para extrair os campos corretos.
+
+            Retorne um JSON com esta estrutura COMPLETA:
             {
                 "documento": {
-                    "numero_nf": "string",
-                    "serie": "string",
-                    "chave_nfe": "string",
-                    "data_emissao": "YYYY-MM-DD",
-                    "data_saida_entrada": "YYYY-MM-DD",
-                    "tipo_operacao": "Entrada/Saída",
-                    "natureza_operacao": "string",
-                    "modelo": "string"
+                    "numero_nf": "string - número da nota fiscal",
+                    "serie": "string - série da nota",
+                    "chave_nfe": "string - chave de acesso de 44 dígitos",
+                    "data_emissao": "YYYY-MM-DD - data de emissão",
+                    "data_saida_entrada": "YYYY-MM-DD - data de saída/entrada",
+                    "tipo_operacao": "string - Entrada ou Saída",
+                    "natureza_operacao": "string - natureza da operação",
+                    "modelo": "string - modelo da NFe (55, 57, etc)",
+                    "tipo_documento": "string - produto, servico ou misto"
                 },
                 "emitente": {
-                    "cnpj": "string apenas números",
-                    "nome": "string",
-                    "fantasia": "string",
-                    "inscricao_estadual": "string",
-                    "endereco": "string completo",
-                    "municipio": "string",
-                    "uf": "string",
-                    "cep": "string"
+                    "cnpj": "string - CNPJ apenas números",
+                    "nome": "string - razão social",
+                    "fantasia": "string - nome fantasia",
+                    "inscricao_estadual": "string - IE",
+                    "inscricao_municipal": "string - IM (para prestadores de serviço)",
+                    "endereco": "string - endereço completo",
+                    "municipio": "string - cidade",
+                    "uf": "string - estado (2 letras)",
+                    "cep": "string - CEP"
                 },
                 "destinatario": {
-                    "cnpj": "string apenas números",
-                    "nome": "string",
-                    "inscricao_estadual": "string",
-                    "endereco": "string completo",
-                    "municipio": "string",
-                    "uf": "string",
-                    "cep": "string"
+                    "cnpj": "string - CNPJ apenas números",
+                    "nome": "string - razão social",
+                    "inscricao_estadual": "string - IE",
+                    "inscricao_municipal": "string - IM",
+                    "endereco": "string - endereço completo",
+                    "municipio": "string - cidade",
+                    "uf": "string - estado (2 letras)",
+                    "cep": "string - CEP"
                 },
                 "valores": {
-                    "valor_total_produtos": float,
-                    "valor_total_nf": float,
-                    "valor_icms": float,
-                    "valor_ipi": float,
-                    "valor_pis": float,
-                    "valor_cofins": float,
-                    "valor_frete": float,
-                    "valor_seguro": float,
-                    "valor_desconto": float,
-                    "valor_tributos": float
+                    "valor_total_produtos": "float - valor total de produtos",
+                    "valor_total_servicos": "float - valor total de serviços",
+                    "valor_total_nf": "float - valor total da NFe",
+                    "valor_icms": "float - valor do ICMS",
+                    "valor_ipi": "float - valor do IPI",
+                    "valor_pis": "float - valor do PIS",
+                    "valor_cofins": "float - valor do COFINS",
+                    "valor_issqn": "float - valor do ISSQN (imposto municipal)",
+                    "valor_issrf": "float - valor do ISS retido fonte",
+                    "valor_ir": "float - valor do IR",
+                    "valor_inss": "float - valor do INSS",
+                    "valor_csll": "float - valor do CSLL",
+                    "valor_iss_retido": "float - valor do ISS retido",
+                    "valor_frete": "float - valor do frete",
+                    "valor_seguro": "float - valor do seguro",
+                    "valor_desconto": "float - valor do desconto",
+                    "valor_tributos": "float - valor aproximado dos tributos"
                 },
                 "transporte": {
-                    "modalidade_frete": "string",
-                    "transportadora_cnpj": "string",
-                    "transportadora_nome": "string"
+                    "modalidade_frete": "string - modalidade do frete",
+                    "transportadora_cnpj": "string - CNPJ da transportadora",
+                    "transportadora_nome": "string - nome da transportadora"
                 },
                 "pagamento": {
-                    "forma_pagamento": "string"
+                    "forma_pagamento": "string - forma de pagamento",
+                    "data_vencimento": "YYYY-MM-DD - data de vencimento"
                 },
                 "autorizacao": {
-                    "protocolo": "string",
-                    "status": "string",
-                    "ambiente": "Produção/Homologação"
+                    "protocolo_autorizacao": "string - protocolo de autorização",
+                    "status_autorizacao": "string - status da autorização",
+                    "ambiente": "string - Produção ou Homologação"
                 },
+                "informacoes_adicionais": "string - informações adicionais da NFe",
                 "items": [
                     {
-                        "numero_item": int,
-                        "codigo_produto": "string",
-                        "descricao_produto": "string",
-                        "ncm": "string",
-                        "cfop": "string",
-                        "unidade_comercial": "string",
-                        "quantidade_comercial": float,
-                        "valor_unitario_comercial": float,
-                        "valor_total_produto": float
+                        "numero_item": "int - número do item",
+                        "codigo_produto": "string - código do produto",
+                        "codigo_servico": "string - código do serviço (se aplicável)",
+                        "codigo_atividade": "string - código da atividade",
+                        "descricao_produto": "string - descrição do produto",
+                        "descricao_servico": "string - descrição do serviço",
+                        "ncm": "string - código NCM",
+                        "cfop": "string - código CFOP",
+                        "unidade_comercial": "string - unidade comercial",
+                        "quantidade_comercial": "float - quantidade comercial",
+                        "valor_unitario_comercial": "float - valor unitário comercial",
+                        "valor_total_produto": "float - valor total do item",
+                        "origem_mercadoria": "string - origem da mercadoria",
+                        "situacao_tributaria_icms": "string - situação tributária ICMS",
+                        "base_calculo_icms": "float - base de cálculo ICMS",
+                        "aliquota_icms": "float - alíquota ICMS",
+                        "valor_icms": "float - valor ICMS",
+                        "situacao_tributaria_ipi": "string - situação tributária IPI",
+                        "valor_ipi": "float - valor IPI",
+                        "situacao_tributaria_pis": "string - situação tributária PIS",
+                        "base_calculo_pis": "float - base de cálculo PIS",
+                        "aliquota_pis": "float - alíquota PIS",
+                        "valor_pis": "float - valor PIS",
+                        "situacao_tributaria_cofins": "string - situação tributária COFINS",
+                        "base_calculo_cofins": "float - base de cálculo COFINS",
+                        "aliquota_cofins": "float - alíquota COFINS",
+                        "valor_cofins": "float - valor COFINS",
+                        "situacao_tributaria_issqn": "string - situação tributária ISSQN",
+                        "base_calculo_issqn": "float - base de cálculo ISSQN",
+                        "aliquota_issqn": "float - alíquota ISSQN",
+                        "valor_issqn": "float - valor ISSQN"
                     }
                 ]
             }
+
+            ATENÇÃO ESPECIAL:
+            - Se for NFe de serviços, foque nos campos de serviço e impostos municipais
+            - Se for NFe de produtos, foque nos campos de produto e impostos estaduais/federais
+            - Procure por seções específicas de impostos retidos (IR, INSS, CSLL, ISS)
+            - Verifique se há informações adicionais no rodapé da nota
             """
             
             response = self.client.chat.completions.create(
@@ -258,7 +303,8 @@ class PDFVisionProcessor:
                 'data_saida_entrada': self._parse_date(doc.get('data_saida_entrada')),
                 'tipo_operacao': doc.get('tipo_operacao'),
                 'natureza_operacao': doc.get('natureza_operacao'),
-                'modelo': doc.get('modelo')
+                'modelo': doc.get('modelo'),
+                'tipo_documento': doc.get('tipo_documento')
             })
         
         # Emitente fields
@@ -269,6 +315,7 @@ class PDFVisionProcessor:
                 'emitente_nome': emit.get('nome'),
                 'emitente_fantasia': emit.get('fantasia'),
                 'emitente_ie': emit.get('inscricao_estadual'),
+                'emitente_im': emit.get('inscricao_municipal'),
                 'emitente_endereco': emit.get('endereco'),
                 'emitente_municipio': emit.get('municipio'),
                 'emitente_uf': emit.get('uf'),
@@ -282,22 +329,30 @@ class PDFVisionProcessor:
                 'destinatario_cnpj': self._format_cnpj(dest.get('cnpj')),
                 'destinatario_nome': dest.get('nome'),
                 'destinatario_ie': dest.get('inscricao_estadual'),
+                'destinatario_im': dest.get('inscricao_municipal'),
                 'destinatario_endereco': dest.get('endereco'),
                 'destinatario_municipio': dest.get('municipio'),
                 'destinatario_uf': dest.get('uf'),
                 'destinatario_cep': dest.get('cep')
             })
         
-        # Valores fields
+        # Valores fields - incluindo todos os impostos municipais e federais
         if 'valores' in consolidated:
             vals = consolidated['valores']
             flattened.update({
                 'valor_total_produtos': self._parse_decimal(vals.get('valor_total_produtos')),
+                'valor_total_servicos': self._parse_decimal(vals.get('valor_total_servicos')),
                 'valor_total_nf': self._parse_decimal(vals.get('valor_total_nf')),
                 'valor_icms': self._parse_decimal(vals.get('valor_icms')),
                 'valor_ipi': self._parse_decimal(vals.get('valor_ipi')),
                 'valor_pis': self._parse_decimal(vals.get('valor_pis')),
                 'valor_cofins': self._parse_decimal(vals.get('valor_cofins')),
+                'valor_issqn': self._parse_decimal(vals.get('valor_issqn')),
+                'valor_issrf': self._parse_decimal(vals.get('valor_issrf')),
+                'valor_ir': self._parse_decimal(vals.get('valor_ir')),
+                'valor_inss': self._parse_decimal(vals.get('valor_inss')),
+                'valor_csll': self._parse_decimal(vals.get('valor_csll')),
+                'valor_iss_retido': self._parse_decimal(vals.get('valor_iss_retido')),
                 'valor_frete': self._parse_decimal(vals.get('valor_frete')),
                 'valor_seguro': self._parse_decimal(vals.get('valor_seguro')),
                 'valor_desconto': self._parse_decimal(vals.get('valor_desconto')),
@@ -317,17 +372,21 @@ class PDFVisionProcessor:
         if 'pagamento' in consolidated:
             pag = consolidated['pagamento']
             flattened.update({
-                'forma_pagamento': pag.get('forma_pagamento')
+                'forma_pagamento': pag.get('forma_pagamento'),
+                'data_vencimento': self._parse_date(pag.get('data_vencimento'))
             })
         
         # Autorizacao fields
         if 'autorizacao' in consolidated:
             auth = consolidated['autorizacao']
             flattened.update({
-                'protocolo_autorizacao': auth.get('protocolo'),
-                'status_autorizacao': auth.get('status'),
+                'protocolo_autorizacao': auth.get('protocolo_autorizacao'),
+                'status_autorizacao': auth.get('status_autorizacao'),
                 'ambiente': auth.get('ambiente')
             })
+        
+        # Informações adicionais
+        flattened['informacoes_adicionais'] = consolidated.get('informacoes_adicionais')
         
         # Items
         flattened['items'] = consolidated.get('items', [])
