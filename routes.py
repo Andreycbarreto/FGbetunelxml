@@ -11,8 +11,9 @@ from sqlalchemy.exc import IntegrityError
 
 from app import app, db, init_database
 from replit_auth import require_login, make_replit_blueprint
-from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole
+from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole, Batch, BatchStatus
 from xml_processor import NFEXMLProcessor
+import batch_routes  # Import batch management routes
 from ai_agents import process_nfe_with_ai
 from pdf_simple_processor import SimplePDFProcessor
 from pdf_vision_processor import PDFVisionProcessor
@@ -112,8 +113,14 @@ def index():
 @app.route('/upload')
 @login_required_hybrid
 def upload_page():
-    """File upload page."""
-    return render_template('upload.html')
+    """File upload page with batch selection."""
+    # Get open batches for current user
+    open_batches = Batch.query.filter_by(
+        created_by=current_user.id,
+        status=BatchStatus.OPEN
+    ).order_by(Batch.updated_at.desc()).all()
+    
+    return render_template('upload.html', open_batches=open_batches)
 
 @app.route('/upload', methods=['POST'])
 @login_required_hybrid
@@ -125,6 +132,22 @@ def upload_files():
     
     files = request.files.getlist('files')
     file_type = request.form.get('file_type', 'xml')  # Default to XML
+    batch_id = request.form.get('batch_id')  # Optional batch ID
+    
+    # Validate batch if provided
+    batch = None
+    if batch_id:
+        try:
+            batch = Batch.query.get(int(batch_id))
+            if not batch or batch.created_by != current_user.id:
+                flash('Lote inválido ou acesso negado', 'error')
+                return redirect(request.url)
+            if not batch.can_be_edited():
+                flash('Este lote não permite mais adições de arquivos', 'error')
+                return redirect(request.url)
+        except (ValueError, TypeError):
+            flash('ID de lote inválido', 'error')
+            return redirect(request.url)
     
     if not files or all(file.filename == '' for file in files):
         flash('Nenhum arquivo selecionado', 'error')
@@ -154,6 +177,7 @@ def upload_files():
                 uploaded_file.file_size = os.path.getsize(file_path)
                 uploaded_file.file_type = file_type
                 uploaded_file.status = ProcessingStatus.PENDING
+                uploaded_file.batch_id = batch.id if batch else None
                 
                 db.session.add(uploaded_file)
                 db.session.commit()
