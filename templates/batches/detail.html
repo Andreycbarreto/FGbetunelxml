@@ -213,20 +213,32 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if file.status.value == 'completed' %}
-                                            {% set nfe_record = file.nfe_records[0] if file.nfe_records else none %}
-                                            {% if nfe_record %}
-                                            <a href="{{ url_for('view_nfe', nfe_id=nfe_record.id) }}" 
-                                               class="btn btn-sm btn-outline-primary">
-                                                <i class="feather-eye me-1"></i>Ver
-                                            </a>
+                                        <div class="d-flex gap-1">
+                                            {% if file.status.value == 'completed' %}
+                                                {% set nfe_record = file.nfe_records[0] if file.nfe_records else none %}
+                                                {% if nfe_record %}
+                                                <a href="{{ url_for('view_record', record_id=nfe_record.id) }}" 
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="feather-eye me-1"></i>Ver NFe
+                                                </a>
+                                                {% endif %}
+                                            {% elif file.status.value == 'error' %}
+                                                <button class="btn btn-sm btn-outline-danger" 
+                                                        data-bs-toggle="tooltip" 
+                                                        data-bs-placement="top"
+                                                        title="{{ file.error_message or 'Erro no processamento' }}">
+                                                    <i class="feather-alert-circle me-1"></i>Erro
+                                                </button>
+                                            {% elif file.status.value == 'processing' %}
+                                                <span class="btn btn-sm btn-outline-info disabled">
+                                                    <i class="feather-clock me-1"></i>Processando...
+                                                </span>
+                                            {% elif file.status.value == 'pending' %}
+                                                <span class="btn btn-sm btn-outline-secondary disabled">
+                                                    <i class="feather-clock me-1"></i>Na fila
+                                                </span>
                                             {% endif %}
-                                        {% elif file.status.value == 'error' %}
-                                            <button class="btn btn-sm btn-outline-warning" 
-                                                    title="{{ file.error_message or 'Erro no processamento' }}">
-                                                <i class="feather-info me-1"></i>Detalhes
-                                            </button>
-                                        {% endif %}
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -253,6 +265,14 @@
 
 {% block extra_scripts %}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
 // Auto refresh if there are pending files
 {% if batch.pending_files > 0 %}
 setTimeout(function() {

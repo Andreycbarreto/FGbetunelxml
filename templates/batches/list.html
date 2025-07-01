@@ -76,17 +76,27 @@
                                             <small>{{ batch.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
+                                            <div class="d-flex gap-2">
                                                 <a href="{{ url_for('batch_detail', batch_id=batch.id) }}" 
-                                                   class="btn btn-outline-primary" 
-                                                   data-bs-toggle="tooltip" title="Ver Detalhes">
-                                                    <i class="feather-eye"></i>
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="feather-eye me-1"></i>Ver
                                                 </a>
                                                 {% if batch.can_be_edited() %}
                                                     <a href="{{ url_for('batch_edit', batch_id=batch.id) }}" 
-                                                       class="btn btn-outline-secondary"
-                                                       data-bs-toggle="tooltip" title="Editar">
-                                                        <i class="feather-edit"></i>
+                                                       class="btn btn-sm btn-outline-secondary">
+                                                        <i class="feather-edit me-1"></i>Editar
+                                                    </a>
+                                                {% endif %}
+                                                {% if batch.status.value == 'open' %}
+                                                    <a href="{{ url_for('batch_close', batch_id=batch.id) }}" 
+                                                       class="btn btn-sm btn-outline-warning"
+                                                       onclick="return confirm('Deseja realmente fechar este lote? Não será possível adicionar mais arquivos.')">
+                                                        <i class="feather-lock me-1"></i>Fechar
+                                                    </a>
+                                                {% elif batch.status.value == 'closed' %}
+                                                    <a href="{{ url_for('batch_reopen', batch_id=batch.id) }}" 
+                                                       class="btn btn-sm btn-outline-success">
+                                                        <i class="feather-unlock me-1"></i>Reabrir
                                                     </a>
                                                 {% endif %}
                                             </div>

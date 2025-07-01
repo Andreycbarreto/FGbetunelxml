@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Lote - {{ batch.nome_contrato }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-2">
+                        <i class="feather-edit me-2"></i>
+                        Editar Lote
+                    </h1>
+                    <p class="text-muted mb-0">Atualize as informações do lote/contrato</p>
+                </div>
+                <a href="{{ url_for('batch_detail', batch_id=batch.id) }}" class="btn btn-outline-secondary">
+                    <i class="feather-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="feather-package me-2"></i>
+                        Informações do Lote
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('batch_edit', batch_id=batch.id) }}" method="post">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nome_contrato" class="form-label">
+                                        Nome do Contrato <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="nome_contrato" 
+                                           name="nome_contrato" 
+                                           value="{{ batch.nome_contrato }}"
+                                           required>
+                                    <div class="form-text">
+                                        Nome identificador do contrato ou processo
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nome_item" class="form-label">
+                                        Item (RM) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="nome_item" 
+                                           name="nome_item" 
+                                           value="{{ batch.nome_item }}"
+                                           required>
+                                    <div class="form-text">
+                                        Código RM ou identificador do item
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="unidade_negocio" class="form-label">
+                                        Unidade de Negócio
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="unidade_negocio" 
+                                           name="unidade_negocio" 
+                                           value="{{ batch.unidade_negocio or '' }}">
+                                    <div class="form-text">
+                                        Departamento ou unidade responsável
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="centro_custo" class="form-label">
+                                        Centro de Custo
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="centro_custo" 
+                                           name="centro_custo" 
+                                           value="{{ batch.centro_custo or '' }}">
+                                    <div class="form-text">
+                                        Código do centro de custo para contabilização
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="descricao" class="form-label">
+                                Descrição
+                            </label>
+                            <textarea class="form-control" 
+                                      id="descricao" 
+                                      name="descricao" 
+                                      rows="3">{{ batch.descricao or '' }}</textarea>
+                            <div class="form-text">
+                                Descrição adicional ou observações sobre o lote
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-start">
+                                <i class="feather-info me-2 mt-1"></i>
+                                <div>
+                                    <strong>Informações do Lote:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Status: 
+                                            {% if batch.status.value == 'open' %}
+                                                <span class="badge bg-success">Aberto</span>
+                                            {% elif batch.status.value == 'processing' %}
+                                                <span class="badge bg-warning">Processando</span>
+                                            {% elif batch.status.value == 'completed' %}
+                                                <span class="badge bg-info">Concluído</span>
+                                            {% elif batch.status.value == 'closed' %}
+                                                <span class="badge bg-secondary">Fechado</span>
+                                            {% endif %}
+                                        </li>
+                                        <li>Total de arquivos: <strong>{{ batch.total_files }}</strong></li>
+                                        <li>Arquivos processados: <strong>{{ batch.processed_files }}</strong></li>
+                                        <li>Criado em: <strong>{{ batch.created_at.strftime('%d/%m/%Y às %H:%M') }}</strong></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('batch_detail', batch_id=batch.id) }}" 
+                               class="btn btn-outline-secondary">
+                                <i class="feather-x me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="feather-save me-1"></i>Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if not batch.can_be_edited() %}
+            <div class="alert alert-warning mt-4">
+                <div class="d-flex align-items-start">
+                    <i class="feather-alert-triangle me-2 mt-1"></i>
+                    <div>
+                        <strong>Atenção:</strong> Este lote está fechado ou concluído. 
+                        Algumas alterações podem não ser permitidas.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    const nomeContrato = document.getElementById('nome_contrato');
+    const nomeItem = document.getElementById('nome_item');
+    
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Reset previous validation
+        [nomeContrato, nomeItem].forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        
+        // Validate required fields
+        if (!nomeContrato.value.trim()) {
+            nomeContrato.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        if (!nomeItem.value.trim()) {
+            nomeItem.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            
+            // Show error message
+            const existingAlert = document.querySelector('.alert-danger');
+            if (!existingAlert) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <i class="feather-x-circle me-2 mt-1"></i>
+                        <div>
+                            <strong>Erro:</strong> Por favor, preencha todos os campos obrigatórios.
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                form.insertBefore(alertDiv, form.firstChild);
+            }
+        }
+    });
+    
+    // Real-time validation feedback
+    [nomeContrato, nomeItem].forEach(field => {
+        field.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
