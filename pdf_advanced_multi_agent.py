@@ -9,7 +9,7 @@ import os
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from pdf_vision_processor import PDFVisionProcessor
-from comprehensive_tax_validator import apply_comprehensive_tax_validation
+from advanced_tax_table_reader import apply_advanced_tax_table_reading
 import re
 
 logger = logging.getLogger(__name__)
@@ -351,20 +351,20 @@ class AdvancedMultiAgentProcessor:
                 tax_analysis, item_analysis, base64_image
             )
             
-            # Step 4: Comprehensive Tax Validation (all taxes)
-            logger.info("Step 4: Running comprehensive tax validation...")
-            pre_validation_result = self._combine_results(
+            # Step 4: Advanced Tax Table Reading (line-by-line analysis)
+            logger.info("Step 4: Running advanced tax table reading...")
+            pre_tax_reading_result = self._combine_results(
                 vision_result, tax_analysis, item_analysis, validation_result
             )
             
-            # Apply comprehensive tax validation to fix all tax confusions
-            final_result = apply_comprehensive_tax_validation(
-                base64_image, pre_validation_result
+            # Apply advanced tax table reading to fix all tax confusions
+            final_result = apply_advanced_tax_table_reading(
+                base64_image, pre_tax_reading_result
             )
             
             # Step 5: Final processing notes update
             processing_notes = final_result.get('processing_notes', [])
-            processing_notes.append("Advanced multi-agent processing with comprehensive tax validation completed")
+            processing_notes.append("Advanced multi-agent processing with line-by-line tax table reading completed")
             final_result['processing_notes'] = processing_notes
             
             logger.info(f"Advanced processing complete - Final confidence: {final_result.get('confidence_score', 0)}%")
