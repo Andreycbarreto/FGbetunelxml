@@ -648,12 +648,12 @@
                                     <h6 class="border-bottom pb-2 mb-3">
                                         <i class="feather-info me-2"></i>Informações Adicionais da NFe
                                     </h6>
-                                    <div class="card border-info bg-secondary">
+                                    <div class="card border-info" style="background-color: #495057;">
                                         <div class="card-body">
                                             {% if record.informacoes_adicionais %}
-                                                <p class="mb-0 text-light" style="white-space: pre-wrap; line-height: 1.5;">{{ record.informacoes_adicionais }}</p>
+                                                <p class="mb-0" style="color: #ffffff; white-space: pre-wrap; line-height: 1.5;">{{ record.informacoes_adicionais }}</p>
                                             {% else %}
-                                                <p class="mb-0 text-light fst-italic">
+                                                <p class="mb-0 fst-italic" style="color: #ffffff;">
                                                     <i class="feather-alert-circle me-2"></i>Nenhuma informação adicional encontrada nesta NFe
                                                 </p>
                                             {% endif %}
