@@ -158,15 +158,25 @@ class AsyncPDFProcessor:
                 multi_agent_success = False
                 
                 try:
-                    # Try multi-agent processing first  
-                    result = process_pdf_with_multi_agent_validation(job.file_path)
+                    # Try advanced multi-agent processing first  
+                    from pdf_multi_agent_simple import process_pdf_with_advanced_agents
+                    result = process_pdf_with_advanced_agents(job.file_path)
                     
-                    if result.get('success') and result.get('confidence_score', 0) >= 70:
-                        self.logger.info(f"Multi-agent processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f}%)")
+                    if result.get('success') and result.get('confidence_score', 0) >= 75:
+                        self.logger.info(f"Advanced multi-agent processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f}%)")
                         multi_agent_success = True
                         return result
                     else:
-                        self.logger.warning(f"Multi-agent processing had low confidence for {job.original_filename}, trying single-agent fallback")
+                        self.logger.warning(f"Advanced multi-agent processing had low confidence for {job.original_filename}, trying standard multi-agent")
+                        
+                        # Try standard multi-agent as fallback
+                        from pdf_multi_agent_simple import process_pdf_with_multi_agent_validation
+                        result = process_pdf_with_multi_agent_validation(job.file_path)
+                        
+                        if result.get('success') and result.get('confidence_score', 0) >= 70:
+                            self.logger.info(f"Standard multi-agent processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f}%)")
+                            multi_agent_success = True
+                            return result
                         
                 except Exception as e:
                     self.logger.warning(f"Multi-agent processing failed for {job.original_filename}: {str(e)}, trying single-agent fallback")

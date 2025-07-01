@@ -360,3 +360,21 @@ def process_pdf_with_multi_agent_validation(pdf_path: str) -> Dict[str, Any]:
         Processing results with validation data
     """
     return multi_agent_processor.process_pdf_file(pdf_path)
+
+def process_pdf_with_advanced_agents(pdf_path: str) -> Dict[str, Any]:
+    """
+    Process PDF with advanced multi-agent system for improved accuracy
+    
+    Args:
+        pdf_path: Path to the PDF file
+        
+    Returns:
+        Processing results with enhanced tax and item extraction
+    """
+    try:
+        from pdf_advanced_multi_agent import AdvancedMultiAgentProcessor
+        advanced_processor = AdvancedMultiAgentProcessor()
+        return advanced_processor.process_pdf_file(pdf_path)
+    except Exception as e:
+        logger.error(f"Advanced processing failed, falling back to standard multi-agent: {e}")
+        return multi_agent_processor.process_pdf_file(pdf_path)
