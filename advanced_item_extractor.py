@@ -55,7 +55,10 @@ class AdvancedItemExtractor:
 
         ✅ CÓDIGOS BÁSICOS:
         - codigo_servico: formato XX.XX (busque "Serviço: XXXX" e formate como XX.XX)
-        - codigo_atividade: números longos (busque "Atividade: XXXXXXX")
+        - codigo_atividade: CNAE com EXATAMENTE 7 dígitos (busque "Atividade: XXXXXXX")
+          * IMPORTANTE: CNAE tem sempre 7 dígitos (ex: 6201500, 8230001)
+          * NÃO use CEP (8 dígitos como 77400000)
+          * Se não encontrar CNAE válido de 7 dígitos, deixe null
         - descricao_servico: texto completo da descrição
 
         ✅ DETALHES DO SERVIÇO (da seção detalhada):
@@ -89,7 +92,7 @@ class AdvancedItemExtractor:
             "items": [
                 {
                     "codigo_servico": "33.01",
-                    "codigo_atividade": "77400000",
+                    "codigo_atividade": null,
                     "descricao_servico": "Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres",
                     "servico_codigo": "3301",
                     "servico_local_prestacao": "7435",
@@ -248,7 +251,7 @@ class AdvancedItemExtractor:
         return cleaned[:20] if cleaned else ''
     
     def _clean_activity_code(self, code) -> str:
-        """Clean activity code (CNAE)"""
+        """Clean activity code (CNAE) - must be exactly 7 digits"""
         if code is None or code == 'null' or code == '':
             logger.warning("Activity code is None/null - AI might not have found it in the document")
             return ''
@@ -258,15 +261,20 @@ class AdvancedItemExtractor:
         import re
         cleaned = re.sub(r'[^\d]', '', code_str)
         
-        # Validar se é um CNAE válido (geralmente 7 dígitos)
-        if cleaned and len(cleaned) >= 6 and len(cleaned) <= 8:
-            logger.info(f"Valid activity code found: {cleaned}")
-            return cleaned[:20]
-        elif cleaned:
-            logger.warning(f"Activity code found but unusual format: {code_str} -> {cleaned}")
-            return cleaned[:20]
+        # CNAE deve ter EXATAMENTE 7 dígitos
+        if cleaned and len(cleaned) == 7:
+            logger.info(f"Valid CNAE (7 digits) found: {cleaned}")
+            return cleaned
         
-        logger.warning(f"No valid activity code found: {code_str}")
+        # Rejeitar CEPs (8 dígitos) e outros formatos inválidos
+        if cleaned and len(cleaned) == 8:
+            logger.warning(f"Rejecting 8-digit code (likely CEP, not CNAE): {cleaned}")
+            return ''
+        elif cleaned and len(cleaned) != 7:
+            logger.warning(f"Invalid CNAE format - must be exactly 7 digits: {code_str} -> {cleaned}")
+            return ''
+        
+        logger.warning(f"No valid CNAE found: {code_str}")
         return ''
     
     def _clean_description(self, desc) -> str:

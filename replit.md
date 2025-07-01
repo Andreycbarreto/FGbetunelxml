@@ -103,9 +103,11 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
   * Added detailed service fields: servico_codigo, servico_local_prestacao, servico_aliquota, etc.
   * Implemented comprehensive tax extraction: tax_ir, tax_inss, tax_csll, tax_cofins, tax_pis, tax_issqn
   * Automatic service code formatting: converts "3301" to "33.01" format
+  * Strict CNAE validation: accepts ONLY 7-digit codes, rejects CEP (8 digits) and invalid formats
   * Enhanced prompts to analyze both item table AND "Descrição dos Serviços Prestados" section
   * Complete field mapping for all service document components visible in NFe
   * Comprehensive logging to track extraction of all 25+ service-related fields
+  * Fixed database schema with all new columns for seamless data storage
 - July 1, 2025. Final Solution: Comprehensive Tax Processor with Auto-Correction:
   * Created FinalTaxProcessor - unified solution combining precise reading + auto-correction
   * Enhanced prompts with specific IR vs INSS distinction rules and examples
