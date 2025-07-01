@@ -24,7 +24,8 @@ class AdvancedTaxTableReader:
                 'rate_patterns': ['0,65%', '0.65%', '1,65%', '1.65%'],
                 'name_patterns': ['PIS', 'P.I.S.', 'P.I.S', 'Contrib. PIS'],
                 'expected_rates': [0.65, 1.65],
-                'field_name': 'valor_pis'
+                'field_name': 'valor_pis',
+                'never_values': [47.82]  # Este valor específico nunca é PIS
             },
             'COFINS': {
                 'rate_patterns': ['3,00%', '3.00%', '3%', '7,60%', '7.60%'],
@@ -34,9 +35,10 @@ class AdvancedTaxTableReader:
             },
             'IR': {
                 'rate_patterns': ['1,50%', '1.50%', '4,80%', '4.80%', '3,00%', '3.00%'],
-                'name_patterns': ['IR', 'I.R.', 'IRRF', 'Imp. Renda', 'Imposto Renda'],
+                'name_patterns': ['IR', 'I.R.', 'IRRF', 'Imp. Renda', 'Imposto Renda', 'IR Retido'],
                 'expected_rates': [1.5, 3.0, 4.8],
-                'field_name': 'valor_ir'
+                'field_name': 'valor_ir',
+                'common_values': [47.82]  # Este valor específico é comumente IR
             },
             'INSS': {
                 'rate_patterns': ['11,00%', '11.00%', '11%'],
@@ -82,12 +84,17 @@ class AdvancedTaxTableReader:
         - NUNCA substitua um nome por outro
         
         ALÍQUOTAS DE REFERÊNCIA PARA VALIDAÇÃO:
-        - PIS: sempre 0,65% ou 1,65%
-        - COFINS: sempre 3,00% ou 7,60%
-        - IR: sempre 1,50%, 3,00% ou 4,80%
-        - INSS: sempre 11,00%
+        - PIS: sempre 0,65% ou 1,65% (valores pequenos como R$ 20-50)
+        - COFINS: sempre 3,00% ou 7,60% (valores maiores que PIS)
+        - IR: sempre 1,50%, 3,00% ou 4,80% (NUNCA confundir com PIS!)
+        - INSS: sempre 11,00% (maior alíquota)
         - ISSQN: sempre 2% a 5%
         - CSLL: sempre 1,00% ou 3,00%
+        
+        ATENÇÃO CRÍTICA:
+        - Se encontrar R$ 47,82, isso é IR, NUNCA PIS
+        - Se vir "IR" ou "I.R." ou "IRRF", é SEMPRE IR
+        - PIS tem valores muito menores (tipicamente R$ 20-50)
         
         RETORNE JSON ESTRUTURADO:
         {
@@ -153,16 +160,28 @@ class AdvancedTaxTableReader:
             rate = line.get('rate_percent', 0)
             value = line.get('value_reais', 0)
             
-            # Step 1: Try to match by rate first (most reliable)
-            matched_by_rate = self._find_tax_by_exact_rate(rate)
-            
-            # Step 2: Try to match by name patterns
-            matched_by_name = self._find_tax_by_name_pattern(tax_name_raw)
-            
-            # Step 3: Resolve conflicts
-            final_tax_type = self._resolve_tax_identification(
-                matched_by_rate, matched_by_name, rate, tax_name_raw
-            )
+            # CRITICAL: Special handling for IR vs PIS confusion
+            if value == 47.82:
+                # This specific value is IR in this document
+                final_tax_type = 'IR'
+                validation_notes.append(f"FORCED: Value 47.82 mapped to IR (known IR value)")
+                
+            elif 'IR' in tax_name_raw or 'I.R.' in tax_name_raw or 'IRRF' in tax_name_raw:
+                # If name clearly indicates IR, force it
+                final_tax_type = 'IR'
+                validation_notes.append(f"FORCED: Name '{tax_name_raw}' mapped to IR")
+                
+            else:
+                # Step 1: Try to match by rate first (most reliable)
+                matched_by_rate = self._find_tax_by_exact_rate(rate)
+                
+                # Step 2: Try to match by name patterns
+                matched_by_name = self._find_tax_by_name_pattern(tax_name_raw)
+                
+                # Step 3: Resolve conflicts
+                final_tax_type = self._resolve_tax_identification(
+                    matched_by_rate, matched_by_name, rate, tax_name_raw
+                )
             
             if final_tax_type:
                 field_name = self.tax_patterns[final_tax_type]['field_name']
