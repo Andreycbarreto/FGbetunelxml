@@ -99,7 +99,18 @@ class PDFVisionProcessor:
     def _analyze_page_with_vision(self, image_base64: str, page_num: int) -> Dict[str, Any]:
         """Analyze a PDF page image using GPT-4 Vision."""
         try:
-            prompt = """
+            # First, detect document type to optimize prompt
+            doc_type = self._detect_document_type(image_base64)
+            
+            # Create specialized prompt based on document type
+            if doc_type == 'service':
+                prompt = self._create_service_prompt()
+            elif doc_type == 'product':
+                prompt = self._create_product_prompt()
+            else:
+                prompt = self._create_general_prompt()
+                
+            prompt = prompt + """
             Você é um especialista em processamento de Notas Fiscais Eletrônicas brasileiras. Analise esta imagem de NFe e extraia TODAS as informações de forma precisa e completa.
 
             INSTRUÇÕES CRÍTICAS:
@@ -388,8 +399,14 @@ class PDFVisionProcessor:
         # Informações adicionais
         flattened['informacoes_adicionais'] = consolidated.get('informacoes_adicionais')
         
-        # Items
-        flattened['items'] = consolidated.get('items', [])
+        # Items - processar cada item com todos os detalhes tributários
+        items = consolidated.get('items', [])
+        processed_items = []
+        for item in items:
+            processed_item = self._process_item_details(item)
+            processed_items.append(processed_item)
+        
+        flattened['items'] = processed_items
         
         return flattened
     
@@ -418,6 +435,119 @@ class PDFVisionProcessor:
             return None
         # Remove all non-numeric characters
         return ''.join(filter(str.isdigit, str(cnpj_str)))
+    
+    def _process_item_details(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        """Process individual item details with all tax information."""
+        processed = {}
+        
+        # Item identification
+        processed.update({
+            'numero_item': item.get('numero_item'),
+            'codigo_produto': item.get('codigo_produto'),
+            'codigo_servico': item.get('codigo_servico'),
+            'codigo_atividade': item.get('codigo_atividade'),
+            'descricao_produto': item.get('descricao_produto'),
+            'descricao_servico': item.get('descricao_servico'),
+            'ncm': item.get('ncm'),
+            'cfop': item.get('cfop')
+        })
+        
+        # Commercial values
+        processed.update({
+            'unidade_comercial': item.get('unidade_comercial'),
+            'quantidade_comercial': self._parse_decimal(item.get('quantidade_comercial')),
+            'valor_unitario_comercial': self._parse_decimal(item.get('valor_unitario_comercial')),
+            'valor_total_produto': self._parse_decimal(item.get('valor_total_produto'))
+        })
+        
+        # Tax values
+        processed.update({
+            'origem_mercadoria': item.get('origem_mercadoria'),
+            'situacao_tributaria_icms': item.get('situacao_tributaria_icms'),
+            'base_calculo_icms': self._parse_decimal(item.get('base_calculo_icms')),
+            'aliquota_icms': self._parse_decimal(item.get('aliquota_icms')),
+            'valor_icms': self._parse_decimal(item.get('valor_icms')),
+            'situacao_tributaria_ipi': item.get('situacao_tributaria_ipi'),
+            'valor_ipi': self._parse_decimal(item.get('valor_ipi')),
+            'situacao_tributaria_pis': item.get('situacao_tributaria_pis'),
+            'base_calculo_pis': self._parse_decimal(item.get('base_calculo_pis')),
+            'aliquota_pis': self._parse_decimal(item.get('aliquota_pis')),
+            'valor_pis': self._parse_decimal(item.get('valor_pis')),
+            'situacao_tributaria_cofins': item.get('situacao_tributaria_cofins'),
+            'base_calculo_cofins': self._parse_decimal(item.get('base_calculo_cofins')),
+            'aliquota_cofins': self._parse_decimal(item.get('aliquota_cofins')),
+            'valor_cofins': self._parse_decimal(item.get('valor_cofins')),
+            'situacao_tributaria_issqn': item.get('situacao_tributaria_issqn'),
+            'base_calculo_issqn': self._parse_decimal(item.get('base_calculo_issqn')),
+            'aliquota_issqn': self._parse_decimal(item.get('aliquota_issqn')),
+            'valor_issqn': self._parse_decimal(item.get('valor_issqn'))
+        })
+        
+        return processed
+    
+    def _detect_document_type(self, image_base64: str) -> str:
+        """Quick detection of document type to optimize processing."""
+        try:
+            quick_prompt = """
+            Analise rapidamente esta imagem de NFe e identifique apenas o TIPO DE DOCUMENTO.
+            
+            Responda apenas com uma palavra:
+            - "service" se for NFe de serviços (modelo 57 ou contém seção de serviços/ISSQN)
+            - "product" se for NFe de produtos (modelo 55 ou contém produtos/ICMS)
+            - "mixed" se contém produtos e serviços
+            
+            Resposta:
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": quick_prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                        ]
+                    }
+                ],
+                max_tokens=50
+            )
+            
+            result = response.choices[0].message.content.strip().lower()
+            return result if result in ['service', 'product', 'mixed'] else 'general'
+            
+        except Exception as e:
+            self.logger.warning(f"Could not detect document type: {str(e)}")
+            return 'general'
+    
+    def _create_service_prompt(self) -> str:
+        """Create specialized prompt for service NFe documents."""
+        return """
+        FOCO ESPECIAL EM NFe DE SERVIÇOS:
+        - Priorize informações municipais: ISSQN, ISS retido, Inscrição Municipal
+        - Procure códigos de serviço e atividade
+        - Identifique retenções na fonte: IR, INSS, CSLL, ISS
+        - Verifique seções específicas de impostos municipais
+        """
+    
+    def _create_product_prompt(self) -> str:
+        """Create specialized prompt for product NFe documents."""
+        return """
+        FOCO ESPECIAL EM NFe DE PRODUTOS:
+        - Priorize informações estaduais/federais: ICMS, IPI, PIS, COFINS
+        - Procure códigos NCM e CFOP detalhados
+        - Identifique origem da mercadoria
+        - Verifique informações de transporte e frete
+        """
+    
+    def _create_general_prompt(self) -> str:
+        """Create general prompt for mixed or unidentified documents."""
+        return """
+        PROCESSAMENTO COMPLETO:
+        - Analise todas as seções da NFe cuidadosamente
+        - Identifique se há produtos, serviços ou ambos
+        - Extraia todos os impostos (municipais e estaduais)
+        """
 
 def process_nfe_pdf_with_vision(file_path: str) -> Dict[str, Any]:
     """

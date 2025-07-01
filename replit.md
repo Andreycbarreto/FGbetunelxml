@@ -97,6 +97,15 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Major OCR Vision processing enhancement:
+  * Completely redesigned GPT-4 Vision prompt for comprehensive NFe extraction
+  * Added specialized prompts for Brazilian tax recognition (municipal vs federal)
+  * Enhanced field mapping for all 50+ NFe fields including ISSQN, ISSRF, IR, INSS, CSLL
+  * Implemented robust fallback system for API failures (502, timeout, Cloudflare errors)
+  * Added 60-second timeout for API calls to prevent hanging
+  * Created detailed item processing with complete tax information per item
+  * Improved error handling with automatic retry and fallback to simple processor
+  * Enhanced data consolidation to capture all service-specific and product fields
 - June 30, 2025. Enhanced AI processing with Brazilian tax system specifics:
   * Added service document recognition (model 55=product, 57=service, 65=mixed)
   * Implemented municipal vs state tax context handling
