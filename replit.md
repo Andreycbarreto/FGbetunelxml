@@ -97,6 +97,17 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Multi-Format Specialized Processors Implementation:
+  * Created DANFE specialized processor for Documento Auxiliar da Nota Fiscal Eletrônica
+  * Created NFS-e specialized processor for Nota Fiscal de Serviços Eletrônica
+  * Implemented intelligent format detection based on document content analysis
+  * Added comprehensive field mapping for Brazilian fiscal document formats
+  * Enhanced GPT-4 Vision prompts with format-specific extraction instructions
+  * Automatic processor selection: DANFE → NFS-e → Standard Vision fallback
+  * Specialized tax extraction for each document type (ICMS vs ISSQN focus)
+  * High-resolution image conversion (2x DPI) for improved OCR accuracy
+  * Brazilian date format handling and decimal conversion integrated
+  * Comprehensive field validation and database compatibility
 - July 1, 2025. Critical Fix: OpenAI API Timeout Issue Resolution:
   * Identified and resolved timeout issues with universal PDF processors
   * Temporarily disabled enhanced/universal processors causing API timeouts
