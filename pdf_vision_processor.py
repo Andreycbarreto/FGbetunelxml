@@ -12,6 +12,7 @@ from typing import Dict, Any, List
 from openai import OpenAI
 import pymupdf
 from final_tax_processor import process_taxes_final
+from revolutionary_tax_extractor import extract_taxes_revolutionary
 from advanced_item_extractor import extract_advanced_item_fields
 
 logger = logging.getLogger(__name__)
@@ -465,7 +466,7 @@ class PDFVisionProcessor:
                     total_service_value = self._parse_decimal(vals.get('valor_total_servicos', 0))
                     
                     self.logger.info(f"Processing taxes with service value: {total_service_value}")
-                    final_taxes = process_taxes_final(image_for_taxes, total_service_value)
+                    final_taxes = extract_taxes_revolutionary(image_for_taxes, total_service_value)
                     self.logger.info(f"FINAL tax processing results: {final_taxes}")
                     flattened.update(final_taxes)
                 else:
