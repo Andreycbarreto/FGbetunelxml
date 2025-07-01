@@ -97,6 +97,13 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 1, 2025. Final Solution: Comprehensive Tax Processor with Auto-Correction:
+  * Created FinalTaxProcessor - unified solution combining precise reading + auto-correction
+  * Enhanced prompts with specific IR vs INSS distinction rules and examples
+  * Automatic rate-based validation to detect and correct tax misidentifications
+  * Smart fallback system: precise reading → rate validation → automatic correction
+  * Integrated comprehensive logging for troubleshooting tax identification issues
+  * Replaced all complex multi-stage systems with single, reliable solution
 - July 1, 2025. Critical Fix: Precise Tax Reader (No More Invented Values):
   * Created PreciseTaxReader class to eliminate AI hallucination of tax values
   * Strict instructions: "Read ONLY what's clearly visible, do NOT invent values"
