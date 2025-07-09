@@ -76,6 +76,22 @@ class PDFVisionProcessor:
             # Consolidate data from all pages
             consolidated_data = self._consolidate_nfe_data(all_extracted_data)
             
+            # CRITICAL: Ensure emission date is captured using specialized extractor
+            if not consolidated_data.get('data_emissao') and pdf_images:
+                self.logger.info("Applying specialized emission date extraction as fallback")
+                try:
+                    from emission_date_extractor import EmissionDateExtractor
+                    specialized_extractor = EmissionDateExtractor()
+                    emission_date = specialized_extractor.extract_emission_date_only(pdf_images[0])
+                    if emission_date:
+                        # Convert to ISO format for database compatibility
+                        from date_utils import convert_brazilian_date_to_iso
+                        iso_date = convert_brazilian_date_to_iso(emission_date)
+                        consolidated_data['data_emissao'] = iso_date or emission_date
+                        self.logger.info(f"Specialized extractor found emission date: {consolidated_data['data_emissao']}")
+                except Exception as e:
+                    self.logger.warning(f"Specialized emission date extraction failed: {e}")
+            
             return {
                 'success': True,
                 'data': consolidated_data,

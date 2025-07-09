@@ -211,24 +211,48 @@ IMPORTANTE:
             self.logger.error(f"Error in NFS-e vision extraction: {e}")
             return {}
     
-    def enhance_date_extraction(self, raw_data: Dict[str, Any], text_content: str) -> Dict[str, Any]:
+    def enhance_date_extraction(self, raw_data: Dict[str, Any], text_content: str, base64_image: str = None) -> Dict[str, Any]:
         """Melhora a extração de datas usando validação aprimorada"""
         
         # Validar e corrigir data de emissão
         emission_date = raw_data.get('data_emissao', '')
+        
+        # Se não encontrou data na extração principal, tenta métodos especializados
         if not emission_date or emission_date == '':
-            # Tentar extrair da análise de texto
-            emission_date = extract_emission_date_from_text(text_content)
-            self.logger.info(f"Extracted emission date from text: {emission_date}")
+            self.logger.info("Emission date not found in main extraction, trying specialized methods")
+            
+            # Método 1: Extrator especializado de data de emissão (mais eficaz)
+            if base64_image:
+                try:
+                    from emission_date_extractor import EmissionDateExtractor
+                    specialized_extractor = EmissionDateExtractor()
+                    emission_date = specialized_extractor.extract_emission_date_only(base64_image)
+                    if emission_date:
+                        self.logger.info(f"Specialized extractor found emission date: {emission_date}")
+                except Exception as e:
+                    self.logger.warning(f"Specialized extractor failed: {e}")
+            
+            # Método 2: Extração de texto (fallback)
+            if not emission_date:
+                emission_date = extract_emission_date_from_text(text_content)
+                self.logger.info(f"Text extraction found emission date: {emission_date}")
         else:
             # Validar e corrigir se necessário
             corrected_date = validate_and_correct_date(emission_date, 'data_emissao')
             if corrected_date:
                 emission_date = corrected_date
             else:
-                # Fallback para extração de texto
-                emission_date = extract_emission_date_from_text(text_content)
-                self.logger.info(f"Fallback to text extraction for emission date: {emission_date}")
+                # Fallback para extração especializada
+                if base64_image:
+                    try:
+                        from emission_date_extractor import EmissionDateExtractor
+                        specialized_extractor = EmissionDateExtractor()
+                        fallback_date = specialized_extractor.extract_emission_date_only(base64_image)
+                        if fallback_date:
+                            emission_date = fallback_date
+                            self.logger.info(f"Fallback to specialized extractor: {emission_date}")
+                    except Exception as e:
+                        self.logger.warning(f"Fallback specialized extractor failed: {e}")
         
         # Atualizar dados com datas corrigidas
         raw_data['data_emissao'] = emission_date or ''
@@ -370,7 +394,7 @@ IMPORTANTE:
                 return {'success': False, 'error': 'Could not extract data from NFS-e'}
             
             # Melhorar extração de datas com validação
-            raw_data = self.enhance_date_extraction(raw_data, text_content)
+            raw_data = self.enhance_date_extraction(raw_data, text_content, base64_image)
             
             # Normalizar dados
             normalized_data = self.normalize_nfse_data(raw_data)
