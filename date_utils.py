@@ -10,21 +10,42 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def convert_brazilian_date_to_iso(date_str: str) -> Optional[str]:
+def convert_brazilian_date_to_iso(date_str) -> Optional[str]:
     """
     Convert Brazilian date format (dd/mm/yyyy) to ISO format (yyyy-mm-dd)
     
     Args:
-        date_str: Date string in Brazilian format (dd/mm/yyyy, dd-mm-yyyy, etc.)
+        date_str: Date string in Brazilian format (dd/mm/yyyy, dd-mm-yyyy, etc.) or datetime object
         
     Returns:
         ISO date string (yyyy-mm-dd) or None if conversion fails
     """
-    if not date_str or not isinstance(date_str, str):
+    if not date_str:
         return None
+        
+    # Handle datetime objects
+    if isinstance(date_str, datetime):
+        return date_str.strftime('%Y-%m-%d')
+    
+    # Handle string dates
+    if not isinstance(date_str, str):
+        # Try to convert to string
+        try:
+            date_str = str(date_str)
+        except:
+            return None
     
     # Clean the date string
     date_str = date_str.strip()
+    
+    # Check if already in ISO format (yyyy-mm-dd)
+    if re.match(r'^\d{4}-\d{1,2}-\d{1,2}$', date_str):
+        try:
+            # Validate the date
+            dt = datetime.strptime(date_str, '%Y-%m-%d')
+            return dt.strftime('%Y-%m-%d')
+        except ValueError:
+            pass
     
     # Remove common prefixes and suffixes
     date_str = re.sub(r'^(Data de |DT\. |EMISSÃO:?|SAÍDA:?|ENTRADA:?)\s*', '', date_str, flags=re.IGNORECASE)
