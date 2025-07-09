@@ -10,7 +10,7 @@ import base64
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
 import pymupdf as fitz  # PyMuPDF
-from date_utils import clean_date_fields
+from date_utils import clean_date_fields, validate_and_correct_date, extract_emission_date_from_text
 from json_cleaner import clean_and_parse_json
 
 class DANFEProcessor:
@@ -78,9 +78,17 @@ SEÇÕES OBRIGATÓRIAS DO DANFE:
 - Número da NF-e (campo "Nº.")
 - Série
 - Chave de Acesso (sequência de 44 dígitos)
-- Data de Emissão
-- Data de Saída/Entrada
+- Data de Emissão (procure por "Data de Emissão", "DT. EMISSÃO", "EMISSÃO" - formato dd/mm/yyyy)
+- Data de Saída/Entrada (procure por "Data de Saída", "DT. SAÍDA", "SAÍDA/ENTRADA" - formato dd/mm/yyyy)
 - Protocolo de Autorização
+
+ATENÇÃO ESPECIAL PARA DATAS:
+- A Data de Emissão geralmente está no cabeçalho superior do documento
+- Pode aparecer como "Data de Emissão:", "DT. EMISSÃO:", ou simplesmente "EMISSÃO:"
+- Sempre no formato brasileiro: dd/mm/yyyy (exemplo: 15/03/2024)
+- Se aparecer no formato americano mm/dd/yyyy, converta para dd/mm/yyyy
+- Leia com cuidado para não confundir com outros números
+- Se não conseguir ler claramente, deixe vazio ""
 
 **EMITENTE:**  
 - Razão Social
@@ -222,6 +230,41 @@ IMPORTANTE: Leia com cuidado cada seção e extraia os valores exatos que estão
             self.logger.error(f"Error in DANFE vision extraction: {e}")
             return {}
     
+    def enhance_date_extraction(self, raw_data: Dict[str, Any], text_content: str) -> Dict[str, Any]:
+        """Melhora a extração de datas usando validação aprimorada"""
+        
+        # Validar e corrigir data de emissão
+        emission_date = raw_data.get('data_emissao', '')
+        if not emission_date or emission_date == '':
+            # Tentar extrair da análise de texto
+            emission_date = extract_emission_date_from_text(text_content)
+            self.logger.info(f"Extracted emission date from text: {emission_date}")
+        else:
+            # Validar e corrigir se necessário
+            corrected_date = validate_and_correct_date(emission_date, 'data_emissao')
+            if corrected_date:
+                emission_date = corrected_date
+            else:
+                # Fallback para extração de texto
+                emission_date = extract_emission_date_from_text(text_content)
+                self.logger.info(f"Fallback to text extraction for emission date: {emission_date}")
+        
+        # Validar e corrigir data de saída/entrada
+        exit_date = raw_data.get('data_saida_entrada', '')
+        if exit_date:
+            corrected_exit_date = validate_and_correct_date(exit_date, 'data_saida_entrada')
+            if corrected_exit_date:
+                exit_date = corrected_exit_date
+            else:
+                self.logger.warning(f"Could not validate exit date: {exit_date}")
+                exit_date = ''
+        
+        # Atualizar dados com datas corrigidas
+        raw_data['data_emissao'] = emission_date or ''
+        raw_data['data_saida_entrada'] = exit_date or ''
+        
+        return raw_data
+
     def normalize_danfe_data(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """Normaliza dados do DANFE para formato do banco de dados"""
         
@@ -346,11 +389,21 @@ IMPORTANTE: Leia com cuidado cada seção e extraia os valores exatos que estão
             # Processar primeira página (DANFE geralmente é 1 página)
             base64_image = images[0]
             
+            # Extrair texto para validação de datas
+            doc = fitz.open(pdf_path)
+            text_content = ""
+            for page in doc:
+                text_content += page.get_text()
+            doc.close()
+            
             # Extrair dados com GPT-4 Vision
             raw_data = self.extract_danfe_data_with_vision(base64_image)
             
             if not raw_data:
                 return {'success': False, 'error': 'Could not extract data from DANFE'}
+            
+            # Melhorar extração de datas com validação
+            raw_data = self.enhance_date_extraction(raw_data, text_content)
             
             # Normalizar dados
             normalized_data = self.normalize_danfe_data(raw_data)

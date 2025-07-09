@@ -26,10 +26,15 @@ def convert_brazilian_date_to_iso(date_str: str) -> Optional[str]:
     # Clean the date string
     date_str = date_str.strip()
     
-    # Try different Brazilian date patterns
+    # Remove common prefixes and suffixes
+    date_str = re.sub(r'^(Data de |DT\. |EMISSÃO:?|SAÍDA:?|ENTRADA:?)\s*', '', date_str, flags=re.IGNORECASE)
+    date_str = re.sub(r'\s*(h|H)\s*$', '', date_str)  # Remove trailing "h" for hours
+    
+    # Try different Brazilian date patterns with enhanced detection
     patterns = [
         r'(\d{1,2})[/\-\.](\d{1,2})[/\-\.](\d{4})',  # dd/mm/yyyy or dd-mm-yyyy
         r'(\d{1,2})[/\-\.](\d{1,2})[/\-\.](\d{2})',   # dd/mm/yy or dd-mm-yy
+        r'(\d{2})(\d{2})(\d{4})',  # ddmmyyyy (without separators)
     ]
     
     for pattern in patterns:
@@ -53,20 +58,22 @@ def convert_brazilian_date_to_iso(date_str: str) -> Optional[str]:
                 
                 # Basic validation
                 if not (1 <= day_int <= 31):
-                    logger.warning(f"Invalid day in date: {date_str}")
+                    logger.warning(f"Invalid day in date: {date_str} (day={day_int})")
                     return None
                 if not (1 <= month_int <= 12):
-                    logger.warning(f"Invalid month in date: {date_str}")
+                    logger.warning(f"Invalid month in date: {date_str} (month={month_int})")
                     return None
                 if not (1900 <= year_int <= 2100):
-                    logger.warning(f"Invalid year in date: {date_str}")
+                    logger.warning(f"Invalid year in date: {date_str} (year={year_int})")
                     return None
                 
                 # Create datetime object to validate the date
                 dt = datetime(year_int, month_int, day_int)
                 
                 # Return ISO format
-                return dt.strftime('%Y-%m-%d')
+                iso_date = dt.strftime('%Y-%m-%d')
+                logger.debug(f"Successfully converted date: {date_str} -> {iso_date}")
+                return iso_date
                 
             except (ValueError, TypeError) as e:
                 logger.warning(f"Failed to parse date {date_str}: {e}")
@@ -83,6 +90,35 @@ def convert_brazilian_date_to_iso(date_str: str) -> Optional[str]:
                 return dt.strftime('%Y-%m-%d')
             except (ValueError, TypeError):
                 pass
+    
+    # Try American format (mm/dd/yyyy) and convert to Brazilian
+    american_pattern = r'(\d{1,2})[/\-\.](\d{1,2})[/\-\.](\d{4})'
+    match = re.search(american_pattern, date_str)
+    if match:
+        first, second, year = match.groups()
+        
+        # If first > 12, it's likely day/month format (Brazilian)
+        if int(first) > 12:
+            day, month = first, second
+        # If second > 12, it's likely month/day format (American)
+        elif int(second) > 12:
+            month, day = first, second
+        else:
+            # Ambiguous case - assume Brazilian format (dd/mm/yyyy)
+            day, month = first, second
+            
+        try:
+            day_int = int(day)
+            month_int = int(month)
+            year_int = int(year)
+            
+            if 1 <= day_int <= 31 and 1 <= month_int <= 12 and 1900 <= year_int <= 2100:
+                dt = datetime(year_int, month_int, day_int)
+                iso_date = dt.strftime('%Y-%m-%d')
+                logger.debug(f"Converted ambiguous date: {date_str} -> {iso_date} (assumed Brazilian format)")
+                return iso_date
+        except (ValueError, TypeError):
+            pass
     
     logger.warning(f"Could not parse date: {date_str}")
     return None
@@ -132,3 +168,82 @@ def format_date_for_display(iso_date: str) -> str:
         return dt.strftime('%d/%m/%Y')
     except (ValueError, TypeError):
         return iso_date  # Return as-is if conversion fails
+
+def extract_emission_date_from_text(text_content: str) -> Optional[str]:
+    """
+    Extract emission date from document text using pattern matching
+    
+    Args:
+        text_content: Raw text content from document
+        
+    Returns:
+        Emission date in ISO format (yyyy-mm-dd) or None if not found
+    """
+    # Common patterns for emission date in Brazilian documents
+    emission_patterns = [
+        r'Data de Emissão[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+        r'DT\.?\s*EMISSÃO[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+        r'EMISSÃO[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+        r'Data\s*Emissão[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+        r'Dt\.\s*Emissão[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+        r'Emitido\s*em[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+    ]
+    
+    for pattern in emission_patterns:
+        match = re.search(pattern, text_content, re.IGNORECASE)
+        if match:
+            date_str = match.group(1)
+            converted_date = convert_brazilian_date_to_iso(date_str)
+            if converted_date:
+                logger.info(f"Found emission date from text: {date_str} -> {converted_date}")
+                return converted_date
+    
+    logger.warning("No emission date found in text content")
+    return None
+
+def validate_and_correct_date(date_str: str, field_name: str = "date") -> Optional[str]:
+    """
+    Validate and correct a date string with enhanced error handling
+    
+    Args:
+        date_str: Date string to validate
+        field_name: Name of the field being validated (for logging)
+        
+    Returns:
+        Corrected date in ISO format or None if invalid
+    """
+    if not date_str:
+        return None
+    
+    # First, try normal conversion
+    converted = convert_brazilian_date_to_iso(date_str)
+    if converted:
+        return converted
+    
+    # If it failed, try to clean and fix common issues
+    cleaned = date_str.strip()
+    
+    # Fix common OCR errors
+    cleaned = cleaned.replace('O', '0').replace('o', '0')  # Replace O with 0
+    cleaned = cleaned.replace('I', '1').replace('l', '1')  # Replace I/l with 1
+    cleaned = re.sub(r'[^\d/\-\.]', '', cleaned)  # Remove non-date characters
+    
+    # Try again with cleaned version
+    if cleaned != date_str:
+        logger.info(f"Trying to clean {field_name}: '{date_str}' -> '{cleaned}'")
+        converted = convert_brazilian_date_to_iso(cleaned)
+        if converted:
+            logger.info(f"Successfully corrected {field_name} after cleaning")
+            return converted
+    
+    # If still failing, try to extract just the date part
+    date_match = re.search(r'(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})', cleaned)
+    if date_match:
+        date_part = date_match.group(1)
+        logger.info(f"Extracted date part from {field_name}: '{date_part}'")
+        converted = convert_brazilian_date_to_iso(date_part)
+        if converted:
+            return converted
+    
+    logger.error(f"Could not validate/correct {field_name}: '{date_str}'")
+    return None

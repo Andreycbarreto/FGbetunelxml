@@ -10,7 +10,7 @@ import base64
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
 import pymupdf as fitz  # PyMuPDF
-from date_utils import clean_date_fields
+from date_utils import clean_date_fields, validate_and_correct_date, extract_emission_date_from_text
 from json_cleaner import clean_and_parse_json
 
 class NFSeProcessor:
@@ -82,9 +82,16 @@ SEÇÕES OBRIGATÓRIAS DA NFS-e:
 **CABEÇALHO E IDENTIFICAÇÃO:**
 - Número da NFS-e
 - Série (se presente)
-- Data de Emissão
+- Data de Emissão (procure por "Data de Emissão", "DT. EMISSÃO", "EMISSÃO" - formato dd/mm/yyyy)
 - Competência (mês/ano)
 - Código de Verificação
+
+ATENÇÃO ESPECIAL PARA DATAS:
+- A Data de Emissão está sempre no cabeçalho do documento
+- Pode aparecer como "Data de Emissão:", "DT. EMISSÃO:", ou "EMISSÃO:"
+- Sempre no formato brasileiro: dd/mm/yyyy (exemplo: 15/03/2024)
+- Leia com cuidado para não confundir com outros números
+- Se não conseguir ler claramente, deixe vazio ""
 
 **PRESTADOR DE SERVIÇOS:**
 - Razão Social
@@ -204,6 +211,30 @@ IMPORTANTE:
             self.logger.error(f"Error in NFS-e vision extraction: {e}")
             return {}
     
+    def enhance_date_extraction(self, raw_data: Dict[str, Any], text_content: str) -> Dict[str, Any]:
+        """Melhora a extração de datas usando validação aprimorada"""
+        
+        # Validar e corrigir data de emissão
+        emission_date = raw_data.get('data_emissao', '')
+        if not emission_date or emission_date == '':
+            # Tentar extrair da análise de texto
+            emission_date = extract_emission_date_from_text(text_content)
+            self.logger.info(f"Extracted emission date from text: {emission_date}")
+        else:
+            # Validar e corrigir se necessário
+            corrected_date = validate_and_correct_date(emission_date, 'data_emissao')
+            if corrected_date:
+                emission_date = corrected_date
+            else:
+                # Fallback para extração de texto
+                emission_date = extract_emission_date_from_text(text_content)
+                self.logger.info(f"Fallback to text extraction for emission date: {emission_date}")
+        
+        # Atualizar dados com datas corrigidas
+        raw_data['data_emissao'] = emission_date or ''
+        
+        return raw_data
+
     def normalize_nfse_data(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """Normaliza dados da NFS-e para formato do banco de dados"""
         
@@ -325,11 +356,21 @@ IMPORTANTE:
             # Processar primeira página (NFS-e geralmente é 1 página)
             base64_image = images[0]
             
+            # Extrair texto para validação de datas
+            doc = fitz.open(pdf_path)
+            text_content = ""
+            for page in doc:
+                text_content += page.get_text()
+            doc.close()
+            
             # Extrair dados com GPT-4 Vision
             raw_data = self.extract_nfse_data_with_vision(base64_image)
             
             if not raw_data:
                 return {'success': False, 'error': 'Could not extract data from NFS-e'}
+            
+            # Melhorar extração de datas com validação
+            raw_data = self.enhance_date_extraction(raw_data, text_content)
             
             # Normalizar dados
             normalized_data = self.normalize_nfse_data(raw_data)

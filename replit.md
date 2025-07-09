@@ -97,6 +97,17 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 9, 2025. Enhanced Date Extraction System for Brazilian Documents:
+  * Created specialized date extraction functions with pattern matching for emission dates
+  * Enhanced date validation with OCR error correction (O→0, I→1, l→1)
+  * Added support for various date formats: dd/mm/yyyy, dd-mm-yyyy, ddmmyyyy
+  * Implemented fallback extraction from document text when Vision API fails
+  * Added American format detection with automatic conversion to Brazilian
+  * Enhanced prompt instructions with specific date field guidance
+  * Integrated date enhancement in both DANFE and NFS-e processors
+  * Added comprehensive logging for date extraction and validation process
+  * Improved handling of date prefixes and suffixes in document text
+  * Created validate_and_correct_date function for robust date processing
 - July 1, 2025. Multi-Format Specialized Processors Implementation:
   * Created DANFE specialized processor for Documento Auxiliar da Nota Fiscal Eletrônica
   * Created NFS-e specialized processor for Nota Fiscal de Serviços Eletrônica
