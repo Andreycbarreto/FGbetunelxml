@@ -183,6 +183,11 @@ class NFERecord(db.Model):
     original_pdf_path = db.Column(db.String(500), nullable=True)
     original_pdf_filename = db.Column(db.String(255), nullable=True)
     
+    # Fluig integration fields
+    fluig_process_id = db.Column(db.String(100), nullable=True)
+    fluig_document_id = db.Column(db.String(100), nullable=True)
+    fluig_integration_date = db.Column(db.DateTime, nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
