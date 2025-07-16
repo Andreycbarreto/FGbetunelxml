@@ -8,8 +8,8 @@ from requests_oauthlib import OAuth1
 import json
 import logging
 from datetime import datetime
-from models import UserSettings, NFERecord, Empresa, Filial
 from app import db
+from models import UserSettings, NFERecord, Empresa, Filial
 import os
 
 
