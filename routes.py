@@ -11,10 +11,11 @@ from sqlalchemy.exc import IntegrityError
 
 from app import app, db, init_database
 from replit_auth import require_login, make_replit_blueprint
-from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole, Batch, BatchStatus, Empresa, Filial
+from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole, Batch, BatchStatus, Empresa, Filial, UserSettings
 from xml_processor import NFEXMLProcessor
 import batch_routes  # Import batch management routes
 import filial_routes  # Import filial management routes
+import settings_routes  # Import settings management routes
 from ai_agents import process_nfe_with_ai
 from pdf_simple_processor import SimplePDFProcessor
 from pdf_vision_processor import PDFVisionProcessor

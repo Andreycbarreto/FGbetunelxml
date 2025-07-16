@@ -454,3 +454,62 @@ class Filial(db.Model):
         if len(self.cnpj_filial) == 14:
             return f"{self.cnpj_filial[:2]}.{self.cnpj_filial[2:5]}.{self.cnpj_filial[5:8]}/{self.cnpj_filial[8:12]}-{self.cnpj_filial[12:]}"
         return self.cnpj_filial
+
+
+class UserSettings(db.Model):
+    """Modelo para configurações do usuário"""
+    __tablename__ = 'user_settings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False, unique=True)
+    
+    # API Keys e Configurações
+    openai_api_key = db.Column(db.Text, nullable=True)
+    consumer_key = db.Column(db.Text, nullable=True)
+    consumer_secret = db.Column(db.Text, nullable=True)
+    token_key = db.Column(db.Text, nullable=True)
+    token_secret = db.Column(db.Text, nullable=True)
+    fluig_url = db.Column(db.String(500), nullable=True)
+    ged_folder_id = db.Column(db.String(100), nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relacionamento com usuário
+    user = db.relationship('User', backref='settings')
+    
+    def __repr__(self):
+        return f'<UserSettings {self.user_id}>'
+    
+    @property
+    def has_openai_key(self):
+        """Verifica se tem OpenAI API Key configurada"""
+        return bool(self.openai_api_key and self.openai_api_key.strip())
+    
+    @property
+    def has_twitter_config(self):
+        """Verifica se tem configuração Twitter/X completa"""
+        return all([
+            self.consumer_key and self.consumer_key.strip(),
+            self.consumer_secret and self.consumer_secret.strip(),
+            self.token_key and self.token_key.strip(),
+            self.token_secret and self.token_secret.strip()
+        ])
+    
+    @property
+    def has_fluig_config(self):
+        """Verifica se tem configuração Fluig completa"""
+        return all([
+            self.fluig_url and self.fluig_url.strip(),
+            self.ged_folder_id and self.ged_folder_id.strip()
+        ])
+    
+    @classmethod
+    def get_or_create_for_user(cls, user_id):
+        """Busca ou cria configurações para o usuário"""
+        settings = cls.query.filter_by(user_id=user_id).first()
+        if not settings:
+            settings = cls(user_id=user_id)
+            db.session.add(settings)
+            db.session.commit()
+        return settings
