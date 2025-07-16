@@ -90,21 +90,8 @@ class FluigIntegration:
                 response_data = upload_resp.json()
                 uploaded_file_name = response_data['files'][0]['name']
                 
-                # Gerar ID único baseado no timestamp e hash do arquivo
-                import hashlib
-                import time
-                
-                # Criar ID único baseado no timestamp atual + hash do nome do arquivo
-                unique_id = f"FLG-{int(time.time())}-{hashlib.md5(file_name.encode()).hexdigest()[:8].upper()}"
-                
                 logging.info(f"Arquivo enviado com sucesso: {uploaded_file_name}")
-                logging.info(f"ID de referência gerado: {unique_id}")
-                
-                return {
-                    'file_name': uploaded_file_name,
-                    'reference_id': unique_id,
-                    'upload_timestamp': int(time.time())
-                }
+                return uploaded_file_name
                 
         except Exception as e:
             logging.error(f"Erro ao enviar arquivo para o Fluig: {str(e)}")
@@ -123,8 +110,7 @@ class FluigIntegration:
         """
         try:
             # Primeiro, fazer upload do arquivo
-            upload_result = self.upload_file_to_fluig(file_path, os.path.basename(file_path))
-            uploaded_file_name = upload_result['file_name']
+            uploaded_file_name = self.upload_file_to_fluig(file_path, os.path.basename(file_path))
             
             # Criar documento no GED primeiro
             attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
@@ -502,8 +488,18 @@ class FluigIntegration:
                 auth=self.auth
             )
             start_proc_resp.raise_for_status()
-            process_instance_id = start_proc_resp.json()["processInstanceId"]
+            response_data = start_proc_resp.json()
+            process_instance_id = response_data["processInstanceId"]
+            
+            # Log da resposta completa para capturar número do Fluig
+            logging.info(f"Resposta completa do processo de frete: {response_data}")
             logging.info(f"Processo de frete criado! ID: {process_instance_id}")
+            
+            # Tentar capturar número do processo se disponível
+            process_number = response_data.get("processNumber")
+            if process_number:
+                logging.info(f"Número do processo de frete no Fluig: {process_number}")
+            
             return process_instance_id
             
         except Exception as e:
@@ -596,8 +592,18 @@ class FluigIntegration:
                 auth=self.auth
             )
             start_proc_resp.raise_for_status()
-            process_instance_id = start_proc_resp.json()["processInstanceId"]
+            response_data = start_proc_resp.json()
+            process_instance_id = response_data["processInstanceId"]
+            
+            # Log da resposta completa para capturar número do Fluig
+            logging.info(f"Resposta completa do processo de serviço: {response_data}")
             logging.info(f"Processo de serviço criado! ID: {process_instance_id}")
+            
+            # Tentar capturar número do processo se disponível
+            process_number = response_data.get("processNumber")
+            if process_number:
+                logging.info(f"Número do processo de serviço no Fluig: {process_number}")
+            
             return process_instance_id
             
         except Exception as e:
@@ -737,12 +743,10 @@ class FluigIntegration:
                 raise ValueError("Arquivo PDF original não encontrado")
             
             # 1. Upload do arquivo
-            upload_result = self.upload_file_to_fluig(
+            uploaded_file_name = self.upload_file_to_fluig(
                 nfe_record.original_pdf_path,
                 nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
             )
-            uploaded_file_name = upload_result['file_name']
-            fluig_reference_id = upload_result['reference_id']
             
             # 2. Tentar criar documento no GED com fallback para processos diretos
             try:
@@ -778,7 +782,6 @@ class FluigIntegration:
                 logging.info("Tentando integração simples apenas com upload do arquivo...")
                 
                 # Fallback: Marcar como integrado apenas com upload
-                nfe_record.fluig_process_id = fluig_reference_id
                 nfe_record.fluig_integration_date = datetime.now()
                 nfe_record.fluig_integration_status = 'ARQUIVO_ENVIADO'
                 db.session.commit()
@@ -786,8 +789,7 @@ class FluigIntegration:
                 return {
                     "success": True,
                     "process_type": "Upload de Arquivo",
-                    "process_id": fluig_reference_id,
-                    "message": f"Arquivo enviado com sucesso para o Fluig. Número de referência: {fluig_reference_id}"
+                    "message": f"Arquivo enviado com sucesso para o Fluig. Arquivo: {uploaded_file_name}"
                 }
             
         except Exception as e:
