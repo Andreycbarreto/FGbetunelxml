@@ -62,6 +62,17 @@ class NFEXMLProcessor:
             # Items/Products
             data['items'] = self._extract_items(root)
             
+            # Apply intelligent operation type classification
+            try:
+                from document_type_classifier import classify_document_operation_type
+                # Use text-based classification since we don't have image for XML
+                operation_type = self._classify_operation_type_from_xml_data(data)
+                data['tipo_operacao'] = operation_type
+                logger.info(f"XML classified as: {operation_type}")
+            except Exception as e:
+                logger.warning(f"Operation type classification failed: {e}")
+                # Keep original tipo_operacao if classification fails
+            
             # Store raw XML for reference
             data['raw_xml'] = etree.tostring(root, encoding='unicode', pretty_print=True)
             
@@ -70,6 +81,76 @@ class NFEXMLProcessor:
         except Exception as e:
             logger.error(f"Error processing XML file {file_path}: {str(e)}")
             raise
+    
+    def _classify_operation_type_from_xml_data(self, data):
+        """
+        Classify operation type based on XML data content
+        
+        Args:
+            data: Extracted XML data
+            
+        Returns:
+            str: "CT-e (Transporte)" or "Serviços e Produtos"
+        """
+        try:
+            # Transport indicators in descriptions and codes
+            transport_keywords = [
+                'transporte', 'frete', 'logística', 'logistica', 'terminal', 'porto',
+                'portuário', 'portuario', 'carga', 'descarga', 'armazenagem',
+                'movimentação', 'movimentacao', 'contêiner', 'container',
+                'scanner', 'levante', 'cross dock', 'cross-dock'
+            ]
+            
+            # Transport service codes
+            transport_service_codes = [
+                '16.01', '16.02', '20.01', '20.02', '20.03'
+            ]
+            
+            # Transport CFOPs
+            transport_cfops = [
+                '5351', '5352', '5353', '5354', '5355', '5356',
+                '6351', '6352', '6353', '6354', '6355', '6356'
+            ]
+            
+            # Check natureza_operacao for transport keywords
+            natureza_operacao = data.get('natureza_operacao', '').lower()
+            if any(keyword in natureza_operacao for keyword in transport_keywords):
+                return "CT-e (Transporte)"
+            
+            # Check items for transport indicators
+            items = data.get('items', [])
+            for item in items:
+                # Check service code
+                codigo_servico = item.get('codigo_servico', '')
+                if codigo_servico in transport_service_codes:
+                    return "CT-e (Transporte)"
+                
+                # Check description
+                descricao = item.get('descricao', '').lower()
+                if any(keyword in descricao for keyword in transport_keywords):
+                    return "CT-e (Transporte)"
+                
+                # Check product description
+                produto = item.get('produto', '').lower()
+                if any(keyword in produto for keyword in transport_keywords):
+                    return "CT-e (Transporte)"
+                
+                # Check CFOP
+                cfop = item.get('cfop', '')
+                if cfop in transport_cfops:
+                    return "CT-e (Transporte)"
+            
+            # Check additional information
+            info_adicional = data.get('informacoes_adicionais', '').lower()
+            if any(keyword in info_adicional for keyword in transport_keywords):
+                return "CT-e (Transporte)"
+            
+            # Default to services and products
+            return "Serviços e Produtos"
+            
+        except Exception as e:
+            logger.warning(f"Error in XML operation type classification: {e}")
+            return "Serviços e Produtos"
     
     def _extract_identification(self, root):
         """Extract identification data (IDE section)."""
