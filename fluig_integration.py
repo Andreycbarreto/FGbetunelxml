@@ -612,7 +612,7 @@ class FluigIntegration:
     
     def start_transport_process_direct(self, nfe_record, uploaded_file_name):
         """
-        Inicia processo de transporte diretamente sem criar documento no GED
+        Inicia processo de transporte diretamente usando API correta do Fluig
         
         Args:
             nfe_record: Registro NFE com dados do documento
@@ -622,32 +622,35 @@ class FluigIntegration:
             int: ID do processo criado
         """
         try:
-            # Dados do cartão para processo de transporte
-            card_data = {
-                "NUMERO_NF": nfe_record.numero_nf or '',
-                "EMITENTE": nfe_record.emitente_nome or '',
-                "CNPJ_EMITENTE": nfe_record.emitente_cnpj or '',
-                "VALOR_TOTAL": str(nfe_record.valor_total_nf or 0),
-                "DATA_EMISSAO": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else '',
-                "CHAVE_NFE": nfe_record.chave_nfe or '',
-                "TIPO_OPERACAO": nfe_record.tipo_operacao or 'CT-e (Transporte)',
-                "ANEXO_NFE": uploaded_file_name,
-                "OBSERVACOES": f"Documento processado automaticamente - NFE {nfe_record.numero_nf}"
+            # Dados do formulário para processo de transporte (baseado no processo que funciona)
+            form_fields = {
+                "identificador": f"NFE {nfe_record.numero_nf} - {nfe_record.emitente_nome}",
+                "dt_lanc": datetime.now().strftime('%d/%m/%Y'),
+                "chave_acesso": nfe_record.chave_nfe or "",
+                "NOME_FORNECEDOR": nfe_record.emitente_nome or "",
+                "vlICMSXML": f"{nfe_record.valor_icms or 0:.2f}",
+                "dtSaidaXML": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
+                "produtoXML": nfe_record.natureza_operacao or "",
+                "chaveNFE": nfe_record.chave_nfe or "",
+                "valorUnitario___1": f"{nfe_record.valor_total_nfe or 0:.2f}".replace('.', ','),
+                "valorTotalItem___1": f"{nfe_record.valor_total_nfe or 0:.2f}".replace('.', ','),
+                "nomeItem___1": nfe_record.natureza_operacao or "",
+                "quantidade___1": "1",
+                "codigoItem___1": "01.071.003"
             }
             
-            # Criar processo de importação de frete
-            process_data = {
-                "processId": "ImportacaoFrete",
-                "description": f"Importação de Frete - NFE {nfe_record.numero_nf}",
-                "requester": "yasmim.silva@betunel.com.br",
-                "priority": 1,
-                "attachments": [uploaded_file_name],
-                "cardData": card_data
+            # Payload para iniciar processo usando API correta
+            start_process_payload = {
+                "processId": "Importação de Frete",
+                "choosedState": 0,
+                "formFields": form_fields,
+                "processComment": f"Processo iniciado automaticamente - NFE {nfe_record.numero_nf}"
             }
             
+            # Usar endpoint correto da API Process Management v2 - requests
             response = requests.post(
-                f"{self.fluig_url}/api/public/2.0/processes/start",
-                json=process_data,
+                f"{self.fluig_url}/process-management/api/v2/requests",
+                json=start_process_payload,
                 auth=self.auth,
                 timeout=60
             )
@@ -665,6 +668,9 @@ class FluigIntegration:
                 if process_number:
                     logging.info(f"Número do processo de transporte no Fluig: {process_number}")
                 
+                # Tentar anexar arquivo ao processo criado
+                self._attach_file_to_process(process_id, uploaded_file_name)
+                
                 return process_id
             else:
                 logging.error(f"Erro ao criar processo de transporte: {response.status_code} - {response.text}")
@@ -676,7 +682,7 @@ class FluigIntegration:
     
     def start_service_process_direct(self, nfe_record, uploaded_file_name):
         """
-        Inicia processo de serviço diretamente sem criar documento no GED
+        Inicia processo de serviço diretamente usando API correta do Fluig
         
         Args:
             nfe_record: Registro NFE com dados do documento
@@ -686,34 +692,44 @@ class FluigIntegration:
             int: ID do processo criado
         """
         try:
-            # Dados do cartão para processo de serviço
-            card_data = {
-                "NUMERO_NF": nfe_record.numero_nf or '',
-                "EMITENTE": nfe_record.emitente_nome or '',
-                "CNPJ_EMITENTE": nfe_record.emitente_cnpj or '',
-                "VALOR_TOTAL": str(nfe_record.valor_total_nf or 0),
-                "DATA_EMISSAO": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else '',
-                "CHAVE_NFE": nfe_record.chave_nfe or '',
-                "TIPO_OPERACAO": nfe_record.tipo_operacao or 'Serviços e Produtos',
-                "VALOR_SERVICOS": str(nfe_record.valor_servicos or 0),
-                "VALOR_ISSQN": str(nfe_record.valor_issqn or 0),
-                "ANEXO_NFE": uploaded_file_name,
-                "OBSERVACOES": f"Documento processado automaticamente - NFE {nfe_record.numero_nf}"
+            # Dados do formulário para processo de serviço (baseado no processo que funciona)
+            form_fields = {
+                "nome": "Sistema Automatizado",
+                "matricula": "sistema",
+                "email": "sistema@betunel.com.br",
+                "Hdt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "dt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "nm_empresa": "Sistema Automatizado",
+                "cod_empresa": "1",
+                "cnpj": nfe_record.emitente_cnpj or "",
+                "nm_filial": "Principal",
+                "cod_filial": "1",
+                "cnpj_filial": nfe_record.emitente_cnpj or "",
+                "unid_negoc": "SUPPLY E CUSTOS",
+                "centro_custo": "SUPPLY E CUSTOS",
+                "num_nf": nfe_record.numero_nf or "",
+                "dt_emissao_nf": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
+                "valor_nf": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "dt_vencimento_NF": nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else "",
+                "fornecedor": f"{nfe_record.emitente_nome} - {nfe_record.emitente_cnpj}",
+                "cod_fornecedor": nfe_record.emitente_cnpj or "N/A",
+                "fm_pagamento": nfe_record.forma_pagamento or "N/A",
+                "justificativa": "NFe processada automaticamente pelo sistema.",
+                "destinacao": nfe_record.natureza_operacao or "N/A"
             }
             
-            # Criar processo de lançamento de nota fiscal
-            process_data = {
-                "processId": "LancamentoNF",
-                "description": f"Lançamento de Nota Fiscal - NFE {nfe_record.numero_nf}",
-                "requester": "yasmim.silva@betunel.com.br",
-                "priority": 1,
-                "attachments": [uploaded_file_name],
-                "cardData": card_data
+            # Payload para iniciar processo usando API correta
+            start_process_payload = {
+                "processId": "Processo de Lançamento de Nota Fiscal",
+                "choosedState": 0,
+                "formFields": form_fields,
+                "processComment": f"Processo iniciado automaticamente - NFE {nfe_record.numero_nf}"
             }
             
+            # Usar endpoint correto da API Process Management v2 - requests
             response = requests.post(
-                f"{self.fluig_url}/api/public/2.0/processes/start",
-                json=process_data,
+                f"{self.fluig_url}/process-management/api/v2/requests",
+                json=start_process_payload,
                 auth=self.auth,
                 timeout=60
             )
@@ -731,6 +747,9 @@ class FluigIntegration:
                 if process_number:
                     logging.info(f"Número do processo de serviço no Fluig: {process_number}")
                 
+                # Tentar anexar arquivo ao processo criado
+                self._attach_file_to_process(process_id, uploaded_file_name)
+                
                 return process_id
             else:
                 logging.error(f"Erro ao criar processo de serviço: {response.status_code} - {response.text}")
@@ -739,6 +758,35 @@ class FluigIntegration:
         except Exception as e:
             logging.error(f"Erro ao iniciar processo de serviço direto: {str(e)}")
             raise
+    
+    def _attach_file_to_process(self, process_id, uploaded_file_name):
+        """
+        Anexa arquivo ao processo criado usando API do Fluig
+        
+        Args:
+            process_id: ID do processo criado
+            uploaded_file_name: Nome do arquivo já enviado para o Fluig
+        """
+        try:
+            # Tentar anexar arquivo ao processo usando API de attachments
+            attach_payload = {
+                "attachments": [uploaded_file_name]
+            }
+            
+            response = requests.post(
+                f"{self.fluig_url}/process-management/api/v2/requests/{process_id}/attachments",
+                json=attach_payload,
+                auth=self.auth,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                logging.info(f"Arquivo {uploaded_file_name} anexado com sucesso ao processo {process_id}")
+            else:
+                logging.warning(f"Não foi possível anexar arquivo ao processo: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            logging.warning(f"Erro ao anexar arquivo ao processo: {str(e)}")
     
     def integrate_nfe_with_fluig(self, nfe_record_id):
         """
