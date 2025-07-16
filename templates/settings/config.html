@@ -79,17 +79,33 @@
     background: linear-gradient(45deg, #c82333, #c0392b);
 }
 
-.password-toggle {
-    cursor: pointer;
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 5;
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
 }
 
-.input-group {
-    position: relative;
+.form-control {
+    font-size: 0.9rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem 1rem;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-outline-secondary {
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #495057;
 }
 
 .loading {
@@ -162,16 +178,16 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="openai_api_key" class="form-label">
+                        <label for="openai_api_key" class="form-label fw-bold">
                             <i class="feather-key me-2"></i>OpenAI API Key
                         </label>
                         <div class="input-group">
                             <input type="password" class="form-control" name="openai_api_key" id="openai_api_key" 
                                    value="{{ settings.openai_api_key or '' }}"
-                                   placeholder="sk-...">
-                            <span class="password-toggle" onclick="togglePassword('openai_api_key')">
+                                   placeholder="sk-proj-...">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('openai_api_key')" title="Mostrar/Ocultar">
                                 <i class="feather-eye"></i>
-                            </span>
+                            </button>
                         </div>
                     </div>
                     
@@ -205,46 +221,58 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="consumer_key" class="form-label">Consumer Key</label>
+                        <label for="consumer_key" class="form-label fw-bold">
+                            <i class="feather-key me-2"></i>Consumer Key
+                        </label>
                         <div class="input-group">
                             <input type="password" class="form-control" name="consumer_key" id="consumer_key" 
-                                   value="{{ settings.consumer_key or '' }}">
-                            <span class="password-toggle" onclick="togglePassword('consumer_key')">
+                                   value="{{ settings.consumer_key or '' }}"
+                                   placeholder="Insira Consumer Key">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('consumer_key')" title="Mostrar/Ocultar">
                                 <i class="feather-eye"></i>
-                            </span>
+                            </button>
                         </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="consumer_secret" class="form-label">Consumer Secret</label>
+                        <label for="consumer_secret" class="form-label fw-bold">
+                            <i class="feather-lock me-2"></i>Consumer Secret
+                        </label>
                         <div class="input-group">
                             <input type="password" class="form-control" name="consumer_secret" id="consumer_secret" 
-                                   value="{{ settings.consumer_secret or '' }}">
-                            <span class="password-toggle" onclick="togglePassword('consumer_secret')">
+                                   value="{{ settings.consumer_secret or '' }}"
+                                   placeholder="Insira Consumer Secret">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('consumer_secret')" title="Mostrar/Ocultar">
                                 <i class="feather-eye"></i>
-                            </span>
+                            </button>
                         </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="token_key" class="form-label">Token Key</label>
+                        <label for="token_key" class="form-label fw-bold">
+                            <i class="feather-key me-2"></i>Token Key
+                        </label>
                         <div class="input-group">
                             <input type="password" class="form-control" name="token_key" id="token_key" 
-                                   value="{{ settings.token_key or '' }}">
-                            <span class="password-toggle" onclick="togglePassword('token_key')">
+                                   value="{{ settings.token_key or '' }}"
+                                   placeholder="Insira Token Key">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('token_key')" title="Mostrar/Ocultar">
                                 <i class="feather-eye"></i>
-                            </span>
+                            </button>
                         </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="token_secret" class="form-label">Token Secret</label>
+                        <label for="token_secret" class="form-label fw-bold">
+                            <i class="feather-lock me-2"></i>Token Secret
+                        </label>
                         <div class="input-group">
                             <input type="password" class="form-control" name="token_secret" id="token_secret" 
-                                   value="{{ settings.token_secret or '' }}">
-                            <span class="password-toggle" onclick="togglePassword('token_secret')">
+                                   value="{{ settings.token_secret or '' }}"
+                                   placeholder="Insira Token Secret">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('token_secret')" title="Mostrar/Ocultar">
                                 <i class="feather-eye"></i>
-                            </span>
+                            </button>
                         </div>
                     </div>
                     
@@ -282,7 +310,7 @@
                     <div class="row">
                         <div class="col-md-8">
                             <div class="mb-3">
-                                <label for="fluig_url" class="form-label">
+                                <label for="fluig_url" class="form-label fw-bold">
                                     <i class="feather-link me-2"></i>Fluig URL
                                 </label>
                                 <input type="url" class="form-control" name="fluig_url" id="fluig_url" 
@@ -292,7 +320,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="ged_folder_id" class="form-label">
+                                <label for="ged_folder_id" class="form-label fw-bold">
                                     <i class="feather-folder me-2"></i>GED Folder ID
                                 </label>
                                 <input type="text" class="form-control" name="ged_folder_id" id="ged_folder_id" 
@@ -351,14 +379,17 @@
 <script>
 function togglePassword(fieldId) {
     const field = document.getElementById(fieldId);
-    const icon = field.nextElementSibling.querySelector('i');
+    const button = field.parentElement.querySelector('button');
+    const icon = button.querySelector('i');
     
     if (field.type === 'password') {
         field.type = 'text';
         icon.className = 'feather-eye-off';
+        button.title = 'Ocultar';
     } else {
         field.type = 'password';
         icon.className = 'feather-eye';
+        button.title = 'Mostrar';
     }
 }
 
