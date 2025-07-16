@@ -399,6 +399,16 @@ IMPORTANTE:
             # Normalizar dados
             normalized_data = self.normalize_nfse_data(raw_data)
             
+            # Classificar tipo de operação
+            try:
+                from document_type_classifier import classify_document_operation_type
+                operation_type = classify_document_operation_type(base64_image, normalized_data)
+                normalized_data['tipo_operacao'] = operation_type
+                self.logger.info(f"NFS-e classified as: {operation_type}")
+            except Exception as e:
+                self.logger.warning(f"Operation type classification failed: {e}")
+                normalized_data['tipo_operacao'] = "Serviços e Produtos"
+            
             self.logger.info(f"NFS-e processing successful for {original_filename}")
             self.logger.info(f"Extracted fields: {list(normalized_data.keys())}")
             

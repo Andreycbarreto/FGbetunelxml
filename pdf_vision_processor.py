@@ -92,6 +92,18 @@ class PDFVisionProcessor:
                 except Exception as e:
                     self.logger.warning(f"Specialized emission date extraction failed: {e}")
             
+            # CRITICAL: Classify operation type (Serviços e Produtos vs CT-e Transporte)
+            if pdf_images:
+                self.logger.info("Classifying document operation type")
+                try:
+                    from document_type_classifier import classify_document_operation_type
+                    operation_type = classify_document_operation_type(pdf_images[0], consolidated_data)
+                    consolidated_data['tipo_operacao'] = operation_type
+                    self.logger.info(f"Document classified as: {operation_type}")
+                except Exception as e:
+                    self.logger.warning(f"Operation type classification failed: {e}")
+                    consolidated_data['tipo_operacao'] = "Serviços e Produtos"  # Fallback padrão
+            
             return {
                 'success': True,
                 'data': consolidated_data,

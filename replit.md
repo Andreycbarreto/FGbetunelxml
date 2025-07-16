@@ -97,6 +97,18 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. Intelligent Document Operation Type Classification:
+  * Created DocumentTypeClassifier with AI-powered classification system
+  * Classifies NFe documents into "Serviços e Produtos" or "CT-e (Transporte)"
+  * Dual-layer classification: text-based analysis + GPT-4 Vision analysis
+  * Text-based analysis uses service codes, descriptions, and CFOP codes
+  * Transport indicators: "transporte", "frete", "logística", "terminal", "porto"
+  * Service codes for transport: 16.01, 16.02, 20.01, 20.02, 20.03
+  * CFOPs for transport: 5351-5356, 6351-6356
+  * Integrated into all processors: PDF Vision, DANFE, and NFS-e
+  * Automatic classification stored in tipo_operacao field
+  * Fallback to "Serviços e Produtos" if classification fails
+  * Tested successfully: Terminal Portuário correctly classified as CT-e (Transporte)
 - July 9, 2025. Enhanced Date Extraction System for Brazilian Documents:
   * Created specialized date extraction functions with pattern matching for emission dates
   * Enhanced date validation with OCR error correction (O→0, I→1, l→1)
