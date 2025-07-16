@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app import app, db, init_database
 from replit_auth import require_login, make_replit_blueprint
-from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole, Batch, BatchStatus
+from models import User, UploadedFile, NFERecord, NFEItem, ProcessingStatus, UserRole, Batch, BatchStatus, Empresa
 from xml_processor import NFEXMLProcessor
 import batch_routes  # Import batch management routes
 from ai_agents import process_nfe_with_ai
@@ -886,6 +886,140 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
+
+
+# Rotas para gerenciamento de empresas
+@app.route('/empresas')
+@login_required_hybrid
+def empresas_list():
+    """Lista todas as empresas do usuário"""
+    empresas = Empresa.query.filter_by(user_id=current_user.id).order_by(Empresa.numero).all()
+    return render_template('empresas/list.html', empresas=empresas)
+
+
+@app.route('/empresas/nova', methods=['GET', 'POST'])
+@login_required_hybrid
+def empresa_nova():
+    """Criar nova empresa"""
+    if request.method == 'POST':
+        try:
+            # Validar se já existe empresa com mesmo número para o usuário
+            numero = int(request.form.get('numero'))
+            existing_numero = Empresa.query.filter_by(
+                user_id=current_user.id,
+                numero=numero
+            ).first()
+            
+            if existing_numero:
+                flash('Já existe uma empresa com este número.', 'error')
+                return render_template('empresas/form.html')
+            
+            # Validar se CNPJ já existe
+            cnpj = request.form.get('cnpj').replace('.', '').replace('/', '').replace('-', '')
+            existing_cnpj = Empresa.query.filter_by(cnpj=cnpj).first()
+            
+            if existing_cnpj:
+                flash('CNPJ já cadastrado no sistema.', 'error')
+                return render_template('empresas/form.html')
+            
+            # Criar nova empresa
+            empresa = Empresa(
+                numero=numero,
+                nome_fantasia=request.form.get('nome_fantasia'),
+                cnpj=cnpj,
+                razao_social=request.form.get('razao_social'),
+                user_id=current_user.id
+            )
+            
+            db.session.add(empresa)
+            db.session.commit()
+            
+            flash('Empresa criada com sucesso!', 'success')
+            return redirect(url_for('empresas_list'))
+            
+        except ValueError:
+            flash('Número deve ser um valor numérico.', 'error')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao criar empresa: {str(e)}', 'error')
+    
+    return render_template('empresas/form.html')
+
+
+@app.route('/empresas/<int:empresa_id>/editar', methods=['GET', 'POST'])
+@login_required_hybrid
+def empresa_editar(empresa_id):
+    """Editar empresa existente"""
+    empresa = Empresa.query.filter_by(
+        id=empresa_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    if request.method == 'POST':
+        try:
+            numero = int(request.form.get('numero'))
+            
+            # Validar se já existe empresa com mesmo número (exceto a atual)
+            existing_numero = Empresa.query.filter(
+                Empresa.user_id == current_user.id,
+                Empresa.numero == numero,
+                Empresa.id != empresa_id
+            ).first()
+            
+            if existing_numero:
+                flash('Já existe uma empresa com este número.', 'error')
+                return render_template('empresas/form.html', empresa=empresa)
+            
+            # Validar se CNPJ já existe (exceto o atual)
+            cnpj = request.form.get('cnpj').replace('.', '').replace('/', '').replace('-', '')
+            existing_cnpj = Empresa.query.filter(
+                Empresa.cnpj == cnpj,
+                Empresa.id != empresa_id
+            ).first()
+            
+            if existing_cnpj:
+                flash('CNPJ já cadastrado no sistema.', 'error')
+                return render_template('empresas/form.html', empresa=empresa)
+            
+            # Atualizar empresa
+            empresa.numero = numero
+            empresa.nome_fantasia = request.form.get('nome_fantasia')
+            empresa.cnpj = cnpj
+            empresa.razao_social = request.form.get('razao_social')
+            empresa.updated_at = datetime.now()
+            
+            db.session.commit()
+            
+            flash('Empresa atualizada com sucesso!', 'success')
+            return redirect(url_for('empresas_list'))
+            
+        except ValueError:
+            flash('Número deve ser um valor numérico.', 'error')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao atualizar empresa: {str(e)}', 'error')
+    
+    return render_template('empresas/form.html', empresa=empresa)
+
+
+@app.route('/empresas/<int:empresa_id>/excluir', methods=['POST'])
+@login_required_hybrid
+def empresa_excluir(empresa_id):
+    """Excluir empresa"""
+    empresa = Empresa.query.filter_by(
+        id=empresa_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    try:
+        db.session.delete(empresa)
+        db.session.commit()
+        flash('Empresa excluída com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir empresa: {str(e)}', 'error')
+    
+    return redirect(url_for('empresas_list'))
 
 # Traditional Login Routes
 @app.route('/login', methods=['GET', 'POST'])

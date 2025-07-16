@@ -97,6 +97,17 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. Complete Company Management System Implementation:
+  * Created Empresa model with fields: numero, nome_fantasia, cnpj, razao_social
+  * Added comprehensive CRUD operations for company management
+  * Implemented company listing with formatted CNPJ display
+  * Created responsive form for creating and editing companies
+  * Added data validation (unique CNPJ, unique number per user)
+  * Implemented security checks (users can only manage their own companies)
+  * Added confirmation modal for company deletion
+  * Integrated company menu item in navigation
+  * Added CNPJ formatting mask and form validation
+  * Database table created with proper relationships and constraints
 - July 16, 2025. PDF Download Feature Implementation:
   * Added original_pdf_path and original_pdf_filename columns to NFERecord model
   * Modified async_pdf_processor to save PDF file paths in database during processing

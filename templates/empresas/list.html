@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Empresas{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Empresas</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-0">
+                        <i class="feather-building me-2"></i>
+                        Empresas
+                    </h1>
+                    <p class="text-muted mb-0">
+                        Gerencie as empresas cadastradas
+                    </p>
+                </div>
+                <a href="{{ url_for('empresa_nova') }}" class="btn btn-primary">
+                    <i class="feather-plus me-2"></i>Nova Empresa
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Empresas -->
+    {% if empresas %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nº</th>
+                            <th>Nome Fantasia</th>
+                            <th>CNPJ</th>
+                            <th>Razão Social</th>
+                            <th>Data Criação</th>
+                            <th width="120">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for empresa in empresas %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">{{ empresa.numero }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ empresa.nome_fantasia }}</strong>
+                            </td>
+                            <td>
+                                <code>{{ empresa.cnpj_formatado }}</code>
+                            </td>
+                            <td>{{ empresa.razao_social }}</td>
+                            <td>
+                                <small class="text-muted">{{ empresa.created_at.strftime('%d/%m/%Y') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('empresa_editar', empresa_id=empresa.id) }}" 
+                                       class="btn btn-outline-primary" title="Editar">
+                                        <i class="feather-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-outline-danger" 
+                                            title="Excluir"
+                                            onclick="confirmarExclusao({{ empresa.id }}, '{{ empresa.nome_fantasia }}')">
+                                        <i class="feather-trash-2"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="feather-building display-1 text-muted mb-3"></i>
+        <h3>Nenhuma empresa cadastrada</h3>
+        <p class="text-muted mb-4">Comece adicionando sua primeira empresa</p>
+        <a href="{{ url_for('empresa_nova') }}" class="btn btn-primary">
+            <i class="feather-plus me-2"></i>Nova Empresa
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir a empresa <strong id="empresaNome"></strong>?</p>
+                <p class="text-muted">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarExclusao(empresaId, nomeFantasia) {
+    document.getElementById('empresaNome').textContent = nomeFantasia;
+    document.getElementById('deleteForm').action = `/empresas/${empresaId}/excluir`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

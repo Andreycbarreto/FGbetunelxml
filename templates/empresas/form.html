@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if empresa %}Editar Empresa{% else %}Nova Empresa{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('empresas_list') }}">Empresas</a></li>
+                    <li class="breadcrumb-item active">
+                        {% if empresa %}Editar{% else %}Nova{% endif %}
+                    </li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-0">
+                        <i class="feather-building me-2"></i>
+                        {% if empresa %}Editar Empresa{% else %}Nova Empresa{% endif %}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        {% if empresa %}
+                            Atualize os dados da empresa
+                        {% else %}
+                            Preencha os dados da nova empresa
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{{ url_for('empresas_list') }}" class="btn btn-outline-secondary">
+                    <i class="feather-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        <div class="row g-3">
+                            <!-- Número -->
+                            <div class="col-md-3">
+                                <label for="numero" class="form-label">Número *</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="numero" 
+                                       name="numero" 
+                                       value="{{ empresa.numero if empresa else '' }}"
+                                       required>
+                                <div class="form-text">Número sequencial da empresa</div>
+                            </div>
+
+                            <!-- Nome Fantasia -->
+                            <div class="col-md-9">
+                                <label for="nome_fantasia" class="form-label">Nome Fantasia *</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="nome_fantasia" 
+                                       name="nome_fantasia" 
+                                       value="{{ empresa.nome_fantasia if empresa else '' }}"
+                                       required
+                                       maxlength="255">
+                                <div class="form-text">Nome comercial da empresa</div>
+                            </div>
+
+                            <!-- CNPJ -->
+                            <div class="col-md-6">
+                                <label for="cnpj" class="form-label">CNPJ *</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="cnpj" 
+                                       name="cnpj" 
+                                       value="{{ empresa.cnpj_formatado if empresa else '' }}"
+                                       required
+                                       placeholder="00.000.000/0000-00"
+                                       maxlength="18">
+                                <div class="form-text">CNPJ da empresa (apenas números ou formatado)</div>
+                            </div>
+
+                            <!-- Razão Social -->
+                            <div class="col-md-6">
+                                <label for="razao_social" class="form-label">Razão Social *</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="razao_social" 
+                                       name="razao_social" 
+                                       value="{{ empresa.razao_social if empresa else '' }}"
+                                       required
+                                       maxlength="255">
+                                <div class="form-text">Razão social registrada na Receita Federal</div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('empresas_list') }}" class="btn btn-outline-secondary">
+                                <i class="feather-x me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="feather-save me-2"></i>
+                                {% if empresa %}Atualizar{% else %}Criar{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Máscara para CNPJ
+document.getElementById('cnpj').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    
+    if (value.length <= 14) {
+        value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        e.target.value = value;
+    }
+});
+
+// Validação do formulário
+document.querySelector('form').addEventListener('submit', function(e) {
+    const numero = document.getElementById('numero');
+    const nomeFantasia = document.getElementById('nome_fantasia');
+    const cnpj = document.getElementById('cnpj');
+    const razaoSocial = document.getElementById('razao_social');
+    
+    let isValid = true;
+    
+    // Validar número
+    if (!numero.value || parseInt(numero.value) <= 0) {
+        numero.classList.add('is-invalid');
+        isValid = false;
+    } else {
+        numero.classList.remove('is-invalid');
+    }
+    
+    // Validar nome fantasia
+    if (!nomeFantasia.value.trim()) {
+        nomeFantasia.classList.add('is-invalid');
+        isValid = false;
+    } else {
+        nomeFantasia.classList.remove('is-invalid');
+    }
+    
+    // Validar CNPJ
+    const cnpjValue = cnpj.value.replace(/\D/g, '');
+    if (!cnpjValue || cnpjValue.length !== 14) {
+        cnpj.classList.add('is-invalid');
+        isValid = false;
+    } else {
+        cnpj.classList.remove('is-invalid');
+    }
+    
+    // Validar razão social
+    if (!razaoSocial.value.trim()) {
+        razaoSocial.classList.add('is-invalid');
+        isValid = false;
+    } else {
+        razaoSocial.classList.remove('is-invalid');
+    }
+    
+    if (!isValid) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

@@ -375,3 +375,31 @@ class Batch(db.Model):
         self.status = BatchStatus.CLOSED
         self.closed_at = datetime.now()
         db.session.commit()
+
+
+class Empresa(db.Model):
+    """Modelo para gerenciar empresas cadastradas pelo usuário"""
+    __tablename__ = 'empresas'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.Integer, nullable=False)
+    nome_fantasia = db.Column(db.String(255), nullable=False)
+    cnpj = db.Column(db.String(18), nullable=False, unique=True)
+    razao_social = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relacionamento com usuário
+    user = db.relationship('User', backref='empresas')
+    
+    def __repr__(self):
+        return f'<Empresa {self.numero}: {self.nome_fantasia}>'
+    
+    @property
+    def cnpj_formatado(self):
+        """Retorna CNPJ formatado XX.XXX.XXX/XXXX-XX"""
+        if len(self.cnpj) == 14:
+            return f"{self.cnpj[:2]}.{self.cnpj[2:5]}.{self.cnpj[5:8]}/{self.cnpj[8:12]}-{self.cnpj[12:]}"
+        return self.cnpj
