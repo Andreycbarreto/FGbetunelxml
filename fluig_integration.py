@@ -96,19 +96,40 @@ class FluigIntegration:
     
     def find_accessible_folder(self):
         """
-        Retorna a pasta configurada ou uma pasta padrão como fallback
+        Descobre automaticamente uma pasta com permissões de escrita
         
         Returns:
-            int: ID da pasta acessível
+            int: ID da pasta acessível ou None se não encontrar
         """
-        # Se tem pasta configurada, usar ela
+        # Primeiro, tentar a pasta configurada
         if self.ged_folder_id:
-            logging.info(f"Usando pasta configurada: {self.ged_folder_id}")
-            return self.ged_folder_id
+            logging.info(f"Testando pasta configurada: {self.ged_folder_id}")
+            test_result = self.test_folder_permission(self.ged_folder_id)
+            if test_result['success']:
+                logging.info(f"Pasta configurada {self.ged_folder_id} está acessível")
+                return self.ged_folder_id
+            else:
+                logging.warning(f"Pasta configurada {self.ged_folder_id} não tem permissões: {test_result['message']}")
         
-        # Fallback para pasta padrão
-        logging.info("Nenhuma pasta configurada, usando pasta padrão: 1")
-        return 1
+        # Se não tem pasta configurada ou ela não funciona, descobrir automaticamente
+        logging.info("Descobrindo pasta funcional automaticamente...")
+        
+        # Listar todas as pastas disponíveis
+        folders = self.list_available_folders()
+        
+        # Testar cada pasta até encontrar uma que funcione
+        for folder in folders:
+            logging.info(f"Testando pasta {folder['id']} ({folder['name']})")
+            test_result = self.test_folder_permission(folder['id'])
+            if test_result['success']:
+                logging.info(f"Pasta funcional encontrada: {folder['id']} ({folder['name']})")
+                return folder['id']
+            else:
+                logging.debug(f"Pasta {folder['id']} não tem permissões: {test_result['message']}")
+        
+        # Se não encontrou nenhuma pasta funcional
+        logging.error("Nenhuma pasta com permissões de escrita foi encontrada")
+        return None
     
     def list_available_folders(self):
         """
@@ -261,11 +282,17 @@ class FluigIntegration:
                 description = f"{uploaded_file_name} - Enviado via API"
             
             # Lista de estratégias para testar múltiplas pastas
-            strategies = [
-                {"parentId": int(folder_id), "description": description},
+            strategies = []
+            
+            # Adicionar pasta descoberta automaticamente se encontrada
+            if folder_id:
+                strategies.append({"parentId": int(folder_id), "description": description})
+            
+            # Adicionar pastas de fallback
+            strategies.extend([
                 {"parentId": 1, "description": description},  # Pasta raiz
                 {"parentId": 2, "description": description},  # Pasta secundária
-            ]
+            ])
             
             # Tentar cada estratégia
             for strategy in strategies:
