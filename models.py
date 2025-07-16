@@ -187,6 +187,7 @@ class NFERecord(db.Model):
     fluig_process_id = db.Column(db.String(100), nullable=True)
     fluig_document_id = db.Column(db.String(100), nullable=True)
     fluig_integration_date = db.Column(db.DateTime, nullable=True)
+    fluig_integration_status = db.Column(db.String(50), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)

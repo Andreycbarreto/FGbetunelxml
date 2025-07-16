@@ -94,6 +94,71 @@ class FluigIntegration:
             logging.error(f"Erro ao enviar arquivo para o Fluig: {str(e)}")
             raise
     
+    def create_workflow_launch(self, nfe_record, file_path):
+        """
+        Cria um novo lançamento no Fluig com o documento NFE
+        
+        Args:
+            nfe_record: Registro NFE com dados do documento
+            file_path: Caminho do arquivo PDF
+            
+        Returns:
+            dict: Resultado da criação do lançamento
+        """
+        try:
+            # Primeiro, fazer upload do arquivo
+            uploaded_file_name = self.upload_file_to_fluig(file_path, os.path.basename(file_path))
+            
+            # Preparar dados do lançamento baseado no NFE
+            launch_data = {
+                "processId": "nfe_processing",  # ID do processo configurado no Fluig
+                "requester": "yasmim.silva@betunel.com.br",
+                "description": f"NFE {nfe_record.numero_nf} - {nfe_record.emitente_nome}",
+                "priority": 0,
+                "attachments": [uploaded_file_name],
+                "cardData": {
+                    "numero_nf": nfe_record.numero_nf,
+                    "emitente_nome": nfe_record.emitente_nome,
+                    "emitente_cnpj": nfe_record.emitente_cnpj,
+                    "valor_total": str(nfe_record.valor_total_nf or 0),
+                    "data_emissao": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else '',
+                    "tipo_operacao": nfe_record.tipo_operacao or '',
+                    "chave_nfe": nfe_record.chave_nfe or ''
+                }
+            }
+            
+            # Criar lançamento
+            response = requests.post(
+                f'{self.fluig_url}/api/public/2.0/processes/start',
+                json=launch_data,
+                auth=self.auth,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                process_id = result.get('processInstanceId')
+                logging.info(f"Lançamento criado com sucesso. Process ID: {process_id}")
+                return {
+                    'success': True,
+                    'process_id': process_id,
+                    'message': 'Lançamento criado com sucesso'
+                }
+            else:
+                error_msg = response.text[:200]
+                logging.error(f"Erro ao criar lançamento: {response.status_code} - {error_msg}")
+                return {
+                    'success': False,
+                    'message': f'Erro {response.status_code}: {error_msg}'
+                }
+                
+        except Exception as e:
+            logging.error(f"Erro na criação do lançamento: {str(e)}")
+            return {
+                'success': False,
+                'message': f'Erro inesperado: {str(e)}'
+            }
+    
     def find_accessible_folder(self):
         """
         Descobre automaticamente uma pasta com permissões de escrita
@@ -546,7 +611,59 @@ class FluigIntegration:
     
     def integrate_nfe_with_fluig(self, nfe_record_id):
         """
-        Integra um registro NFE com o Fluig
+        Integra um registro NFE com o Fluig usando lançamentos de workflow
+        
+        Args:
+            nfe_record_id: ID do registro NFE
+            
+        Returns:
+            dict: Resultado da integração
+        """
+        try:
+            # Buscar o registro NFE
+            nfe_record = NFERecord.query.get(nfe_record_id)
+            if not nfe_record:
+                raise ValueError(f"Registro NFE não encontrado: {nfe_record_id}")
+            
+            # Verificar se tem arquivo PDF original
+            if not nfe_record.original_pdf_path or not os.path.exists(nfe_record.original_pdf_path):
+                raise ValueError("Arquivo PDF original não encontrado")
+            
+            # Usar a nova API de lançamentos ao invés de criar documentos em pastas
+            result = self.create_workflow_launch(nfe_record, nfe_record.original_pdf_path)
+            
+            if result['success']:
+                # Atualizar o registro NFE com informações da integração
+                nfe_record.fluig_process_id = result['process_id']
+                nfe_record.fluig_integration_date = datetime.now()
+                nfe_record.fluig_integration_status = 'INTEGRADO'
+                db.session.commit()
+                
+                logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso. Process ID: {result['process_id']}")
+                return {
+                    'success': True,
+                    'process_id': result['process_id'],
+                    'message': 'NFE integrado com sucesso ao Fluig',
+                    'process_type': 'Lançamento de Workflow'
+                }
+            else:
+                logging.error(f"Falha na integração do NFE {nfe_record.numero_nf}: {result['message']}")
+                return {
+                    'success': False,
+                    'message': result['message']
+                }
+                
+        except Exception as e:
+            logging.error(f"Erro na integração NFE com Fluig: {str(e)}")
+            return {
+                'success': False,
+                'message': f'Erro inesperado: {str(e)}'
+            }
+    
+    def integrate_nfe_with_fluig_legacy(self, nfe_record_id):
+        """
+        [LEGACY] Integra um registro NFE com o Fluig usando método antigo (pastas)
+        Esta função será mantida como fallback se necessário
         
         Args:
             nfe_record_id: ID do registro NFE

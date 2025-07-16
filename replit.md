@@ -97,6 +97,18 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. Revolutionary Fluig Integration: Workflow Launch API Implementation:
+  * Completely redesigned Fluig integration to use workflow launch API instead of folder-based approach
+  * Created create_workflow_launch() method for proper document submission to Fluig processes
+  * Replaced folder-based document creation with process-based workflow launches
+  * Added process ID tracking and status management for launched workflows
+  * Updated integrate_nfe_with_fluig() to use new workflow launch system
+  * Added fluig_integration_status field to NFERecord model for tracking integration state
+  * Maintains legacy folder-based methods as fallback (integrate_nfe_with_fluig_legacy)
+  * Implements proper NFE data mapping to Fluig workflow card fields
+  * Automatic process creation with NFE document attachment and metadata
+  * Enhanced error handling and logging for workflow launch operations
+  * System now creates proper Fluig workflow instances instead of orphaned documents
 - July 16, 2025. Complete Fluig Integration System Implementation:
   * Added complete integration routes for Fluig document workflow management
   * Created /nfe/integrar-fluig/<id> endpoint for document integration
