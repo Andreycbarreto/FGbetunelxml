@@ -587,6 +587,118 @@ class FluigIntegration:
             logging.error(f"Erro ao iniciar processo de serviço: {str(e)}")
             raise
     
+    def start_transport_process_direct(self, nfe_record, uploaded_file_name):
+        """
+        Inicia processo de transporte diretamente sem criar documento no GED
+        
+        Args:
+            nfe_record: Registro NFE com dados do documento
+            uploaded_file_name: Nome do arquivo já enviado para o Fluig
+            
+        Returns:
+            int: ID do processo criado
+        """
+        try:
+            # Dados do cartão para processo de transporte
+            card_data = {
+                "NUMERO_NF": nfe_record.numero_nf or '',
+                "EMITENTE": nfe_record.emitente_nome or '',
+                "CNPJ_EMITENTE": nfe_record.emitente_cnpj or '',
+                "VALOR_TOTAL": str(nfe_record.valor_total_nf or 0),
+                "DATA_EMISSAO": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else '',
+                "CHAVE_NFE": nfe_record.chave_nfe or '',
+                "TIPO_OPERACAO": nfe_record.tipo_operacao or 'CT-e (Transporte)',
+                "ANEXO_NFE": uploaded_file_name,
+                "OBSERVACOES": f"Documento processado automaticamente - NFE {nfe_record.numero_nf}"
+            }
+            
+            # Criar processo de importação de frete
+            process_data = {
+                "processId": "ImportacaoFrete",
+                "description": f"Importação de Frete - NFE {nfe_record.numero_nf}",
+                "requester": "yasmim.silva@betunel.com.br",
+                "priority": 1,
+                "attachments": [uploaded_file_name],
+                "cardData": card_data
+            }
+            
+            response = requests.post(
+                f"{self.fluig_url}/api/public/2.0/processes/start",
+                json=process_data,
+                auth=self.auth,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                process_id = result.get('processInstanceId')
+                logging.info(f"Processo de transporte criado com sucesso. ID: {process_id}")
+                return process_id
+            else:
+                logging.error(f"Erro ao criar processo de transporte: {response.status_code} - {response.text}")
+                raise Exception(f"Erro ao criar processo: {response.status_code}")
+                
+        except Exception as e:
+            logging.error(f"Erro ao iniciar processo de transporte direto: {str(e)}")
+            raise
+    
+    def start_service_process_direct(self, nfe_record, uploaded_file_name):
+        """
+        Inicia processo de serviço diretamente sem criar documento no GED
+        
+        Args:
+            nfe_record: Registro NFE com dados do documento
+            uploaded_file_name: Nome do arquivo já enviado para o Fluig
+            
+        Returns:
+            int: ID do processo criado
+        """
+        try:
+            # Dados do cartão para processo de serviço
+            card_data = {
+                "NUMERO_NF": nfe_record.numero_nf or '',
+                "EMITENTE": nfe_record.emitente_nome or '',
+                "CNPJ_EMITENTE": nfe_record.emitente_cnpj or '',
+                "VALOR_TOTAL": str(nfe_record.valor_total_nf or 0),
+                "DATA_EMISSAO": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else '',
+                "CHAVE_NFE": nfe_record.chave_nfe or '',
+                "TIPO_OPERACAO": nfe_record.tipo_operacao or 'Serviços e Produtos',
+                "VALOR_SERVICOS": str(nfe_record.valor_servicos or 0),
+                "VALOR_ISSQN": str(nfe_record.valor_issqn or 0),
+                "ANEXO_NFE": uploaded_file_name,
+                "OBSERVACOES": f"Documento processado automaticamente - NFE {nfe_record.numero_nf}"
+            }
+            
+            # Criar processo de lançamento de nota fiscal
+            process_data = {
+                "processId": "LancamentoNF",
+                "description": f"Lançamento de Nota Fiscal - NFE {nfe_record.numero_nf}",
+                "requester": "yasmim.silva@betunel.com.br",
+                "priority": 1,
+                "attachments": [uploaded_file_name],
+                "cardData": card_data
+            }
+            
+            response = requests.post(
+                f"{self.fluig_url}/api/public/2.0/processes/start",
+                json=process_data,
+                auth=self.auth,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                process_id = result.get('processInstanceId')
+                logging.info(f"Processo de serviço criado com sucesso. ID: {process_id}")
+                return process_id
+            else:
+                logging.error(f"Erro ao criar processo de serviço: {response.status_code} - {response.text}")
+                raise Exception(f"Erro ao criar processo: {response.status_code}")
+                
+        except Exception as e:
+            logging.error(f"Erro ao iniciar processo de serviço direto: {str(e)}")
+            raise
+    
     def integrate_nfe_with_fluig(self, nfe_record_id):
         """
         Integra um registro NFE com o Fluig usando processos existentes
@@ -607,26 +719,25 @@ class FluigIntegration:
             if not nfe_record.original_pdf_path or not os.path.exists(nfe_record.original_pdf_path):
                 raise ValueError("Arquivo PDF original não encontrado")
             
+            # Estratégia alternativa: Iniciar processo direto sem criar documento no GED primeiro
+            # Isso resolve o problema de permissões na pasta
+            
             # 1. Upload do arquivo
             uploaded_file_name = self.upload_file_to_fluig(
                 nfe_record.original_pdf_path,
                 nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
             )
             
-            # 2. Criar documento no GED com informações específicas do NFE
-            attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
-            
-            # 3. Iniciar processo baseado no tipo de operação
+            # 2. Iniciar processo direto baseado no tipo de operação
             if nfe_record.tipo_operacao == "CT-e (Transporte)":
-                process_id = self.start_transport_process(nfe_record, attachment_id)
+                process_id = self.start_transport_process_direct(nfe_record, uploaded_file_name)
                 process_type = "Importação de Frete"
             else:
-                process_id = self.start_service_process(nfe_record, attachment_id)
+                process_id = self.start_service_process_direct(nfe_record, uploaded_file_name)
                 process_type = "Lançamento de Nota Fiscal"
             
             # Atualizar registro com informações da integração
             nfe_record.fluig_process_id = process_id
-            nfe_record.fluig_document_id = attachment_id
             nfe_record.fluig_integration_date = datetime.now()
             nfe_record.fluig_integration_status = 'INTEGRADO'
             db.session.commit()
@@ -635,7 +746,6 @@ class FluigIntegration:
             return {
                 "success": True,
                 "process_id": process_id,
-                "document_id": attachment_id,
                 "process_type": process_type,
                 "message": f"Integração realizada com sucesso! Processo {process_type} criado com ID: {process_id}"
             }
