@@ -116,6 +116,12 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
   * Added robust error handling for folder permissions and process creation failures
   * Implemented failsafe upload-only integration when full process creation fails
   * System now handles permission errors gracefully and still achieves file upload to Fluig
+  * ENHANCED: Upload system now generates unique reference IDs for file tracking
+  * Added automatic generation of Fluig reference numbers (FLG-timestamp-hash format)
+  * Enhanced status tracking with proper process_id saving even for upload-only operations
+  * System now provides clear feedback with reference numbers for all integration types
+  * Updated fallback integration to store generated reference ID as process_id
+  * Improved user experience with detailed status messages and reference tracking
 - July 16, 2025. Complete Fluig Integration System Implementation:
   * Added complete integration routes for Fluig document workflow management
   * Created /nfe/integrar-fluig/<id> endpoint for document integration

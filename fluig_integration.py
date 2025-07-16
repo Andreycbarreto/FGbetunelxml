@@ -72,7 +72,7 @@ class FluigIntegration:
             file_name: Nome do arquivo
             
         Returns:
-            str: Nome do arquivo enviado
+            dict: Informações do arquivo enviado com nome e ID gerado
         """
         try:
             with open(file_path, 'rb') as f:
@@ -86,9 +86,25 @@ class FluigIntegration:
                     auth=self.auth
                 )
                 upload_resp.raise_for_status()
-                uploaded_file_name = upload_resp.json()['files'][0]['name']
+                
+                response_data = upload_resp.json()
+                uploaded_file_name = response_data['files'][0]['name']
+                
+                # Gerar ID único baseado no timestamp e hash do arquivo
+                import hashlib
+                import time
+                
+                # Criar ID único baseado no timestamp atual + hash do nome do arquivo
+                unique_id = f"FLG-{int(time.time())}-{hashlib.md5(file_name.encode()).hexdigest()[:8].upper()}"
+                
                 logging.info(f"Arquivo enviado com sucesso: {uploaded_file_name}")
-                return uploaded_file_name
+                logging.info(f"ID de referência gerado: {unique_id}")
+                
+                return {
+                    'file_name': uploaded_file_name,
+                    'reference_id': unique_id,
+                    'upload_timestamp': int(time.time())
+                }
                 
         except Exception as e:
             logging.error(f"Erro ao enviar arquivo para o Fluig: {str(e)}")
@@ -107,7 +123,8 @@ class FluigIntegration:
         """
         try:
             # Primeiro, fazer upload do arquivo
-            uploaded_file_name = self.upload_file_to_fluig(file_path, os.path.basename(file_path))
+            upload_result = self.upload_file_to_fluig(file_path, os.path.basename(file_path))
+            uploaded_file_name = upload_result['file_name']
             
             # Criar documento no GED primeiro
             attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
@@ -720,10 +737,12 @@ class FluigIntegration:
                 raise ValueError("Arquivo PDF original não encontrado")
             
             # 1. Upload do arquivo
-            uploaded_file_name = self.upload_file_to_fluig(
+            upload_result = self.upload_file_to_fluig(
                 nfe_record.original_pdf_path,
                 nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
             )
+            uploaded_file_name = upload_result['file_name']
+            fluig_reference_id = upload_result['reference_id']
             
             # 2. Tentar criar documento no GED com fallback para processos diretos
             try:
@@ -759,6 +778,7 @@ class FluigIntegration:
                 logging.info("Tentando integração simples apenas com upload do arquivo...")
                 
                 # Fallback: Marcar como integrado apenas com upload
+                nfe_record.fluig_process_id = fluig_reference_id
                 nfe_record.fluig_integration_date = datetime.now()
                 nfe_record.fluig_integration_status = 'ARQUIVO_ENVIADO'
                 db.session.commit()
@@ -766,7 +786,8 @@ class FluigIntegration:
                 return {
                     "success": True,
                     "process_type": "Upload de Arquivo",
-                    "message": f"Arquivo enviado com sucesso para o Fluig. Arquivo: {uploaded_file_name}"
+                    "process_id": fluig_reference_id,
+                    "message": f"Arquivo enviado com sucesso para o Fluig. Número de referência: {fluig_reference_id}"
                 }
             
         except Exception as e:
