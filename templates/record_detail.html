@@ -40,6 +40,9 @@
                         <i class="feather-download me-2"></i>Baixar PDF
                     </a>
                     {% endif %}
+                    <button class="btn btn-outline-success" onclick="integrarFluig({{ record.id }})" id="btnFluig{{ record.id }}">
+                        <i class="feather-upload me-2"></i>Integrar Fluig
+                    </button>
                 </div>
             </div>
         </div>
@@ -127,6 +130,11 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional" type="button" role="tab">
                         <i class="feather-more-horizontal me-2"></i>Informações Adicionais
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="fluig-tab" data-bs-toggle="tab" data-bs-target="#fluig" type="button" role="tab">
+                        <i class="feather-upload me-2"></i>Integração Fluig
                     </button>
                 </li>
             </ul>
@@ -682,6 +690,107 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Fluig Integration Tab -->
+                <div class="tab-pane fade" id="fluig" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h6 class="border-bottom pb-2 mb-3">
+                                        <i class="feather-upload me-2"></i>Status da Integração Fluig
+                                    </h6>
+                                    
+                                    <div id="fluigStatusCard" class="card border-secondary">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <span>Verificando status da integração...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-4">
+                                        <h6 class="border-bottom pb-2 mb-3">
+                                            <i class="feather-info me-2"></i>Informações da Integração
+                                        </h6>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <table class="table table-sm">
+                                                    <tr>
+                                                        <td><strong>Tipo de Operação:</strong></td>
+                                                        <td>
+                                                            <span class="badge bg-{{ record.tipo_operacao == 'CT-e (Transporte)' and 'warning' or 'info' }}">
+                                                                {{ record.tipo_operacao or 'Não identificado' }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Processo Fluig:</strong></td>
+                                                        <td>
+                                                            {% if record.tipo_operacao == 'CT-e (Transporte)' %}
+                                                                Importação de Frete
+                                                            {% else %}
+                                                                Lançamento de Nota Fiscal
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Valor do Documento:</strong></td>
+                                                        <td>
+                                                            {% if record.valor_total_nf %}
+                                                                {{ record.valor_total_nf | currency }}
+                                                            {% else %}
+                                                                N/A
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <table class="table table-sm">
+                                                    <tr>
+                                                        <td><strong>Emitente:</strong></td>
+                                                        <td>{{ record.emitente_nome or 'N/A' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>CNPJ Emitente:</strong></td>
+                                                        <td>{{ record.emitente_cnpj or 'N/A' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Data Emissão:</strong></td>
+                                                        <td>
+                                                            {% if record.data_emissao %}
+                                                                {{ record.data_emissao.strftime('%d/%m/%Y') }}
+                                                            {% else %}
+                                                                N/A
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="alert alert-info mt-3">
+                                            <i class="feather-info me-2"></i>
+                                            <strong>Sobre a Integração:</strong>
+                                            <ul class="mb-0 mt-2">
+                                                <li>A integração envia o documento para o GED do Fluig</li>
+                                                <li>Inicia automaticamente o processo apropriado baseado no tipo de operação</li>
+                                                <li>Documentos de transporte iniciam o processo de "Importação de Frete"</li>
+                                                <li>Outros documentos iniciam o processo de "Lançamento de Nota Fiscal"</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -739,6 +848,163 @@ function copyXmlToClipboard() {
             button.innerHTML = originalText;
         }, 2000);
     });
+}
+
+function integrarFluig(nfeId) {
+    const button = document.getElementById('btnFluig' + nfeId);
+    const originalText = button.innerHTML;
+    
+    // Mostrar loading
+    button.innerHTML = '<i class="feather-loader me-2"></i>Integrando...';
+    button.disabled = true;
+    
+    // Fazer requisição para integrar
+    fetch('/nfe/integrar-fluig/' + nfeId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Sucesso
+                button.innerHTML = '<i class="feather-check me-2"></i>Integrado!';
+                button.className = 'btn btn-success';
+                
+                // Mostrar mensagem de sucesso
+                showAlert('success', data.message);
+                
+                // Opcional: recarregar a página após alguns segundos
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+            } else {
+                // Erro
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showAlert('error', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro na integração:', error);
+            button.innerHTML = originalText;
+            button.disabled = false;
+            showAlert('error', 'Erro ao integrar com Fluig. Tente novamente.');
+        });
+}
+
+function showAlert(type, message) {
+    const alertContainer = document.createElement('div');
+    alertContainer.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    alertContainer.style.position = 'fixed';
+    alertContainer.style.top = '20px';
+    alertContainer.style.right = '20px';
+    alertContainer.style.zIndex = '9999';
+    alertContainer.style.minWidth = '300px';
+    
+    alertContainer.innerHTML = `
+        <i class="feather-${type === 'success' ? 'check-circle' : 'alert-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertContainer);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        if (alertContainer.parentNode) {
+            alertContainer.parentNode.removeChild(alertContainer);
+        }
+    }, 5000);
+}
+
+// Verificar status da integração Fluig ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    const nfeId = {{ record.id }};
+    
+    fetch('/nfe/status-fluig/' + nfeId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.integrated) {
+                const button = document.getElementById('btnFluig' + nfeId);
+                if (button) {
+                    button.innerHTML = '<i class="feather-check me-2"></i>Já Integrado';
+                    button.className = 'btn btn-success';
+                    button.disabled = true;
+                    
+                    // Mostrar informações da integração
+                    if (data.process_id) {
+                        button.title = `Processo ID: ${data.process_id}`;
+                    }
+                }
+                
+                // Atualizar o status na aba Fluig
+                updateFluigStatusCard(data);
+            } else {
+                // Ainda não integrado
+                updateFluigStatusCard(data);
+            }
+        })
+        .catch(error => {
+            console.log('Erro ao verificar status Fluig:', error);
+            updateFluigStatusCard({success: false, message: 'Erro ao verificar status'});
+        });
+});
+
+function updateFluigStatusCard(data) {
+    const statusCard = document.getElementById('fluigStatusCard');
+    
+    if (data.success && data.integrated) {
+        // Já integrado
+        statusCard.className = 'card border-success';
+        statusCard.innerHTML = `
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="feather-check-circle text-success me-2"></i>
+                    <div>
+                        <h6 class="mb-0">Integração Concluída</h6>
+                        <small class="text-muted">Documento integrado com sucesso ao Fluig</small>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <table class="table table-sm">
+                        ${data.process_id ? `<tr><td><strong>ID do Processo:</strong></td><td><code>${data.process_id}</code></td></tr>` : ''}
+                        ${data.document_id ? `<tr><td><strong>ID do Documento:</strong></td><td><code>${data.document_id}</code></td></tr>` : ''}
+                        ${data.integration_date ? `<tr><td><strong>Data da Integração:</strong></td><td>${data.integration_date}</td></tr>` : ''}
+                    </table>
+                </div>
+            </div>
+        `;
+    } else if (data.success && !data.integrated) {
+        // Disponível para integração
+        statusCard.className = 'card border-warning';
+        statusCard.innerHTML = `
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <i class="feather-alert-triangle text-warning me-2"></i>
+                        <div>
+                            <h6 class="mb-0">Aguardando Integração</h6>
+                            <small class="text-muted">Documento ainda não foi integrado ao Fluig</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-success btn-sm" onclick="integrarFluig(${data.nfe_id || {{ record.id }}})">
+                        <i class="feather-upload me-1"></i>Integrar Agora
+                    </button>
+                </div>
+            </div>
+        `;
+    } else {
+        // Erro
+        statusCard.className = 'card border-danger';
+        statusCard.innerHTML = `
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="feather-alert-circle text-danger me-2"></i>
+                    <div>
+                        <h6 class="mb-0">Erro na Verificação</h6>
+                        <small class="text-muted">${data.message || 'Não foi possível verificar o status da integração'}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 }
 </script>
 {% endblock %}

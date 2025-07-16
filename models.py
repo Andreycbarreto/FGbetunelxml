@@ -292,6 +292,15 @@ class NFEItem(db.Model):
     aliquota_csll = db.Column(Numeric(5, 4), nullable=True)
     valor_csll = db.Column(Numeric(15, 2), nullable=True)
     
+    # Campos para integração com Fluig
+    fluig_process_id = db.Column(db.String(100), nullable=True)
+    fluig_document_id = db.Column(db.String(100), nullable=True)
+    fluig_integration_date = db.Column(db.DateTime, nullable=True)
+    
+    # Campos adicionais para PDF
+    original_pdf_path = db.Column(db.String(500), nullable=True)
+    original_pdf_filename = db.Column(db.String(255), nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.now)
 
 

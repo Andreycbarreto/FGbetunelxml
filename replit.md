@@ -97,6 +97,21 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. Complete Fluig Integration System Implementation:
+  * Added complete integration routes for Fluig document workflow management
+  * Created /nfe/integrar-fluig/<id> endpoint for document integration
+  * Created /nfe/status-fluig/<id> endpoint for integration status checking
+  * Enhanced NFE record detail template with Fluig integration button
+  * Added dedicated "Integração Fluig" tab in record detail view
+  * Implemented real-time status checking and visual feedback
+  * Added JavaScript functions for seamless integration experience
+  * Created comprehensive status cards showing integration progress
+  * Implemented different workflows based on operation type (transport vs service)
+  * Added error handling and user feedback for failed integrations
+  * Integrated with existing UserSettings for Fluig credentials
+  * Status tracking with process IDs and document IDs from Fluig
+  * Auto-refresh functionality after successful integration
+  * Visual indicators for integrated vs pending documents
 - July 16, 2025. Complete Branch (Filial) Management System Implementation:
   * Created Filial model with fields: coligada, nome_coligada, cnpj_coligada, filial, nome_filial, cnpj_filial
   * Implemented full CRUD operations for branch management linked to companies

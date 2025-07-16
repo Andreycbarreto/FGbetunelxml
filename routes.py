@@ -17,6 +17,7 @@ import batch_routes  # Import batch management routes
 import filial_routes  # Import filial management routes
 import settings_routes  # Import settings management routes
 from ai_agents import process_nfe_with_ai
+from fluig_integration import get_fluig_integration_for_user
 from pdf_simple_processor import SimplePDFProcessor
 from pdf_vision_processor import PDFVisionProcessor
 from async_pdf_processor import add_pdf_processing_job, start_async_processor, get_processing_status
@@ -1064,3 +1065,73 @@ def local_logout():
     logout_user()
     flash('Você foi desconectado com sucesso.', 'info')
     return redirect(url_for('login'))
+
+
+# Rotas de integração com Fluig
+@app.route('/nfe/integrar-fluig/<int:nfe_id>')
+@require_login
+def integrar_fluig(nfe_id):
+    """Integrar NFE com o sistema Fluig"""
+    nfe_record = NFERecord.query.get_or_404(nfe_id)
+    
+    # Verificar se o usuário tem permissão para acessar este arquivo
+    if nfe_record.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Acesso negado!'})
+    
+    # Verificar se já foi integrado
+    if nfe_record.fluig_process_id:
+        return jsonify({
+            'success': False, 
+            'message': f'NFE já integrada ao Fluig! Processo ID: {nfe_record.fluig_process_id}'
+        })
+    
+    # Obter integração Fluig para o usuário
+    fluig_integration = get_fluig_integration_for_user(current_user.id)
+    
+    if not fluig_integration:
+        return jsonify({
+            'success': False, 
+            'message': 'Configuração do Fluig não encontrada. Configure suas credenciais nas configurações do sistema.'
+        })
+    
+    # Executar integração
+    result = fluig_integration.integrate_nfe_with_fluig(nfe_id)
+    
+    if result['success']:
+        return jsonify({
+            'success': True,
+            'message': result['message'],
+            'process_id': result['process_id'],
+            'document_id': result['document_id']
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': result['message']
+        })
+
+
+@app.route('/nfe/status-fluig/<int:nfe_id>')
+@require_login
+def status_fluig(nfe_id):
+    """Verificar status da integração Fluig"""
+    nfe_record = NFERecord.query.get_or_404(nfe_id)
+    
+    # Verificar se o usuário tem permissão para acessar este arquivo
+    if nfe_record.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Acesso negado!'})
+    
+    if nfe_record.fluig_process_id:
+        return jsonify({
+            'success': True,
+            'integrated': True,
+            'process_id': nfe_record.fluig_process_id,
+            'document_id': nfe_record.fluig_document_id,
+            'integration_date': nfe_record.fluig_integration_date.strftime('%d/%m/%Y %H:%M:%S') if nfe_record.fluig_integration_date else None
+        })
+    else:
+        return jsonify({
+            'success': True,
+            'integrated': False,
+            'message': 'NFE não integrada ao Fluig'
+        })
