@@ -176,25 +176,45 @@ class FluigIntegration:
                     logging.info(f"Status Code com matrícula: {create_doc_resp.status_code}")
                     logging.info(f"Response com matrícula: {create_doc_resp.text}")
                     
-                    # Se ainda falhar, tentar apenas com phisicalFile
+                    # Se ainda falhar, tentar com pasta raiz (ID 1)
                     if create_doc_resp.status_code != 200:
-                        logging.info("Tentando apenas com phisicalFile...")
-                        minimal_payload = {
+                        logging.info("Tentando com pasta raiz (ID 1)...")
+                        root_payload = {
                             "description": f"{uploaded_file_name} - Enviado via API",
-                            "parentId": int(self.ged_folder_id),
-                            "phisicalFile": uploaded_file_name,
+                            "parentId": 1,  # Pasta raiz
+                            "attachments": [{"fileName": uploaded_file_name}],
                             "documentTypeId": 7
                         }
                         
                         create_doc_resp = requests.post(
                             f'{self.fluig_url}/api/public/ecm/document/createDocument',
-                            json=minimal_payload,
+                            json=root_payload,
                             auth=self.auth
                         )
                         
-                        logging.info(f"Payload mínimo: {json.dumps(minimal_payload, indent=2)}")
-                        logging.info(f"Status Code mínimo: {create_doc_resp.status_code}")
-                        logging.info(f"Response mínimo: {create_doc_resp.text}")
+                        logging.info(f"Payload pasta raiz: {json.dumps(root_payload, indent=2)}")
+                        logging.info(f"Status Code pasta raiz: {create_doc_resp.status_code}")
+                        logging.info(f"Response pasta raiz: {create_doc_resp.text}")
+                        
+                        # Se ainda falhar, tentar apenas com phisicalFile
+                        if create_doc_resp.status_code != 200:
+                            logging.info("Tentando apenas com phisicalFile...")
+                            minimal_payload = {
+                                "description": f"{uploaded_file_name} - Enviado via API",
+                                "parentId": 1,  # Pasta raiz
+                                "phisicalFile": uploaded_file_name,
+                                "documentTypeId": 7
+                            }
+                            
+                            create_doc_resp = requests.post(
+                                f'{self.fluig_url}/api/public/ecm/document/createDocument',
+                                json=minimal_payload,
+                                auth=self.auth
+                            )
+                            
+                            logging.info(f"Payload mínimo: {json.dumps(minimal_payload, indent=2)}")
+                            logging.info(f"Status Code mínimo: {create_doc_resp.status_code}")
+                            logging.info(f"Response mínimo: {create_doc_resp.text}")
             
             create_doc_resp.raise_for_status()
             attachment_id = create_doc_resp.json()['content']['id']

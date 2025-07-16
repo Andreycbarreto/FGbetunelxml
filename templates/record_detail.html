@@ -1058,5 +1058,40 @@ function testFluigConnection() {
             }, 3000);
         });
 }
+
+function debugFluigFolders() {
+    console.log('Debug: Testando pastas Fluig...');
+    
+    fetch('/debug-fluig-folders')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Debug: Resultado dos testes de pastas:', data.folder_tests);
+                
+                // Mostrar resultados em alert
+                let message = 'Teste de Pastas Fluig:\n\n';
+                message += `Pasta configurada: ${data.current_ged_folder_id}\n\n`;
+                
+                for (const [folderId, result] of Object.entries(data.folder_tests)) {
+                    message += `Pasta ${folderId}: ${result.accessible ? 'ACESSÍVEL' : 'SEM ACESSO'} (Status: ${result.status})\n`;
+                }
+                
+                // Encontrar pasta acessível
+                const accessibleFolders = Object.entries(data.folder_tests).filter(([id, result]) => result.accessible);
+                if (accessibleFolders.length > 0) {
+                    message += `\nPastas acessíveis: ${accessibleFolders.map(([id]) => id).join(', ')}`;
+                }
+                
+                showAlert('info', message);
+            } else {
+                console.error('Debug: Erro ao testar pastas:', data.message);
+                showAlert('error', 'Erro ao testar pastas: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Debug: Erro na requisição:', error);
+            showAlert('error', 'Erro ao testar pastas: ' + error.message);
+        });
+}
 </script>
 {% endblock %}

@@ -1151,3 +1151,53 @@ def test_fluig_connection():
     
     result = fluig_integration.test_fluig_connection()
     return jsonify(result)
+
+@app.route('/debug-fluig-folders')
+@login_required_hybrid
+def debug_fluig_folders():
+    """Debug Fluig folders for permission testing"""
+    try:
+        fluig_integration = get_fluig_integration_for_user(current_user.id)
+        if not fluig_integration:
+            return jsonify({
+                'success': False,
+                'message': 'Configurações do Fluig não encontradas'
+            })
+        
+        # Testar diferentes IDs de pastas
+        test_folders = [1, 2693638, 2693639, 2693640]  # Pasta raiz e algumas próximas
+        results = {}
+        
+        for folder_id in test_folders:
+            try:
+                response = requests.get(
+                    f'{fluig_integration.fluig_url}/api/public/ecm/folder/getFolderContent/{folder_id}',
+                    auth=fluig_integration.auth,
+                    timeout=5
+                )
+                
+                results[folder_id] = {
+                    'status': response.status_code,
+                    'accessible': response.status_code == 200,
+                    'response': response.text[:500] if response.text else 'Empty response'
+                }
+                
+            except Exception as e:
+                results[folder_id] = {
+                    'status': 'error',
+                    'accessible': False,
+                    'response': str(e)
+                }
+        
+        return jsonify({
+            'success': True,
+            'folder_tests': results,
+            'current_ged_folder_id': fluig_integration.ged_folder_id
+        })
+        
+    except Exception as e:
+        logging.error(f"Erro ao debug pastas Fluig: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao debug pastas: {str(e)}'
+        })
