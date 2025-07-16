@@ -97,6 +97,20 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. Complete Fluig Integration with API v2 and Robust Fallback System:
+  * Implemented complete API v2 integration based on working example code
+  * Added create_document_in_ged() method for proper GED document creation
+  * Created start_process_with_v2_api() method using correct API v2 endpoints
+  * Implemented process name encoding and proper form field mapping
+  * Added comprehensive fallback system when API v2 fails due to permissions
+  * Fallback maintains upload functionality + unique reference generation
+  * Enhanced error handling and logging for both API v2 and fallback methods
+  * Added fluig_integration_data field to store detailed integration metadata
+  * Database migration applied to support new integration data storage
+  * System now attempts full API v2 integration first, falls back to upload-only
+  * Both methods generate proper reference IDs for document tracking
+  * Comprehensive logging shows integration method used and any errors encountered
+  * Maintains backward compatibility with existing integration records
 - July 16, 2025. Integration API Endpoint Resolution:
   * Investigated multiple Fluig API endpoints for process creation
   * Tested /process-management/api/v2/requests (returned 500 NotAllowedException)

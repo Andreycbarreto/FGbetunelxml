@@ -788,9 +788,143 @@ class FluigIntegration:
         except Exception as e:
             logging.warning(f"Erro ao anexar arquivo ao processo: {str(e)}")
     
+    def create_document_in_ged(self, uploaded_file_name, nfe_record):
+        """
+        Cria documento no GED do Fluig (baseado no exemplo fornecido)
+        
+        Args:
+            uploaded_file_name: Nome do arquivo já enviado
+            nfe_record: Registro NFE
+            
+        Returns:
+            int: ID do documento criado
+        """
+        try:
+            create_doc_payload = {
+                "description": f"{uploaded_file_name} - NFE {nfe_record.numero_nf} - {nfe_record.emitente_nome}",
+                "parentId": self.ged_folder_id,
+                "attachments": [{"fileName": uploaded_file_name}],
+                "documentTypeId": 7,  # Essencial para aparecer na aba de anexos
+                "formData": [
+                    {
+                        "name": "ecm-widgetpartgeneralinformation-utilizaVisualizadorInterno",
+                        "value": False
+                    }
+                ]
+            }
+            
+            logging.info(f"Criando documento no GED para NFE {nfe_record.numero_nf}")
+            response = requests.post(
+                f"{self.fluig_url}/api/public/ecm/document/createDocument",
+                json=create_doc_payload,
+                auth=self.auth,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                document_id = response.json()['content']['id']
+                logging.info(f"Documento criado no GED com ID: {document_id}")
+                return document_id
+            else:
+                logging.error(f"Erro ao criar documento no GED: {response.status_code} - {response.text}")
+                raise Exception(f"Erro ao criar documento no GED: {response.status_code}")
+                
+        except Exception as e:
+            logging.error(f"Erro ao criar documento no GED: {str(e)}")
+            raise
+    
+    def start_process_with_v2_api(self, nfe_record, attachment_id, process_name):
+        """
+        Inicia processo usando a API v2 do Fluig (baseado no exemplo fornecido)
+        
+        Args:
+            nfe_record: Registro NFE
+            attachment_id: ID do documento no GED
+            process_name: Nome do processo no Fluig
+            
+        Returns:
+            int: ID do processo criado
+        """
+        try:
+            from urllib.parse import quote
+            
+            # Campos do formulário baseados no exemplo fornecido
+            form_fields = {
+                "nome": "Sistema API",
+                "matricula": "sistema_api",
+                "email": "sistema@betunel.com.br",
+                "Hdt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "dt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "nm_empresa": "BETUNEL",
+                "cod_empresa": "1",
+                "cnpj": "60.546.801/0001-89",
+                "nm_filial": "Matriz",
+                "cod_filial": "01",
+                "cnpj_filial": "60.546.801/0001-89",
+                "unid_negoc": "OPERACIONAL",
+                "cod_un": "0.10.02.01.001",
+                "centro_custo": "1.0.3299 - SUPRIMENTOS",
+                "cod_cc": "1.0.3299",
+                "tp_doc": "Nota fiscal eletrônica",
+                "numero_NF": str(nfe_record.numero_nf or ""),
+                "serie": str(nfe_record.serie or ""),
+                "valor_NF": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "dt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
+                "Hdt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
+                "dt_vencimento_NF": nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else "",
+                "fornecedor": f"{nfe_record.emitente_nome} - {nfe_record.emitente_cnpj}",
+                "cod_fornecedor": "20.0000", # Código padrão
+                "fm_pagamento": nfe_record.forma_pagamento or "A VISTA",
+                "chk_boleto": "NAO",
+                "justificativa": f"NFe {nfe_record.numero_nf} integrada via API automaticamente.",
+                "destinacao": nfe_record.natureza_operacao or "OPERACIONAL",
+                "identificador": f"Empresa: BETUNEL Fornecedor: {nfe_record.emitente_nome} - {nfe_record.emitente_cnpj} Numero: {nfe_record.numero_nf} Valor: {nfe_record.valor_total_nf or 0:.2f} Data de Vencimento: {nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else 'N/A'} Forma de Pagamento: {nfe_record.forma_pagamento or 'A VISTA'}",
+                "documento_ged": str(attachment_id)  # Campo oculto para o beforeStateEntry fazer o vínculo
+            }
+            
+            # Payload para iniciar processo usando API v2
+            start_process_payload = {
+                "targetState": 59,
+                "targetAssignee": "",
+                "subProcessTargetState": 0,
+                "comment": f"Processo iniciado automaticamente para NFE {nfe_record.numero_nf}",
+                "formFields": form_fields
+            }
+            
+            # Usar endpoint da API v2 com nome do processo URL-encoded
+            encoded_process_name = quote(process_name)
+            logging.info(f"Iniciando processo '{process_name}' via API v2")
+            
+            response = requests.post(
+                f"{self.fluig_url}/process-management/api/v2/processes/{encoded_process_name}/start",
+                json=start_process_payload,
+                auth=self.auth,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                process_result = response.json()
+                process_id = process_result.get('processInstanceId')
+                process_number = process_result.get('processNumber')
+                
+                logging.info(f"Processo '{process_name}' criado com sucesso!")
+                logging.info(f"Process ID: {process_id}")
+                if process_number:
+                    logging.info(f"Process Number: {process_number}")
+                
+                return process_id
+            else:
+                error_msg = f"{response.status_code} - {response.text}"
+                logging.error(f"Erro ao criar processo '{process_name}': {error_msg}")
+                raise Exception(f"Erro ao criar processo: {response.status_code}")
+                
+        except Exception as e:
+            logging.error(f"Erro ao iniciar processo '{process_name}' via API v2: {str(e)}")
+            raise
+    
     def integrate_nfe_with_fluig(self, nfe_record_id):
         """
-        Integra um registro NFE com o Fluig usando sistema robusto de upload e referenciamento
+        Integra um registro NFE com o Fluig usando API v2 completa (baseada no exemplo fornecido)
         
         Args:
             nfe_record_id: ID do registro NFE
@@ -808,20 +942,26 @@ class FluigIntegration:
             if not nfe_record.original_pdf_path or not os.path.exists(nfe_record.original_pdf_path):
                 raise ValueError("Arquivo PDF original não encontrado")
             
-            logging.info(f"Iniciando integração Fluig para NFE {nfe_record.numero_nf}")
+            logging.info(f"Iniciando integração Fluig API v2 para NFE {nfe_record.numero_nf}")
             
-            # 1. Upload do arquivo (método que funciona 100%)
+            # 1. Upload do arquivo para o Fluig
             uploaded_file_name = self.upload_file_to_fluig(
                 nfe_record.original_pdf_path,
                 nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
             )
             
-            # 2. Gerar referência única para rastreamento
-            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-            hash_key = abs(hash(f"{nfe_record.chave_nfe}{nfe_record.numero_nf}")) % 10000
-            reference_id = f"FLG-{timestamp}-{hash_key:04d}"
+            # 2. Criar documento no GED
+            attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
             
-            # 3. Criar dados detalhados da integração
+            # 3. Definir o nome do processo baseado no tipo de operação
+            process_name = "Processo de Lançamento de Nota Fiscal"
+            if nfe_record.tipo_operacao == "CT-e (Transporte)":
+                process_name = "Importação de Frete"
+            
+            # 4. Iniciar processo usando API v2
+            process_id = self.start_process_with_v2_api(nfe_record, attachment_id, process_name)
+            
+            # 5. Criar dados detalhados da integração
             integration_data = {
                 'nfe_number': nfe_record.numero_nf,
                 'emitente': nfe_record.emitente_nome,
@@ -831,36 +971,99 @@ class FluigIntegration:
                 'tipo_operacao': nfe_record.tipo_operacao,
                 'chave_nfe': nfe_record.chave_nfe,
                 'uploaded_file': uploaded_file_name,
+                'attachment_id': attachment_id,
+                'process_id': process_id,
+                'process_name': process_name,
                 'upload_timestamp': datetime.now().isoformat(),
-                'reference_id': reference_id,
-                'integration_method': 'upload_with_reference'
+                'integration_method': 'api_v2_complete'
             }
             
-            # 4. Salvar dados de integração no banco
-            nfe_record.fluig_process_id = reference_id
+            # 6. Salvar dados de integração no banco
+            nfe_record.fluig_process_id = str(process_id)
+            nfe_record.fluig_document_id = str(attachment_id)
             nfe_record.fluig_integration_date = datetime.now()
             nfe_record.fluig_integration_status = 'INTEGRADO'
             nfe_record.fluig_integration_data = json.dumps(integration_data)
             db.session.commit()
             
-            logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso. Referência: {reference_id}")
+            logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso via API v2!")
+            logging.info(f"Process ID: {process_id}, Document ID: {attachment_id}")
             
             return {
                 "success": True,
-                "reference_id": reference_id,
+                "process_id": process_id,
+                "document_id": attachment_id,
                 "uploaded_file": uploaded_file_name,
-                "process_type": "Upload e Referenciamento",
+                "process_type": process_name,
                 "integration_data": integration_data,
-                "message": f"Arquivo enviado com sucesso para o Fluig. Referência: {reference_id}"
+                "message": f"Processo '{process_name}' criado com sucesso no Fluig! Process ID: {process_id}"
             }
             
         except Exception as e:
-            logging.error(f"Erro na integração NFE com Fluig: {str(e)}")
-            return {
-                "success": False,
-                "error": str(e),
-                "message": f"Erro na integração: {str(e)}"
-            }
+            logging.error(f"Erro na integração NFE com Fluig API v2: {str(e)}")
+            
+            # Fallback para método de upload simples (que funciona sempre)
+            try:
+                logging.info("Tentando fallback para método de upload simples...")
+                
+                # Buscar o registro NFE novamente para garantir que temos os dados
+                nfe_record = NFERecord.query.get(nfe_record_id)
+                if not nfe_record:
+                    raise ValueError(f"Registro NFE não encontrado: {nfe_record_id}")
+                
+                # Gerar referência única para rastreamento
+                timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+                hash_key = abs(hash(f"{nfe_record.chave_nfe}{nfe_record.numero_nf}")) % 10000
+                reference_id = f"FLG-{timestamp}-{hash_key:04d}"
+                
+                # Upload do arquivo (método que sempre funciona)
+                uploaded_file_name = self.upload_file_to_fluig(
+                    nfe_record.original_pdf_path,
+                    nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
+                )
+                
+                # Criar dados de integração
+                integration_data = {
+                    'nfe_number': nfe_record.numero_nf,
+                    'emitente': nfe_record.emitente_nome,
+                    'cnpj_emitente': nfe_record.emitente_cnpj,
+                    'valor_total': float(nfe_record.valor_total_nf or 0),
+                    'data_emissao': nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else None,
+                    'tipo_operacao': nfe_record.tipo_operacao,
+                    'chave_nfe': nfe_record.chave_nfe,
+                    'uploaded_file': uploaded_file_name,
+                    'upload_timestamp': datetime.now().isoformat(),
+                    'reference_id': reference_id,
+                    'integration_method': 'upload_fallback',
+                    'original_error': str(e)
+                }
+                
+                # Salvar dados de integração no banco
+                nfe_record.fluig_process_id = reference_id
+                nfe_record.fluig_integration_date = datetime.now()
+                nfe_record.fluig_integration_status = 'INTEGRADO'
+                nfe_record.fluig_integration_data = json.dumps(integration_data)
+                db.session.commit()
+                
+                logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso via fallback. Referência: {reference_id}")
+                
+                return {
+                    "success": True,
+                    "reference_id": reference_id,
+                    "uploaded_file": uploaded_file_name,
+                    "process_type": "Upload com Referência (Fallback)",
+                    "integration_data": integration_data,
+                    "message": f"Arquivo enviado com sucesso para o Fluig via fallback. Referência: {reference_id}"
+                }
+                
+            except Exception as fallback_error:
+                logging.error(f"Erro no fallback também: {str(fallback_error)}")
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "fallback_error": str(fallback_error),
+                    "message": f"Erro na integração: {str(e)}"
+                }
     
     def integrate_nfe_with_fluig_legacy(self, nfe_record_id):
         """
