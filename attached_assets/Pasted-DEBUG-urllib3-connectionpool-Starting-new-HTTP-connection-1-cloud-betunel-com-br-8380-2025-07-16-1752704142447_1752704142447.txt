@@ -1,0 +1,20 @@
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+[2025-07-16 22:14:53 +0000] [1028] [INFO] Handling signal: winch
+[2025-07-16 22:14:53 +0000] [1028] [INFO] Handling signal: winch
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /ecm/upload HTTP/1.1" 200 85
+INFO:root:Arquivo enviado com sucesso: 20250716_175948_3.2.2_NFe_TERMINAL_PORTUARIO.pdf
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [POST]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '179590177152365601171752704095'), ('oauth_timestamp', '1752704095'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=179590177152365601171752704095&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752704095&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/2.0/processes/start
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: POST&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2F2.0%2Fprocesses%2Fstart&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D179590177152365601171752704095%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752704095%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: 7RvzzJOSRosHjkx6pAYMDZX6HXg=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/2.0/processes/start
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Content-Length': b'498', b'Content-Type': b'application/json', b'Authorization': b'OAuth oauth_nonce="179590177152365601171752704095", oauth_timestamp="1752704095", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="7RvzzJOSRosHjkx6pAYMDZX6HXg%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: b'{"processId": "nfe_processing", "requester": "yasmim.silva@betunel.com.br", "description": "NFE 202519 - APM TERMINALS PECEM OPERACOES PORTUARIAS LTDA", "priority": 0, "attachments": ["20250716_175948_3.2.2_NFe_TERMINAL_PORTUARIO.pdf"], "cardData": {"numero_nf": "202519", "emitente_nome": "APM TERMINALS PECEM OPERACOES PORTUARIAS LTDA", "emitente_cnpj": "05388226000125", "valor_total": "4055.31", "data_emissao": "12/06/2025", "tipo_operacao": "CT-e (Transporte)", "chave_nfe": "9121446388999"}}'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /api/public/2.0/processes/start HTTP/1.1" 500 102
+ERROR:root:Erro ao criar lançamento: 500 - {"code":"javax.ws.rs.NotFoundException","message":"","detailedMessage":"","helpUrl":null,"details":[]}
+ERROR:root:Falha na integração do NFE 202519: Erro 500: {"code":"javax.ws.rs.NotFoundException","message":"","detailedMessage":"","helpUrl":null,"details":[]}

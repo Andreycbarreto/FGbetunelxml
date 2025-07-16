@@ -96,7 +96,7 @@ class FluigIntegration:
     
     def create_workflow_launch(self, nfe_record, file_path):
         """
-        Cria um novo lançamento no Fluig com o documento NFE
+        Cria um novo lançamento no Fluig com o documento NFE usando processos existentes
         
         Args:
             nfe_record: Registro NFE com dados do documento
@@ -109,48 +109,26 @@ class FluigIntegration:
             # Primeiro, fazer upload do arquivo
             uploaded_file_name = self.upload_file_to_fluig(file_path, os.path.basename(file_path))
             
-            # Preparar dados do lançamento baseado no NFE
-            launch_data = {
-                "processId": "nfe_processing",  # ID do processo configurado no Fluig
-                "requester": "yasmim.silva@betunel.com.br",
-                "description": f"NFE {nfe_record.numero_nf} - {nfe_record.emitente_nome}",
-                "priority": 0,
-                "attachments": [uploaded_file_name],
-                "cardData": {
-                    "numero_nf": nfe_record.numero_nf,
-                    "emitente_nome": nfe_record.emitente_nome,
-                    "emitente_cnpj": nfe_record.emitente_cnpj,
-                    "valor_total": str(nfe_record.valor_total_nf or 0),
-                    "data_emissao": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else '',
-                    "tipo_operacao": nfe_record.tipo_operacao or '',
-                    "chave_nfe": nfe_record.chave_nfe or ''
-                }
-            }
+            # Criar documento no GED primeiro
+            attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
             
-            # Criar lançamento
-            response = requests.post(
-                f'{self.fluig_url}/api/public/2.0/processes/start',
-                json=launch_data,
-                auth=self.auth,
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                process_id = result.get('processInstanceId')
-                logging.info(f"Lançamento criado com sucesso. Process ID: {process_id}")
-                return {
-                    'success': True,
-                    'process_id': process_id,
-                    'message': 'Lançamento criado com sucesso'
-                }
+            # Determinar o processo baseado no tipo de operação
+            if nfe_record.tipo_operacao == "CT-e (Transporte)":
+                # Usar processo de transporte existente
+                process_id = self.start_transport_process(nfe_record, attachment_id)
+                process_type = "Importação de Frete"
             else:
-                error_msg = response.text[:200]
-                logging.error(f"Erro ao criar lançamento: {response.status_code} - {error_msg}")
-                return {
-                    'success': False,
-                    'message': f'Erro {response.status_code}: {error_msg}'
-                }
+                # Usar processo de serviço existente
+                process_id = self.start_service_process(nfe_record, attachment_id)
+                process_type = "Lançamento de Nota Fiscal"
+            
+            logging.info(f"Processo {process_type} criado com sucesso. Process ID: {process_id}")
+            return {
+                'success': True,
+                'process_id': process_id,
+                'message': f'Processo {process_type} criado com sucesso',
+                'process_type': process_type
+            }
                 
         except Exception as e:
             logging.error(f"Erro na criação do lançamento: {str(e)}")
@@ -611,7 +589,7 @@ class FluigIntegration:
     
     def integrate_nfe_with_fluig(self, nfe_record_id):
         """
-        Integra um registro NFE com o Fluig usando lançamentos de workflow
+        Integra um registro NFE com o Fluig usando processos existentes
         
         Args:
             nfe_record_id: ID do registro NFE
@@ -629,35 +607,45 @@ class FluigIntegration:
             if not nfe_record.original_pdf_path or not os.path.exists(nfe_record.original_pdf_path):
                 raise ValueError("Arquivo PDF original não encontrado")
             
-            # Usar a nova API de lançamentos ao invés de criar documentos em pastas
-            result = self.create_workflow_launch(nfe_record, nfe_record.original_pdf_path)
+            # 1. Upload do arquivo
+            uploaded_file_name = self.upload_file_to_fluig(
+                nfe_record.original_pdf_path,
+                nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
+            )
             
-            if result['success']:
-                # Atualizar o registro NFE com informações da integração
-                nfe_record.fluig_process_id = result['process_id']
-                nfe_record.fluig_integration_date = datetime.now()
-                nfe_record.fluig_integration_status = 'INTEGRADO'
-                db.session.commit()
-                
-                logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso. Process ID: {result['process_id']}")
-                return {
-                    'success': True,
-                    'process_id': result['process_id'],
-                    'message': 'NFE integrado com sucesso ao Fluig',
-                    'process_type': 'Lançamento de Workflow'
-                }
+            # 2. Criar documento no GED com informações específicas do NFE
+            attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
+            
+            # 3. Iniciar processo baseado no tipo de operação
+            if nfe_record.tipo_operacao == "CT-e (Transporte)":
+                process_id = self.start_transport_process(nfe_record, attachment_id)
+                process_type = "Importação de Frete"
             else:
-                logging.error(f"Falha na integração do NFE {nfe_record.numero_nf}: {result['message']}")
-                return {
-                    'success': False,
-                    'message': result['message']
-                }
-                
+                process_id = self.start_service_process(nfe_record, attachment_id)
+                process_type = "Lançamento de Nota Fiscal"
+            
+            # Atualizar registro com informações da integração
+            nfe_record.fluig_process_id = process_id
+            nfe_record.fluig_document_id = attachment_id
+            nfe_record.fluig_integration_date = datetime.now()
+            nfe_record.fluig_integration_status = 'INTEGRADO'
+            db.session.commit()
+            
+            logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso. Process ID: {process_id}")
+            return {
+                "success": True,
+                "process_id": process_id,
+                "document_id": attachment_id,
+                "process_type": process_type,
+                "message": f"Integração realizada com sucesso! Processo {process_type} criado com ID: {process_id}"
+            }
+            
         except Exception as e:
             logging.error(f"Erro na integração NFE com Fluig: {str(e)}")
             return {
-                'success': False,
-                'message': f'Erro inesperado: {str(e)}'
+                "success": False,
+                "error": str(e),
+                "message": f"Erro na integração: {str(e)}"
             }
     
     def integrate_nfe_with_fluig_legacy(self, nfe_record_id):

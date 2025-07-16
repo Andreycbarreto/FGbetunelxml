@@ -109,6 +109,9 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
   * Automatic process creation with NFE document attachment and metadata
   * Enhanced error handling and logging for workflow launch operations
   * System now creates proper Fluig workflow instances instead of orphaned documents
+  * FIXED: Reverted to use existing functional processes after API endpoint not found error
+  * Uses existing start_transport_process() and start_service_process() methods that work correctly
+  * Maintains document creation in GED with proper process initiation for each operation type
 - July 16, 2025. Complete Fluig Integration System Implementation:
   * Added complete integration routes for Fluig document workflow management
   * Created /nfe/integrar-fluig/<id> endpoint for document integration
