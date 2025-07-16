@@ -105,14 +105,12 @@ class FluigIntegration:
             str: ID do documento criado
         """
         try:
-            # Primeira tentativa com usuário específico para resolver problemas de permissão
+            # Primeira tentativa sem especificar usuário - usar credenciais OAuth
             create_doc_payload = {
                 "description": f"{uploaded_file_name} - Enviado via API",
                 "parentId": int(self.ged_folder_id),
                 "attachments": [{"fileName": uploaded_file_name}],
                 "documentTypeId": 7,
-                "colleagueId": "yasmim.silva@betunel.com.br",  # Usuário com permissão
-                "publisherId": "yasmim.silva@betunel.com.br",
                 "version": 1,
                 "draft": False,
                 "inheritSecurity": True
@@ -139,13 +137,12 @@ class FluigIntegration:
             
             # Se falhar, tentar versão mais simples
             if create_doc_resp.status_code != 200:
-                logging.info("Tentando versão simplificada...")
+                logging.info("Tentando versão ultra-simplificada...")
                 simple_payload = {
                     "description": f"{uploaded_file_name} - Enviado via API",
                     "parentId": int(self.ged_folder_id),
                     "attachments": [{"fileName": uploaded_file_name}],
-                    "documentTypeId": 7,
-                    "colleagueId": "yasmim.silva@betunel.com.br"
+                    "documentTypeId": 7
                 }
                 
                 create_doc_resp = requests.post(
@@ -154,9 +151,50 @@ class FluigIntegration:
                     auth=self.auth
                 )
                 
-                logging.info(f"Payload simplificado: {json.dumps(simple_payload, indent=2)}")
-                logging.info(f"Status Code simplificado: {create_doc_resp.status_code}")
-                logging.info(f"Response simplificado: {create_doc_resp.text}")
+                logging.info(f"Payload ultra-simplificado: {json.dumps(simple_payload, indent=2)}")
+                logging.info(f"Status Code ultra-simplificado: {create_doc_resp.status_code}")
+                logging.info(f"Response ultra-simplificado: {create_doc_resp.text}")
+                
+                # Se ainda falhar, tentar com matrícula em vez de email
+                if create_doc_resp.status_code != 200:
+                    logging.info("Tentando com matrícula do usuário...")
+                    matricula_payload = {
+                        "description": f"{uploaded_file_name} - Enviado via API",
+                        "parentId": int(self.ged_folder_id),
+                        "attachments": [{"fileName": uploaded_file_name}],
+                        "documentTypeId": 7,
+                        "colleagueId": "0d44ddb10e5a41a3a7a378aa5862694d"  # Matrícula da Yasmim
+                    }
+                    
+                    create_doc_resp = requests.post(
+                        f'{self.fluig_url}/api/public/ecm/document/createDocument',
+                        json=matricula_payload,
+                        auth=self.auth
+                    )
+                    
+                    logging.info(f"Payload com matrícula: {json.dumps(matricula_payload, indent=2)}")
+                    logging.info(f"Status Code com matrícula: {create_doc_resp.status_code}")
+                    logging.info(f"Response com matrícula: {create_doc_resp.text}")
+                    
+                    # Se ainda falhar, tentar apenas com phisicalFile
+                    if create_doc_resp.status_code != 200:
+                        logging.info("Tentando apenas com phisicalFile...")
+                        minimal_payload = {
+                            "description": f"{uploaded_file_name} - Enviado via API",
+                            "parentId": int(self.ged_folder_id),
+                            "phisicalFile": uploaded_file_name,
+                            "documentTypeId": 7
+                        }
+                        
+                        create_doc_resp = requests.post(
+                            f'{self.fluig_url}/api/public/ecm/document/createDocument',
+                            json=minimal_payload,
+                            auth=self.auth
+                        )
+                        
+                        logging.info(f"Payload mínimo: {json.dumps(minimal_payload, indent=2)}")
+                        logging.info(f"Status Code mínimo: {create_doc_resp.status_code}")
+                        logging.info(f"Response mínimo: {create_doc_resp.text}")
             
             create_doc_resp.raise_for_status()
             attachment_id = create_doc_resp.json()['content']['id']

@@ -1,0 +1,69 @@
+ 0\n/Type /Page\n>>\nendobj\n2 0 obj\n<<\n/Count 2\n/Kids [ 3 0 R 18 0 R ]\n/Type /Pages\n>>\nendobj\n1 0 obj\n<<\n/Pages 2 0 R\n/Type /Catalog\n>>\nendobj\n28 0 obj\n<<\n/Author (operacional15)\n/CreationDate (D:20250612210111-03\'00\')\n/ModDate (D:20250612210111-03\'00\')\n/Producer (Microsoft: Print To PDF)\n/Title (072.25 - NF APM scanner e levante -U-202519.PDF)\n>>\nendobj\nxref\n0 29\r\n0000000000 65535 f\r\n0000357968 00000 n\r\n0000357902 00000 n\r\n0000216301 00000 n\r\n0000000009 00000 n\r\n0000023274 00000 n\r\n0000044643 00000 n\r\n0000061007 00000 n\r\n0000082372 00000 n\r\n0000106392 00000 n\r\n0000131792 00000 n\r\n0000154282 00000 n\r\n0000177684 00000 n\r\n0000180918 00000 n\r\n0000189579 00000 n\r\n0000190890 00000 n\r\n0000214060 00000 n\r\n0000216219 00000 n\r\n0000357680 00000 n\r\n0000216537 00000 n\r\n0000222115 00000 n\r\n0000242878 00000 n\r\n0000260126 00000 n\r\n0000281217 00000 n\r\n0000304368 00000 n\r\n0000327383 00000 n\r\n0000350875 00000 n\r\n0000357583 00000 n\r\n0000358017 00000 n\r\ntrailer\n<<\n/Info 28 0 R\n/Root 1 0 R\n/Size 29\n>>\nstartxref\n358232\n%%EOF\n\r\n--81c120a5b5b5fb0a4637d70fed55579b--\r\n'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+[2025-07-16 21:12:19 +0000] [4621] [INFO] Handling signal: winch
+[2025-07-16 21:12:19 +0000] [4621] [INFO] Handling signal: winch
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /ecm/upload HTTP/1.1" 200 69
+INFO:root:Arquivo enviado com sucesso: 3.2.2 NFe TERMINAL PORTUARIO.pdf
+INFO:root:Criando documento no GED...
+INFO:root:Payload: {
+  "description": "3.2.2 NFe TERMINAL PORTUARIO.pdf - Enviado via API",
+  "parentId": 2693638,
+  "attachments": [
+    {
+      "fileName": "3.2.2 NFe TERMINAL PORTUARIO.pdf"
+    }
+  ],
+  "documentTypeId": 7,
+  "colleagueId": "yasmim.silva@betunel.com.br",
+  "publisherId": "yasmim.silva@betunel.com.br",
+  "version": 1,
+  "draft": false,
+  "inheritSecurity": true
+}
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [POST]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '45203584599283946871752700340'), ('oauth_timestamp', '1752700340'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=45203584599283946871752700340&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752700340&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: POST&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Fdocument%2FcreateDocument&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D45203584599283946871752700340%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752700340%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: ENvob9Y4Xg5tZvgPwqaJoTnT2EE=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Content-Length': b'325', b'Content-Type': b'application/json', b'Authorization': b'OAuth oauth_nonce="45203584599283946871752700340", oauth_timestamp="1752700340", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="ENvob9Y4Xg5tZvgPwqaJoTnT2EE%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: b'{"description": "3.2.2 NFe TERMINAL PORTUARIO.pdf - Enviado via API", "parentId": 2693638, "attachments": [{"fileName": "3.2.2 NFe TERMINAL PORTUARIO.pdf"}], "documentTypeId": 7, "colleagueId": "yasmim.silva@betunel.com.br", "publisherId": "yasmim.silva@betunel.com.br", "version": 1, "draft": false, "inheritSecurity": true}'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /api/public/ecm/document/createDocument HTTP/1.1" 500 285
+INFO:root:Status Code: 500
+INFO:root:Response Headers: {'Expires': '0', 'Cache-Control': 'no-cache, no-transform, no-store', 'Set-Cookie': 'JSESSIONID="uqmnCc3ncmtqthI17cKkS9P_ql3tZ5RrTXbwv_kt.master:fluig1"; Version=1; Path=/', 'Access-Control-Allow-Headers': 'accept, authorization, content-type, x-requested-with', 'Pragma': 'no-cache', 'X-Frame-Options': 'SAMEORIGIN', 'Date': 'Wed, 16 Jul 2025 21:11:55 GMT', 'Connection': 'keep-alive', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Credentials': 'true', 'Content-Type': 'application/json;charset=UTF-8', 'Content-Length': '285', 'Access-Control-Max-Age': '1', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT'}
+INFO:root:Response Body: {"content":"ERROR","message":{"message":"User informed as publisher/author of the document does not exist or is inactive.","detail":"User informed as publisher/author of the document does not exist or is inactive.","type":"ERROR","param":null,"errorCode":"ECMInsertDocumentException"}}
+INFO:root:Tentando versão simplificada...
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [POST]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '109170539869939122051752700340'), ('oauth_timestamp', '1752700340'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=109170539869939122051752700340&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752700340&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: POST&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Fdocument%2FcreateDocument&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D109170539869939122051752700340%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752700340%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: uFwFdveBINp3ux+eiL8BqQB72ME=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Content-Length': b'224', b'Content-Type': b'application/json', b'Authorization': b'OAuth oauth_nonce="109170539869939122051752700340", oauth_timestamp="1752700340", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="uFwFdveBINp3ux%2BeiL8BqQB72ME%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: b'{"description": "3.2.2 NFe TERMINAL PORTUARIO.pdf - Enviado via API", "parentId": 2693638, "attachments": [{"fileName": "3.2.2 NFe TERMINAL PORTUARIO.pdf"}], "documentTypeId": 7, "colleagueId": "yasmim.silva@betunel.com.br"}'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /api/public/ecm/document/createDocument HTTP/1.1" 500 285
+INFO:root:Payload simplificado: {
+  "description": "3.2.2 NFe TERMINAL PORTUARIO.pdf - Enviado via API",
+  "parentId": 2693638,
+  "attachments": [
+    {
+      "fileName": "3.2.2 NFe TERMINAL PORTUARIO.pdf"
+    }
+  ],
+  "documentTypeId": 7,
+  "colleagueId": "yasmim.silva@betunel.com.br"
+}
+INFO:root:Status Code simplificado: 500
+INFO:root:Response simplificado: {"content":"ERROR","message":{"message":"User informed as publisher/author of the document does not exist or is inactive.","detail":"User informed as publisher/author of the document does not exist or is inactive.","type":"ERROR","param":null,"errorCode":"ECMInsertDocumentException"}}
+ERROR:root:HTTP Error ao criar documento no GED: 500 Server Error: Internal Server Error for url: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+ERROR:root:Status Code: 500
+ERROR:root:Response: {"content":"ERROR","message":{"message":"User informed as publisher/author of the document does not exist or is inactive.","detail":"User informed as publisher/author of the document does not exist or is inactive.","type":"ERROR","param":null,"errorCode":"ECMInsertDocumentException"}}
+ERROR:root:Erro na integração com Fluig: 500 Server Error: Internal Server Error for url: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
