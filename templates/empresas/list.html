@@ -3,6 +3,86 @@
 {% block title %}Empresas{% endblock %}
 
 {% block content %}
+<style>
+.btn-action {
+    transition: all 0.2s ease-in-out;
+    font-weight: 500;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-action.btn-success {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+}
+
+.btn-action.btn-success:hover {
+    background: linear-gradient(45deg, #218838, #1a9f7a);
+}
+
+.btn-action.btn-danger {
+    background: linear-gradient(45deg, #dc3545, #e74c3c);
+    border: none;
+}
+
+.btn-action.btn-danger:hover {
+    background: linear-gradient(45deg, #c82333, #c0392b);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--bs-light);
+}
+
+.badge {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.btn-group-actions {
+    gap: 0.25rem;
+}
+
+@media (max-width: 768px) {
+    .btn-action .btn-text {
+        display: none;
+    }
+    
+    .btn-action {
+        padding: 0.375rem 0.5rem;
+    }
+}
+
+.empty-state {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.table th {
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.badge {
+    border-radius: 8px;
+}
+</style>
 <div class="container py-4">
     <!-- Header -->
     <div class="row mb-4">
@@ -64,16 +144,21 @@
                                 <small class="text-muted">{{ empresa.created_at.strftime('%d/%m/%Y') }}</small>
                             </td>
                             <td>
-                                <div class="btn-group btn-group-sm">
+                                <div class="btn-group btn-group-sm btn-group-actions" role="group">
                                     <a href="{{ url_for('empresa_editar', empresa_id=empresa.id) }}" 
-                                       class="btn btn-outline-primary" title="Editar">
-                                        <i class="feather-edit"></i>
+                                       class="btn btn-success btn-action btn-sm" 
+                                       title="Editar empresa"
+                                       data-bs-toggle="tooltip">
+                                        <i class="feather-edit me-1"></i>
+                                        <span class="btn-text d-none d-md-inline">Editar</span>
                                     </a>
                                     <button type="button" 
-                                            class="btn btn-outline-danger" 
-                                            title="Excluir"
+                                            class="btn btn-danger btn-action btn-sm" 
+                                            title="Excluir empresa"
+                                            data-bs-toggle="tooltip"
                                             onclick="confirmarExclusao({{ empresa.id }}, '{{ empresa.nome_fantasia }}')">
-                                        <i class="feather-trash-2"></i>
+                                        <i class="feather-trash-2 me-1"></i>
+                                        <span class="btn-text d-none d-md-inline">Excluir</span>
                                     </button>
                                 </div>
                             </td>
@@ -85,33 +170,59 @@
         </div>
     </div>
     {% else %}
-    <div class="text-center py-5">
-        <i class="feather-building display-1 text-muted mb-3"></i>
-        <h3>Nenhuma empresa cadastrada</h3>
-        <p class="text-muted mb-4">Comece adicionando sua primeira empresa</p>
-        <a href="{{ url_for('empresa_nova') }}" class="btn btn-primary">
-            <i class="feather-plus me-2"></i>Nova Empresa
-        </a>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <div class="empty-state">
+                <div class="mb-4">
+                    <i class="feather-building text-primary" style="font-size: 4rem; opacity: 0.7;"></i>
+                </div>
+                <h3 class="h4 mb-3">Nenhuma empresa cadastrada</h3>
+                <p class="text-muted mb-4">
+                    Comece adicionando sua primeira empresa ao sistema.<br>
+                    Você pode gerenciar todas as suas empresas aqui.
+                </p>
+                <a href="{{ url_for('empresa_nova') }}" class="btn btn-primary btn-lg">
+                    <i class="feather-plus me-2"></i>
+                    Cadastrar Primeira Empresa
+                </a>
+            </div>
+        </div>
     </div>
     {% endif %}
 </div>
 
 <!-- Modal de Confirmação -->
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="feather-alert-triangle me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p>Tem certeza que deseja excluir a empresa <strong id="empresaNome"></strong>?</p>
-                <p class="text-muted">Esta ação não pode ser desfeita.</p>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3">
+                    <i class="feather-trash-2 text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h6 class="mb-3">Tem certeza que deseja excluir a empresa:</h6>
+                <div class="alert alert-light border">
+                    <strong id="empresaNome" class="text-danger"></strong>
+                </div>
+                <p class="text-muted mb-0">
+                    <i class="feather-info me-1"></i>
+                    Esta ação não pode ser desfeita.
+                </p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <div class="modal-footer justify-content-center border-0">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                    <i class="feather-x me-2"></i>Cancelar
+                </button>
                 <form id="deleteForm" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-danger">Excluir</button>
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="feather-trash-2 me-2"></i>Excluir
+                    </button>
                 </form>
             </div>
         </div>
@@ -119,6 +230,21 @@
 </div>
 
 <script>
+// Inicializar tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    // Ativar tooltips do Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Adicionar animação suave aos botões
+    const actionButtons = document.querySelectorAll('.btn-action');
+    actionButtons.forEach(button => {
+        button.style.transition = 'all 0.2s ease-in-out';
+    });
+});
+
 function confirmarExclusao(empresaId, nomeFantasia) {
     document.getElementById('empresaNome').textContent = nomeFantasia;
     document.getElementById('deleteForm').action = `/empresas/${empresaId}/excluir`;
