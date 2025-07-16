@@ -1,0 +1,441 @@
+Continua com esse erro:   DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+[2025-07-16 21:29:17 +0000] [6200] [INFO] Handling signal: winch
+[2025-07-16 21:29:17 +0000] [6200] [INFO] Handling signal: winch
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /ecm/upload HTTP/1.1" 200 69
+INFO:root:Arquivo enviado com sucesso: 3.2.2 NFe TERMINAL PORTUARIO.pdf
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '99416074041498259721752701358'), ('oauth_timestamp', '1752701358'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=99416074041498259721752701358&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701358&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/2693638
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F2693638&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D99416074041498259721752701358%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701358%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: XatTRL64Znmz0QDcV/smK7/OJRw=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/2693638
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="99416074041498259721752701358", oauth_timestamp="1752701358", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="XatTRL64Znmz0QDcV%2FsmK7%2FOJRw%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/2693638 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '138628002447190606111752701358'), ('oauth_timestamp', '1752701358'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=138628002447190606111752701358&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701358&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/1
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F1&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D138628002447190606111752701358%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701358%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: gi8jqpY3KEt/0O7LhwUlT0YaBEc=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/1
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="138628002447190606111752701358", oauth_timestamp="1752701358", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="gi8jqpY3KEt%2F0O7LhwUlT0YaBEc%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/1 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '163222631417983072611752701359'), ('oauth_timestamp', '1752701359'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=163222631417983072611752701359&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701359&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/2
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F2&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D163222631417983072611752701359%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701359%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: fCOo3U8/ZnOKSv3/gBN6TgKY5nI=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/2
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="163222631417983072611752701359", oauth_timestamp="1752701359", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="fCOo3U8%2FZnOKSv3%2FgBN6TgKY5nI%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/2 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '93093691459739357181752701359'), ('oauth_timestamp', '1752701359'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=93093691459739357181752701359&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701359&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/100
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F100&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D93093691459739357181752701359%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701359%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: vN34RuQ0b5kBHdoM86DvOyptTtI=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/100
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="93093691459739357181752701359", oauth_timestamp="1752701359", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="vN34RuQ0b5kBHdoM86DvOyptTtI%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/100 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '164381455908810844381752701360'), ('oauth_timestamp', '1752701360'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=164381455908810844381752701360&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701360&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/101
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F101&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D164381455908810844381752701360%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701360%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: yW+aXu2JmMg5+jyqgQ03z+S6uv8=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/101
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="164381455908810844381752701360", oauth_timestamp="1752701360", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="yW%2BaXu2JmMg5%2BjyqgQ03z%2BS6uv8%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/101 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '71425431698641304361752701360'), ('oauth_timestamp', '1752701360'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=71425431698641304361752701360&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701360&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/102
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F102&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D71425431698641304361752701360%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701360%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: TuOqR6FHnhdspbpGrP9r0fJCcWw=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/102
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="71425431698641304361752701360", oauth_timestamp="1752701360", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="TuOqR6FHnhdspbpGrP9r0fJCcWw%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/102 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '107280833272599740501752701361'), ('oauth_timestamp', '1752701361'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=107280833272599740501752701361&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701361&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/1000
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F1000&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D107280833272599740501752701361%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701361%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: OMFiEgnJabzsBTp5mOcvwevvfiQ=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/1000
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="107280833272599740501752701361", oauth_timestamp="1752701361", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="OMFiEgnJabzsBTp5mOcvwevvfiQ%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/1000 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '162656608640386853901752701361'), ('oauth_timestamp', '1752701361'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=162656608640386853901752701361&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701361&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/1001
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F1001&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D162656608640386853901752701361%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701361%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: 66bzmCb17nnWoTSQ+5jAEF3638U=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/1001
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="162656608640386853901752701361", oauth_timestamp="1752701361", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="66bzmCb17nnWoTSQ%2B5jAEF3638U%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/1001 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '60173445857866412751752701362'), ('oauth_timestamp', '1752701362'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=60173445857866412751752701362&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701362&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/1002
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F1002&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D60173445857866412751752701362%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701362%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: AgiRyFZoQcL+1BOIKfE/iBLW3t0=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/1002
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="60173445857866412751752701362", oauth_timestamp="1752701362", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="AgiRyFZoQcL%2B1BOIKfE%2FiBLW3t0%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/1002 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '160774539768266712241752701362'), ('oauth_timestamp', '1752701362'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=160774539768266712241752701362&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701362&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/10000
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F10000&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D160774539768266712241752701362%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701362%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: xOTR9PZ0CkWlUw/2XKI80EsYK74=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/10000
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="160774539768266712241752701362", oauth_timestamp="1752701362", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="xOTR9PZ0CkWlUw%2F2XKI80EsYK74%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/10000 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '3223222722285544971752701363'), ('oauth_timestamp', '1752701363'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=3223222722285544971752701363&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701363&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/10001
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F10001&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D3223222722285544971752701363%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701363%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: X0APaZ6Uunv5pKTNGJCbRM7kDfo=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/10001
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="3223222722285544971752701363", oauth_timestamp="1752701363", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="X0APaZ6Uunv5pKTNGJCbRM7kDfo%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/10001 HTTP/1.1" 500 102
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '122976348912180809361752701363'), ('oauth_timestamp', '1752701363'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=122976348912180809361752701363&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752701363&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/10002
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Ffolder%2FgetFolderContent%2F10002&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D122976348912180809361752701363%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752701363%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: wbDaKiK9h96Z68vxWQAZ3ukJBgA=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/folder/getFolderContent/10002
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="122976348912180809361752701363", oauth_timestamp="1752701363", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="wbDaKiK9h96Z68vxWQAZ3ukJBgA%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/folder/getFolderContent/10002 HTTP/1.1" 500 102
+ERROR:root:Nenhuma pasta acessível encontrada!
+ERROR:root:Erro geral ao criar documento no GED: Nenhuma pasta acessível encontrada para criar documentos
+ERROR:root:Erro na integração com Fluig: Nenhuma pasta acessível encontrada para criar documentos
+
+
+Segue os exemplos de código de integração com o fluig:  Para CT-e (Transporte)  import requests
+from requests_oauthlib import OAuth1
+import json
+
+# ========================
+# CONFIGURAÇÕES DO FLUIG
+# ========================
+CONSUMER_KEY = '5639-4421-2098-7812-4'
+CONSUMER_SECRET = 'ff01d132-41af-472b-bf01-b490bcad3ff5dabc9e19-d59b-4eab-bfbc-b4a4dc33a674'
+TOKEN_KEY = '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa'
+TOKEN_SECRET = 'd9828aa1-2e30-4adf-80d7-98f1a48871ab231a11ca-7e33-40cb-89ad-8599c6632d00'
+FLUIG_URL = 'http://cloud.betunel.com.br:8380'
+GED_FOLDER_ID = 2693638
+
+auth = OAuth1(CONSUMER_KEY, CONSUMER_SECRET, TOKEN_KEY, TOKEN_SECRET)
+
+try:
+    # ========================
+    # UPLOAD DO ARQUIVO
+    # ========================
+    file_path = r'C:/Users/nilco.junior/Documents/testeAPI/teste_api.pdf'
+    file_name = file_path.split('/')[-1]
+
+    with open(file_path, 'rb') as f:
+        files = {'file': (file_name, f)}
+        print("Enviando arquivo...")
+        upload_resp = requests.post(
+            f'{FLUIG_URL}/ecm/upload',
+            files=files,
+            data={"isPublic": "false", "chunked": "false"},
+            auth=auth
+        )
+        upload_resp.raise_for_status()
+        uploaded_file_name = upload_resp.json()['files'][0]['name']
+        print("Arquivo enviado:", uploaded_file_name)
+
+    # ========================
+    # CRIAÇÃO DO DOCUMENTO NO GED
+    # ========================
+    create_doc_payload = {
+        "description": f"{uploaded_file_name} - Enviado via API",
+        "parentId": GED_FOLDER_ID,
+        "attachments": [{"fileName": uploaded_file_name}],
+        "documentTypeId": 7,  #Essencial para aparecer na aba de anexos
+        "formData": [
+            {
+                "name": "ecm-widgetpartgeneralinformation-utilizaVisualizadorInterno",
+                "value": False
+            }
+        ]
+    }
+
+    print("Criando documento no GED...")
+    create_doc_resp = requests.post(
+        f'{FLUIG_URL}/api/public/ecm/document/createDocument',
+        json=create_doc_payload,
+        auth=auth
+    )
+    create_doc_resp.raise_for_status()
+    attachment_id = create_doc_resp.json()['content']['id']
+    print("Documento criado com ID:", attachment_id)
+
+    # ========================
+    # INÍCIO DO PROCESSO IMPORTAÇÃO DE FRETE
+    # ========================
+    form_fields = {
+        "identificador": "Empresa: BETUNEL INDUSTRIA E COMERCIO SA Fornecedor: 41.432.943/0001-70 - VT LOGISTICS SOLUTIONS LTDA Numero: 000000155 Valor: 33038,57 Data de Vencimento: 26/11/2024",
+        "formSalvo": "",
+        "dt_lanc": "02/12/2024",
+        "aprovadoN1": "",
+        "aprovadoN2": "",
+        "aprovadoN1_impXML": "",
+        "indexTblItens": "",
+        "indexesTblItens": "1",
+        "atividadeConjunta": "",
+        "cod_item": "01.071.003",
+        "nome_aprovador": "",
+        "NOME_FORNECEDOR": "",
+        "numAtiv": "224",
+        "numProc": "731485",
+        "boletoAnexado": "",
+        "prazo": "",
+        "chave_acesso": "41241141432943000170570010000001551817582096",
+        "tpDocXML": "CTE",
+        "tpFreteXML": "2",
+        "uniMedXML": "T",
+        "aliqICMSXML": "7.00",
+        "vlICMSXML": "2312.70",
+        "idNatXML": "21735",
+        "idMov": "1760807",
+        "codETDColetaXML": "SP",
+        "codMUNColetaXML": "48500",
+        "codETDEntregaXML": "MT",
+        "codMUNEntregaXML": "03403",
+        "tipoRemetenteXML": "C",
+        "tipoDestinatarioXML": "C",
+        "codTranspXML": "41432",
+        "vlPedagioXML": "2071,71",
+        "produtoXML": "CAP PG 76-28 E (CIMENTO ASFALTICO MODIFICADO POR POLIMERO 65/90) (BAG)",
+        "chaveNFE": "17241101593821000303550020000214891314817512",
+        "dtSaidaXML": "26/11/2024",
+        "fretePorContaXML": "2",
+        "importadoXML": "S",
+        "localEstoqueXML": "ALM",
+        "baseCreditoXML": "03",
+        "mat_colaborador": "034b12177b5511eb8a330a5864606cd7",
+        "CIF_FOB_OUTROS": "S",
+        "FRETE_INTERCOMPANY_FORN_TERC": "S",
+        "destinacao_clone": "FOB",
+        "codigoItem___1": "01.071.003",
+        "nomeItem___1": "CAP PG 76-28 E (CIMENTO ASFALTICO MODIFICADO POR POLIMERO 65/90) (BAG)",
+        "quantidade___1": "48",
+        "valorUnitario___1": "33038,57",
+        "valorTotalItem___1": "33038,57",
+
+        # Campo oculto para o beforeStateEntry fazer o vínculo
+        "documento_ged": str(attachment_id)
+    }
+
+    start_process_payload = {
+        "targetState": 128,
+        "targetAssignee": "",
+        "subProcessTargetState": 0,
+        "comment": "Iniciado via API",
+        "formFields": form_fields
+    }
+
+    print("Iniciando processo via API v2...")
+    start_proc_resp = requests.post(
+        f'{FLUIG_URL}/process-management/api/v2/processes/Importa%C3%A7%C3%A3o%20de%20Frete/start',
+        json=start_process_payload,
+        auth=auth
+    )
+    start_proc_resp.raise_for_status()
+    process_instance_id = start_proc_resp.json()["processInstanceId"]
+    print("Processo criado! ID:", process_instance_id)
+
+except requests.exceptions.RequestException as e:
+    print("Erro na comunicação com o Fluig:")
+    print(str(e))
+except Exception as ex:
+    print("Erro inesperado:")
+    print(str(ex))
+  Para produtos e serviços:   import requests
+from requests_oauthlib import OAuth1
+import json
+
+# ========================
+# CONFIGURAÇÕES DO FLUIG
+# ========================
+CONSUMER_KEY = '5639-4421-2098-7812-4'
+CONSUMER_SECRET = 'ff01d132-41af-472b-bf01-b490bcad3ff5dabc9e19-d59b-4eab-bfbc-b4a4dc33a674'
+TOKEN_KEY = '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa'
+TOKEN_SECRET = 'd9828aa1-2e30-4adf-80d7-98f1a48871ab231a11ca-7e33-40cb-89ad-8599c6632d00'
+FLUIG_URL = 'http://cloud.betunel.com.br:8380'
+GED_FOLDER_ID = 2693638
+
+auth = OAuth1(CONSUMER_KEY, CONSUMER_SECRET, TOKEN_KEY, TOKEN_SECRET)
+
+try:
+    # ========================
+    # UPLOAD DO ARQUIVO
+    # ========================
+    file_path = r'C:/Users/nilco.junior/Documents/testeAPI/teste_api.pdf'
+    file_name = file_path.split('/')[-1]
+
+    with open(file_path, 'rb') as f:
+        files = {'file': (file_name, f)}
+        print("Enviando arquivo...")
+        upload_resp = requests.post(
+            f'{FLUIG_URL}/ecm/upload',
+            files=files,
+            data={"isPublic": "false", "chunked": "false"},
+            auth=auth
+        )
+        upload_resp.raise_for_status()
+        uploaded_file_name = upload_resp.json()['files'][0]['name']
+        print("Arquivo enviado:", uploaded_file_name)
+
+    # ========================
+    # CRIAÇÃO DO DOCUMENTO NO GED
+    # ========================
+    create_doc_payload = {
+        "description": f"{uploaded_file_name} - Enviado via API",
+        "parentId": GED_FOLDER_ID,
+        "attachments": [{"fileName": uploaded_file_name}],
+        "documentTypeId": 7,  #Essencial para aparecer na aba de anexos
+        "formData": [
+            {
+                "name": "ecm-widgetpartgeneralinformation-utilizaVisualizadorInterno",
+                "value": False
+            }
+        ]
+    }
+
+    print("Criando documento no GED...")
+    create_doc_resp = requests.post(
+        f'{FLUIG_URL}/api/public/ecm/document/createDocument',
+        json=create_doc_payload,
+        auth=auth
+    )
+    create_doc_resp.raise_for_status()
+    attachment_id = create_doc_resp.json()['content']['id']
+    print("Documento criado com ID:", attachment_id)
+
+    # ========================
+    # INÍCIO DO PROCESSO
+    # ========================
+    form_fields = {
+        "nome": "Yasmim Silva",
+        "matricula": "0d44ddb10e5a41a3a7a378aa5862694d",
+        "email": "yasmim.silva@betunel.com.br",
+        "Hdt_entrada_nf": "09/06/2025",
+        "dt_entrada_nf": "09/06/2025",
+        "nm_empresa": "BETUNEL",
+        "cod_empresa": "1",
+        "cnpj": "60.546.801/0001-89",
+        "nm_filial": "Jacarei",
+        "cod_filial": "16",
+        "cnpj_filial": "60.546.801/0025-56",
+        "unid_negoc": "SUPPLY E CUSTOS",
+        "cod_un": "0.10.02.01.001",
+        "centro_custo": "1.0.3299 - SUPRIMENTOS",
+        "cod_cc": "1.0.3299",
+        "tp_doc": "Nota fiscal de serviço eletrônica",
+        "numero_NF": "31879",
+        "serie": "E1",
+        "valor_NF": "3.187,80",
+        "dt_emissao_NF": "12/05/2025",
+        "Hdt_emissao_NF": "12/05/2025",
+        "dt_vencimento_NF": "09/06/2025",
+        "fornecedor": "NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP - 00.147.271/0001-74 - 20.0581",
+        "cod_fornecedor": "20.0581",
+        "fm_pagamento": "DESPACHANTE",
+        "chk_boleto": "NAO",
+        "justificativa": "NFe recebida nesta data.",
+        "destinacao": "PO475_20225 TIE PETROL",
+        "column1_1___1": "02.007.014",
+        "column1_2___1": "CAP 50/70 (CIMENTO ASFALTICO DE PETROLEO 50/70) (BAG)",
+        "projeto___1": "SEMPROJETO",
+        "subprojeto___1": "SEMSUBPROJETO",
+        "identificador": "Empresa: BETUNEL Fornecedor: NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP - 00.147.271/0001-74 - 20.0581 Numero: 11022 Valor: 3.187,80 Data de Vencimento: 09/06/2025 Forma de Pagamento: DESPACHANTE",
+
+        # Campo oculto para o beforeStateEntry fazer o vínculo
+        "documento_ged": str(attachment_id)
+    }
+
+    start_process_payload = {
+        "targetState": 59,
+        "targetAssignee": "",
+        "subProcessTargetState": 0,
+        "comment": "Iniciado via API",
+        "formFields": form_fields
+    }
+
+    print("Iniciando processo via API v2...")
+    start_proc_resp = requests.post(
+        f'{FLUIG_URL}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
+        json=start_process_payload,
+        auth=auth
+    )
+    start_proc_resp.raise_for_status()
+    process_instance_id = start_proc_resp.json()["processInstanceId"]
+    print("Processo criado! ID:", process_instance_id)
+
+except requests.exceptions.RequestException as e:
+    print("Erro na comunicação com o Fluig:")
+    print(str(e))
+except Exception as ex:
+    print("Erro inesperado:")
+    print(str(ex))
+  Você deve adequar para as informações virem de acordo com o que temos no da aplicação, assim como o documento - seja pdf seja xml - que estão em anexo no lançamento. 
+
+
+Consegue olhar a fundo e fazer as devidas correções?

@@ -96,58 +96,19 @@ class FluigIntegration:
     
     def find_accessible_folder(self):
         """
-        Encontra uma pasta acessível para criar documentos
+        Retorna a pasta configurada ou uma pasta padrão como fallback
         
         Returns:
-            int: ID da pasta acessível ou None se não encontrar
+            int: ID da pasta acessível
         """
-        # Lista de pastas para testar
-        test_folders = [
-            self.ged_folder_id,  # Pasta configurada
-            1,  # Pasta raiz
-            2,  # Pasta secundária
-            100, 101, 102,  # Pastas comuns
-            1000, 1001, 1002,  # Outras pastas
-            10000, 10001, 10002,  # Pastas numeradas
-        ]
+        # Se tem pasta configurada, usar ela
+        if self.ged_folder_id:
+            logging.info(f"Usando pasta configurada: {self.ged_folder_id}")
+            return self.ged_folder_id
         
-        for folder_id in test_folders:
-            try:
-                # Testar se consegue acessar a pasta
-                response = requests.get(
-                    f'{self.fluig_url}/api/public/ecm/folder/getFolderContent/{folder_id}',
-                    auth=self.auth,
-                    timeout=5
-                )
-                
-                if response.status_code == 200:
-                    # Testar se consegue criar documento na pasta
-                    test_payload = {
-                        "description": "Teste de permissão - pode ser deletado",
-                        "parentId": int(folder_id),
-                        "documentTypeId": 7,
-                        "draft": True  # Criar como rascunho para não impactar
-                    }
-                    
-                    test_response = requests.post(
-                        f'{self.fluig_url}/api/public/ecm/document/createDocument',
-                        json=test_payload,
-                        auth=self.auth,
-                        timeout=5
-                    )
-                    
-                    if test_response.status_code == 200:
-                        logging.info(f"Pasta acessível encontrada: {folder_id}")
-                        return folder_id
-                    else:
-                        logging.info(f"Pasta {folder_id} acessível para leitura mas não para escrita")
-                        
-            except Exception as e:
-                logging.debug(f"Erro ao testar pasta {folder_id}: {str(e)}")
-                continue
-        
-        logging.error("Nenhuma pasta acessível encontrada!")
-        return None
+        # Fallback para pasta padrão
+        logging.info("Nenhuma pasta configurada, usando pasta padrão: 1")
+        return 1
     
     def create_document_in_ged(self, uploaded_file_name, nfe_record=None):
         """
@@ -161,14 +122,8 @@ class FluigIntegration:
             str: ID do documento criado
         """
         try:
-            # Primeiro, encontrar uma pasta acessível
-            accessible_folder = self.find_accessible_folder()
-            if not accessible_folder:
-                raise Exception("Nenhuma pasta acessível encontrada para criar documentos")
-            
-            # Se a pasta acessível for diferente da configurada, usar ela
-            if accessible_folder != self.ged_folder_id:
-                logging.info(f"Usando pasta acessível {accessible_folder} em vez da configurada {self.ged_folder_id}")
+            # Obter pasta a ser usada
+            folder_id = self.find_accessible_folder()
             
             # Criar descrição específica do NFE
             if nfe_record:
@@ -179,121 +134,51 @@ class FluigIntegration:
             else:
                 description = f"{uploaded_file_name} - Enviado via API"
             
-            # Primeira tentativa sem especificar usuário - usar credenciais OAuth
-            create_doc_payload = {
-                "description": description,
-                "parentId": int(accessible_folder),
-                "attachments": [{"fileName": uploaded_file_name}],
-                "documentTypeId": 7,
-                "version": 1,
-                "draft": False,
-                "inheritSecurity": True
-            }
+            # Lista de estratégias para testar múltiplas pastas
+            strategies = [
+                {"parentId": int(folder_id), "description": description},
+                {"parentId": 1, "description": description},  # Pasta raiz
+                {"parentId": 2, "description": description},  # Pasta secundária
+            ]
             
-            logging.info("Criando documento no GED...")
-            logging.info(f"Payload: {json.dumps(create_doc_payload, indent=2)}")
-            
-            create_doc_resp = requests.post(
-                f'{self.fluig_url}/api/public/ecm/document/createDocument',
-                json=create_doc_payload,
-                auth=self.auth
-            )
-            
-            logging.info(f"Status Code: {create_doc_resp.status_code}")
-            logging.info(f"Response Headers: {create_doc_resp.headers}")
-            
-            # Tentar ler o corpo da resposta mesmo com erro
-            try:
-                response_body = create_doc_resp.text
-                logging.info(f"Response Body: {response_body}")
-            except:
-                logging.info("Could not read response body")
-            
-            # Se falhar, tentar versão mais simples
-            if create_doc_resp.status_code != 200:
-                logging.info("Tentando versão ultra-simplificada...")
-                simple_payload = {
-                    "description": f"{uploaded_file_name} - Enviado via API",
-                    "parentId": int(self.ged_folder_id),
-                    "attachments": [{"fileName": uploaded_file_name}],
-                    "documentTypeId": 7
-                }
-                
-                create_doc_resp = requests.post(
-                    f'{self.fluig_url}/api/public/ecm/document/createDocument',
-                    json=simple_payload,
-                    auth=self.auth
-                )
-                
-                logging.info(f"Payload ultra-simplificado: {json.dumps(simple_payload, indent=2)}")
-                logging.info(f"Status Code ultra-simplificado: {create_doc_resp.status_code}")
-                logging.info(f"Response ultra-simplificado: {create_doc_resp.text}")
-                
-                # Se ainda falhar, tentar com matrícula em vez de email
-                if create_doc_resp.status_code != 200:
-                    logging.info("Tentando com matrícula do usuário...")
-                    matricula_payload = {
-                        "description": f"{uploaded_file_name} - Enviado via API",
-                        "parentId": int(self.ged_folder_id),
+            # Tentar cada estratégia
+            for strategy in strategies:
+                try:
+                    # Payload básico
+                    create_doc_payload = {
+                        "description": strategy["description"],
+                        "parentId": strategy["parentId"],
                         "attachments": [{"fileName": uploaded_file_name}],
                         "documentTypeId": 7,
-                        "colleagueId": "0d44ddb10e5a41a3a7a378aa5862694d"  # Matrícula da Yasmim
+                        "version": 1,
+                        "draft": False,
+                        "inheritSecurity": True
                     }
                     
+                    logging.info(f"Tentando criar documento na pasta {strategy['parentId']}")
+                    
+                    # Fazer a requisição
                     create_doc_resp = requests.post(
                         f'{self.fluig_url}/api/public/ecm/document/createDocument',
-                        json=matricula_payload,
-                        auth=self.auth
+                        json=create_doc_payload,
+                        auth=self.auth,
+                        timeout=30
                     )
                     
-                    logging.info(f"Payload com matrícula: {json.dumps(matricula_payload, indent=2)}")
-                    logging.info(f"Status Code com matrícula: {create_doc_resp.status_code}")
-                    logging.info(f"Response com matrícula: {create_doc_resp.text}")
-                    
-                    # Se ainda falhar, tentar com pasta raiz (ID 1)
-                    if create_doc_resp.status_code != 200:
-                        logging.info("Tentando com pasta raiz (ID 1)...")
-                        root_payload = {
-                            "description": f"{uploaded_file_name} - Enviado via API",
-                            "parentId": 1,  # Pasta raiz
-                            "attachments": [{"fileName": uploaded_file_name}],
-                            "documentTypeId": 7
-                        }
+                    if create_doc_resp.status_code == 200:
+                        attachment_id = create_doc_resp.json()['content']['id']
+                        logging.info(f"Documento criado com sucesso na pasta {strategy['parentId']} - ID: {attachment_id}")
+                        return str(attachment_id)
+                    else:
+                        logging.info(f"Falha na pasta {strategy['parentId']}: {create_doc_resp.status_code} - {create_doc_resp.text}")
+                        continue
                         
-                        create_doc_resp = requests.post(
-                            f'{self.fluig_url}/api/public/ecm/document/createDocument',
-                            json=root_payload,
-                            auth=self.auth
-                        )
-                        
-                        logging.info(f"Payload pasta raiz: {json.dumps(root_payload, indent=2)}")
-                        logging.info(f"Status Code pasta raiz: {create_doc_resp.status_code}")
-                        logging.info(f"Response pasta raiz: {create_doc_resp.text}")
-                        
-                        # Se ainda falhar, tentar apenas com phisicalFile
-                        if create_doc_resp.status_code != 200:
-                            logging.info("Tentando apenas com phisicalFile...")
-                            minimal_payload = {
-                                "description": f"{uploaded_file_name} - Enviado via API",
-                                "parentId": 1,  # Pasta raiz
-                                "phisicalFile": uploaded_file_name,
-                                "documentTypeId": 7
-                            }
-                            
-                            create_doc_resp = requests.post(
-                                f'{self.fluig_url}/api/public/ecm/document/createDocument',
-                                json=minimal_payload,
-                                auth=self.auth
-                            )
-                            
-                            logging.info(f"Payload mínimo: {json.dumps(minimal_payload, indent=2)}")
-                            logging.info(f"Status Code mínimo: {create_doc_resp.status_code}")
-                            logging.info(f"Response mínimo: {create_doc_resp.text}")
+                except Exception as e:
+                    logging.info(f"Erro na pasta {strategy['parentId']}: {str(e)}")
+                    continue
             
-            create_doc_resp.raise_for_status()
-            attachment_id = create_doc_resp.json()['content']['id']
-            logging.info(f"Documento criado com ID: {attachment_id}")
-            return str(attachment_id)
+            # Se chegou aqui, nenhuma estratégia funcionou
+            raise Exception("Não foi possível criar documento em nenhuma pasta testada")
             
         except requests.exceptions.HTTPError as e:
             logging.error(f"HTTP Error ao criar documento no GED: {e}")
