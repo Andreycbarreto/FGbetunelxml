@@ -94,21 +94,95 @@ class FluigIntegration:
             logging.error(f"Erro ao enviar arquivo para o Fluig: {str(e)}")
             raise
     
-    def create_document_in_ged(self, uploaded_file_name):
+    def find_accessible_folder(self):
         """
-        Cria um documento no GED do Fluig
+        Encontra uma pasta acessível para criar documentos
+        
+        Returns:
+            int: ID da pasta acessível ou None se não encontrar
+        """
+        # Lista de pastas para testar
+        test_folders = [
+            self.ged_folder_id,  # Pasta configurada
+            1,  # Pasta raiz
+            2,  # Pasta secundária
+            100, 101, 102,  # Pastas comuns
+            1000, 1001, 1002,  # Outras pastas
+            10000, 10001, 10002,  # Pastas numeradas
+        ]
+        
+        for folder_id in test_folders:
+            try:
+                # Testar se consegue acessar a pasta
+                response = requests.get(
+                    f'{self.fluig_url}/api/public/ecm/folder/getFolderContent/{folder_id}',
+                    auth=self.auth,
+                    timeout=5
+                )
+                
+                if response.status_code == 200:
+                    # Testar se consegue criar documento na pasta
+                    test_payload = {
+                        "description": "Teste de permissão - pode ser deletado",
+                        "parentId": int(folder_id),
+                        "documentTypeId": 7,
+                        "draft": True  # Criar como rascunho para não impactar
+                    }
+                    
+                    test_response = requests.post(
+                        f'{self.fluig_url}/api/public/ecm/document/createDocument',
+                        json=test_payload,
+                        auth=self.auth,
+                        timeout=5
+                    )
+                    
+                    if test_response.status_code == 200:
+                        logging.info(f"Pasta acessível encontrada: {folder_id}")
+                        return folder_id
+                    else:
+                        logging.info(f"Pasta {folder_id} acessível para leitura mas não para escrita")
+                        
+            except Exception as e:
+                logging.debug(f"Erro ao testar pasta {folder_id}: {str(e)}")
+                continue
+        
+        logging.error("Nenhuma pasta acessível encontrada!")
+        return None
+    
+    def create_document_in_ged(self, uploaded_file_name, nfe_record=None):
+        """
+        Cria um documento no GED do Fluig com informações específicas do NFE
         
         Args:
             uploaded_file_name: Nome do arquivo enviado
+            nfe_record: Registro NFE com informações específicas do documento
             
         Returns:
             str: ID do documento criado
         """
         try:
+            # Primeiro, encontrar uma pasta acessível
+            accessible_folder = self.find_accessible_folder()
+            if not accessible_folder:
+                raise Exception("Nenhuma pasta acessível encontrada para criar documentos")
+            
+            # Se a pasta acessível for diferente da configurada, usar ela
+            if accessible_folder != self.ged_folder_id:
+                logging.info(f"Usando pasta acessível {accessible_folder} em vez da configurada {self.ged_folder_id}")
+            
+            # Criar descrição específica do NFE
+            if nfe_record:
+                description = f"NFE {nfe_record.numero_nfe} - {nfe_record.nome_emitente} - " \
+                             f"Valor: R$ {nfe_record.valor_total_nfe or 0:.2f} - " \
+                             f"Data: {nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else 'N/A'} - " \
+                             f"Tipo: {nfe_record.tipo_operacao or 'N/A'}"
+            else:
+                description = f"{uploaded_file_name} - Enviado via API"
+            
             # Primeira tentativa sem especificar usuário - usar credenciais OAuth
             create_doc_payload = {
-                "description": f"{uploaded_file_name} - Enviado via API",
-                "parentId": int(self.ged_folder_id),
+                "description": description,
+                "parentId": int(accessible_folder),
                 "attachments": [{"fileName": uploaded_file_name}],
                 "documentTypeId": 7,
                 "version": 1,
@@ -458,8 +532,8 @@ class FluigIntegration:
                 nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nfe}.pdf"
             )
             
-            # 2. Criar documento no GED
-            attachment_id = self.create_document_in_ged(uploaded_file_name)
+            # 2. Criar documento no GED com informações específicas do NFE
+            attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
             
             # 3. Iniciar processo baseado no tipo de operação
             if nfe_record.tipo_operacao == "CT-e (Transporte)":

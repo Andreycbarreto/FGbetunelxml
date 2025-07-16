@@ -1168,6 +1168,8 @@ def debug_fluig_folders():
         test_folders = [1, 2693638, 2693639, 2693640]  # Pasta raiz e algumas próximas
         results = {}
         
+        import requests
+        
         for folder_id in test_folders:
             try:
                 response = requests.get(
