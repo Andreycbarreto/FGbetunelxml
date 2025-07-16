@@ -105,12 +105,17 @@ class FluigIntegration:
             str: ID do documento criado
         """
         try:
-            # Versão mais simples para evitar erros
+            # Primeira tentativa com usuário específico para resolver problemas de permissão
             create_doc_payload = {
                 "description": f"{uploaded_file_name} - Enviado via API",
                 "parentId": int(self.ged_folder_id),
                 "attachments": [{"fileName": uploaded_file_name}],
-                "documentTypeId": 7
+                "documentTypeId": 7,
+                "colleagueId": "yasmim.silva@betunel.com.br",  # Usuário com permissão
+                "publisherId": "yasmim.silva@betunel.com.br",
+                "version": 1,
+                "draft": False,
+                "inheritSecurity": True
             }
             
             logging.info("Criando documento no GED...")
@@ -131,6 +136,27 @@ class FluigIntegration:
                 logging.info(f"Response Body: {response_body}")
             except:
                 logging.info("Could not read response body")
+            
+            # Se falhar, tentar versão mais simples
+            if create_doc_resp.status_code != 200:
+                logging.info("Tentando versão simplificada...")
+                simple_payload = {
+                    "description": f"{uploaded_file_name} - Enviado via API",
+                    "parentId": int(self.ged_folder_id),
+                    "attachments": [{"fileName": uploaded_file_name}],
+                    "documentTypeId": 7,
+                    "colleagueId": "yasmim.silva@betunel.com.br"
+                }
+                
+                create_doc_resp = requests.post(
+                    f'{self.fluig_url}/api/public/ecm/document/createDocument',
+                    json=simple_payload,
+                    auth=self.auth
+                )
+                
+                logging.info(f"Payload simplificado: {json.dumps(simple_payload, indent=2)}")
+                logging.info(f"Status Code simplificado: {create_doc_resp.status_code}")
+                logging.info(f"Response simplificado: {create_doc_resp.text}")
             
             create_doc_resp.raise_for_status()
             attachment_id = create_doc_resp.json()['content']['id']
