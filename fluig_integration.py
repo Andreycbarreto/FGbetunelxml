@@ -33,6 +33,36 @@ class FluigIntegration:
         self.fluig_url = user_settings.fluig_url
         self.ged_folder_id = user_settings.ged_folder_id
         
+    def test_fluig_connection(self):
+        """
+        Testa a conexão com o Fluig
+        
+        Returns:
+            dict: Resultado do teste
+        """
+        try:
+            # Testar conexão básica
+            response = requests.get(
+                f'{self.fluig_url}/api/public/ecm/folder/getFolderContent/{self.ged_folder_id}',
+                auth=self.auth,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                return {'success': True, 'message': 'Conexão com Fluig estabelecida com sucesso'}
+            else:
+                return {
+                    'success': False, 
+                    'message': f'Erro na conexão: Status {response.status_code} - {response.text[:200]}'
+                }
+                
+        except requests.exceptions.ConnectionError:
+            return {'success': False, 'message': 'Não foi possível conectar ao servidor Fluig'}
+        except requests.exceptions.Timeout:
+            return {'success': False, 'message': 'Timeout na conexão com o Fluig'}
+        except Exception as e:
+            return {'success': False, 'message': f'Erro inesperado: {str(e)}'}
+        
     def upload_file_to_fluig(self, file_path, file_name):
         """
         Faz upload de um arquivo para o Fluig
@@ -75,32 +105,45 @@ class FluigIntegration:
             str: ID do documento criado
         """
         try:
+            # Versão mais simples para evitar erros
             create_doc_payload = {
                 "description": f"{uploaded_file_name} - Enviado via API",
                 "parentId": int(self.ged_folder_id),
                 "attachments": [{"fileName": uploaded_file_name}],
-                "documentTypeId": 7,  # Essencial para aparecer na aba de anexos
-                "formData": [
-                    {
-                        "name": "ecm-widgetpartgeneralinformation-utilizaVisualizadorInterno",
-                        "value": False
-                    }
-                ]
+                "documentTypeId": 7
             }
             
             logging.info("Criando documento no GED...")
+            logging.info(f"Payload: {json.dumps(create_doc_payload, indent=2)}")
+            
             create_doc_resp = requests.post(
                 f'{self.fluig_url}/api/public/ecm/document/createDocument',
                 json=create_doc_payload,
                 auth=self.auth
             )
+            
+            logging.info(f"Status Code: {create_doc_resp.status_code}")
+            logging.info(f"Response Headers: {create_doc_resp.headers}")
+            
+            # Tentar ler o corpo da resposta mesmo com erro
+            try:
+                response_body = create_doc_resp.text
+                logging.info(f"Response Body: {response_body}")
+            except:
+                logging.info("Could not read response body")
+            
             create_doc_resp.raise_for_status()
             attachment_id = create_doc_resp.json()['content']['id']
             logging.info(f"Documento criado com ID: {attachment_id}")
             return str(attachment_id)
             
+        except requests.exceptions.HTTPError as e:
+            logging.error(f"HTTP Error ao criar documento no GED: {e}")
+            logging.error(f"Status Code: {e.response.status_code}")
+            logging.error(f"Response: {e.response.text}")
+            raise
         except Exception as e:
-            logging.error(f"Erro ao criar documento no GED: {str(e)}")
+            logging.error(f"Erro geral ao criar documento no GED: {str(e)}")
             raise
     
     def start_transport_process(self, nfe_record, attachment_id):

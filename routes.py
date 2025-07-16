@@ -1135,3 +1135,19 @@ def status_fluig(nfe_id):
             'integrated': False,
             'message': 'NFE não integrada ao Fluig'
         })
+
+
+@app.route('/test-fluig-connection')
+@login_required_hybrid
+def test_fluig_connection():
+    """Testar conexão com Fluig"""
+    fluig_integration = get_fluig_integration_for_user(current_user.id)
+    
+    if not fluig_integration:
+        return jsonify({
+            'success': False, 
+            'message': 'Configuração do Fluig não encontrada. Configure suas credenciais nas configurações do sistema.'
+        })
+    
+    result = fluig_integration.test_fluig_connection()
+    return jsonify(result)
