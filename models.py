@@ -394,6 +394,9 @@ class Empresa(db.Model):
     # Relacionamento com usuário
     user = db.relationship('User', backref='empresas')
     
+    # Relacionamento com filiais
+    filiais = db.relationship('Filial', backref='empresa', lazy='dynamic', cascade='all, delete-orphan')
+    
     def __repr__(self):
         return f'<Empresa {self.numero}: {self.nome_fantasia}>'
     
@@ -403,3 +406,51 @@ class Empresa(db.Model):
         if len(self.cnpj) == 14:
             return f"{self.cnpj[:2]}.{self.cnpj[2:5]}.{self.cnpj[5:8]}/{self.cnpj[8:12]}-{self.cnpj[12:]}"
         return self.cnpj
+    
+    @property
+    def total_filiais(self):
+        """Total de filiais cadastradas para esta empresa"""
+        return self.filiais.count()
+
+
+class Filial(db.Model):
+    """Modelo para gerenciar filiais vinculadas às empresas"""
+    __tablename__ = 'filiais'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    coligada = db.Column(db.Integer, nullable=False)  # Numero da empresa (FK)
+    nome_coligada = db.Column(db.String(255), nullable=False)
+    cnpj_coligada = db.Column(db.String(18), nullable=False)
+    filial = db.Column(db.String(10), nullable=False)  # Codigo da filial
+    nome_filial = db.Column(db.String(255), nullable=False)
+    cnpj_filial = db.Column(db.String(18), nullable=False)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relacionamento com empresa (via numero)
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), nullable=False)
+    
+    # Relacionamento com usuário
+    user = db.relationship('User', backref='filiais')
+    
+    # Constraint para garantir que coligada + filial seja único por usuário
+    __table_args__ = (UniqueConstraint('coligada', 'filial', 'user_id', name='uq_filial_user'),)
+    
+    def __repr__(self):
+        return f'<Filial {self.coligada}-{self.filial}: {self.nome_filial}>'
+    
+    @property
+    def cnpj_coligada_formatado(self):
+        """Retorna CNPJ da coligada formatado XX.XXX.XXX/XXXX-XX"""
+        if len(self.cnpj_coligada) == 14:
+            return f"{self.cnpj_coligada[:2]}.{self.cnpj_coligada[2:5]}.{self.cnpj_coligada[5:8]}/{self.cnpj_coligada[8:12]}-{self.cnpj_coligada[12:]}"
+        return self.cnpj_coligada
+    
+    @property
+    def cnpj_filial_formatado(self):
+        """Retorna CNPJ da filial formatado XX.XXX.XXX/XXXX-XX"""
+        if len(self.cnpj_filial) == 14:
+            return f"{self.cnpj_filial[:2]}.{self.cnpj_filial[2:5]}.{self.cnpj_filial[5:8]}/{self.cnpj_filial[8:12]}-{self.cnpj_filial[12:]}"
+        return self.cnpj_filial

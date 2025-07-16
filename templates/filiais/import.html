@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Importar Filiais{% endblock %}
+
+{% block content %}
+<style>
+.upload-area {
+    border: 2px dashed #007bff;
+    border-radius: 15px;
+    padding: 3rem;
+    text-align: center;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e6f3ff 100%);
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: #0056b3;
+    background: linear-gradient(135deg, #e6f3ff 0%, #d1e7dd 100%);
+}
+
+.upload-area.dragover {
+    border-color: #28a745;
+    background: linear-gradient(135deg, #d1e7dd 0%, #d4edda 100%);
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.form-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #5a6fd8, #6a4190);
+}
+
+.btn-warning {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+    border: none;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(45deg, #e0a800, #dc6105);
+}
+
+.instruction-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.file-info {
+    background: #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    display: none;
+}
+
+.loading {
+    display: none;
+}
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0">
+                <div class="card-header form-gradient text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="feather-upload me-2"></i>
+                        Importar Filiais via XLSX
+                    </h3>
+                    <p class="mb-0 mt-2 opacity-75">
+                        Faça upload do arquivo Excel com os dados das filiais
+                    </p>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Instruções -->
+                    <div class="instruction-card">
+                        <h5 class="mb-3">
+                            <i class="feather-info me-2"></i>
+                            Instruções para Importação
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>📋 Colunas Obrigatórias:</h6>
+                                <ul class="list-unstyled">
+                                    <li>✓ <strong>COLIGADA</strong> - Número da empresa</li>
+                                    <li>✓ <strong>NOME_COLIGADA</strong> - Nome da empresa</li>
+                                    <li>✓ <strong>CNPJ_COLIGADA</strong> - CNPJ da empresa</li>
+                                    <li>✓ <strong>FILIAL</strong> - Código da filial</li>
+                                    <li>✓ <strong>NOME_FILIAL</strong> - Nome da filial</li>
+                                    <li>✓ <strong>CNPJ_FILIAL</strong> - CNPJ da filial</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>⚠️ Requisitos:</h6>
+                                <ul class="list-unstyled">
+                                    <li>• Arquivo deve estar no formato XLSX</li>
+                                    <li>• Primeira linha deve conter os cabeçalhos</li>
+                                    <li>• Empresa deve estar cadastrada previamente</li>
+                                    <li>• CNPJ pode ter ou não formatação</li>
+                                    <li>• Filiais duplicadas serão ignoradas</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botão para baixar modelo -->
+                    <div class="text-center mb-4">
+                        <a href="{{ url_for('filial_modelo_xlsx') }}" class="btn btn-warning btn-lg">
+                            <i class="feather-download me-2"></i>
+                            Baixar Modelo XLSX
+                        </a>
+                        <p class="text-muted mt-2">
+                            Baixe o modelo com suas empresas já preenchidas
+                        </p>
+                    </div>
+
+                    <!-- Formulário de Upload -->
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <div class="upload-area" id="uploadArea">
+                            <i class="feather-upload-cloud text-primary mb-3" style="font-size: 4rem;"></i>
+                            <h4 class="mb-3">Arraste o arquivo XLSX aqui</h4>
+                            <p class="text-muted mb-3">ou clique para selecionar</p>
+                            <input type="file" name="file" id="fileInput" accept=".xlsx" 
+                                   style="display: none;" required>
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                                <i class="feather-folder me-2"></i>
+                                Selecionar Arquivo
+                            </button>
+                        </div>
+
+                        <div class="file-info" id="fileInfo">
+                            <div class="d-flex align-items-center">
+                                <i class="feather-file-text text-success me-3" style="font-size: 2rem;"></i>
+                                <div>
+                                    <h6 class="mb-0" id="fileName"></h6>
+                                    <small class="text-muted" id="fileSize"></small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="removeFile()">
+                                    <i class="feather-x"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg px-5" id="uploadBtn" disabled>
+                                <span class="loading">
+                                    <i class="feather-loader me-2"></i>Processando...
+                                </span>
+                                <span class="not-loading">
+                                    <i class="feather-upload me-2"></i>
+                                    Importar Filiais
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Botão Voltar -->
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('filiais_listar') }}" class="btn btn-outline-secondary">
+                            <i class="feather-arrow-left me-2"></i>Voltar para Filiais
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-10">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadForm = document.getElementById('uploadForm');
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            showFileInfo(files[0]);
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            showFileInfo(this.files[0]);
+        }
+    });
+
+    // Show file info
+    function showFileInfo(file) {
+        if (file.name.toLowerCase().endsWith('.xlsx')) {
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            fileInfo.style.display = 'block';
+            uploadBtn.disabled = false;
+        } else {
+            alert('Apenas arquivos XLSX são permitidos!');
+            removeFile();
+        }
+    }
+
+    // Remove file
+    window.removeFile = function() {
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+        uploadBtn.disabled = true;
+    };
+
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Loading state on submit
+    uploadForm.addEventListener('submit', function() {
+        uploadBtn.disabled = true;
+        uploadBtn.querySelector('.loading').style.display = 'inline';
+        uploadBtn.querySelector('.not-loading').style.display = 'none';
+    });
+});
+</script>
+{% endblock %}

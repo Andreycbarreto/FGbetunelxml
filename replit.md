@@ -97,6 +97,22 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. Complete Branch (Filial) Management System Implementation:
+  * Created Filial model with fields: coligada, nome_coligada, cnpj_coligada, filial, nome_filial, cnpj_filial
+  * Implemented full CRUD operations for branch management linked to companies
+  * Added relationship between Empresa and Filial models with cascade delete
+  * Created comprehensive branch listing with formatted CNPJ display
+  * Implemented responsive form for creating and editing branches
+  * Added automatic form population when selecting company (coligada)
+  * Built Excel (XLSX) batch import functionality with validation
+  * Created downloadable Excel template with user's company data
+  * Added comprehensive error handling for import process
+  * Implemented drag-and-drop file upload interface
+  * Added security checks (users can only manage their own branches)
+  * Integrated branch menu item in navigation with feather-git-branch icon
+  * Added CNPJ formatting masks and form validation
+  * Database table created with proper relationships and constraints
+  * Unique constraint on coligada+filial combination per user
 - July 16, 2025. Complete Company Management System Implementation:
   * Created Empresa model with fields: numero, nome_fantasia, cnpj, razao_social
   * Added comprehensive CRUD operations for company management
@@ -108,6 +124,7 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
   * Integrated company menu item in navigation
   * Added CNPJ formatting mask and form validation
   * Database table created with proper relationships and constraints
+  * Enhanced UI with modern button styling, gradients, tooltips, and hover effects
 - July 16, 2025. PDF Download Feature Implementation:
   * Added original_pdf_path and original_pdf_filename columns to NFERecord model
   * Modified async_pdf_processor to save PDF file paths in database during processing

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}{% if filial %}Editar Filial{% else %}Nova Filial{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+.form-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #5a6fd8, #6a4190);
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.form-label {
+    font-weight: 600;
+}
+
+.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.cnpj-mask {
+    font-family: 'Courier New', monospace;
+}
+
+.empresa-info {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.loading {
+    display: none;
+}
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0">
+                <div class="card-header form-gradient text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="feather-git-branch me-2"></i>
+                        {% if filial %}Editar Filial{% else %}Nova Filial{% endif %}
+                    </h3>
+                    <p class="mb-0 mt-2 opacity-75">
+                        {% if filial %}Altere as informações da filial{% else %}Cadastre uma nova filial{% endif %}
+                    </p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" id="filialForm">
+                        <!-- Seleção da Empresa -->
+                        <div class="mb-4">
+                            <label for="coligada" class="form-label required">Empresa (Coligada)</label>
+                            <select class="form-select" name="coligada" id="coligada" required>
+                                <option value="">Selecione a empresa...</option>
+                                {% for empresa in empresas %}
+                                <option value="{{ empresa.numero }}" 
+                                    {% if filial and filial.coligada == empresa.numero %}selected{% endif %}
+                                    data-nome="{{ empresa.nome_fantasia }}"
+                                    data-cnpj="{{ empresa.cnpj_formatado }}"
+                                    data-razao="{{ empresa.razao_social }}">
+                                    {{ empresa.numero }} - {{ empresa.nome_fantasia }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Informações da Empresa Selecionada -->
+                        <div id="empresaInfo" class="empresa-info" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Nome Fantasia:</strong>
+                                    <span id="empresaNome"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>CNPJ:</strong>
+                                    <span id="empresaCnpj"></span>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <strong>Razão Social:</strong>
+                                    <span id="empresaRazao"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dados da Coligada -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nome_coligada" class="form-label required">Nome Coligada</label>
+                                    <input type="text" class="form-control" name="nome_coligada" id="nome_coligada" 
+                                           value="{{ filial.nome_coligada if filial else '' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="cnpj_coligada" class="form-label required">CNPJ Coligada</label>
+                                    <input type="text" class="form-control cnpj-mask" name="cnpj_coligada" id="cnpj_coligada" 
+                                           value="{{ filial.cnpj_coligada_formatado if filial else '' }}" 
+                                           placeholder="00.000.000/0000-00" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dados da Filial -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="filial" class="form-label required">Código da Filial</label>
+                                    <input type="text" class="form-control" name="filial" id="filial" 
+                                           value="{{ filial.filial if filial else '' }}" 
+                                           placeholder="Ex: 001, 002, etc." required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nome_filial" class="form-label required">Nome da Filial</label>
+                                    <input type="text" class="form-control" name="nome_filial" id="nome_filial" 
+                                           value="{{ filial.nome_filial if filial else '' }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cnpj_filial" class="form-label required">CNPJ da Filial</label>
+                            <input type="text" class="form-control cnpj-mask" name="cnpj_filial" id="cnpj_filial" 
+                                   value="{{ filial.cnpj_filial_formatado if filial else '' }}" 
+                                   placeholder="00.000.000/0000-00" required>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('filiais_listar') }}" class="btn btn-outline-secondary">
+                                <i class="feather-arrow-left me-2"></i>Voltar
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <span class="loading">
+                                    <i class="feather-loader me-2"></i>Salvando...
+                                </span>
+                                <span class="not-loading">
+                                    <i class="feather-save me-2"></i>
+                                    {% if filial %}Atualizar{% else %}Cadastrar{% endif %}
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Máscaras CNPJ
+    function aplicarMascaraCNPJ(input) {
+        input.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length <= 14) {
+                value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+                this.value = value;
+            }
+        });
+    }
+    
+    // Aplicar máscaras
+    aplicarMascaraCNPJ(document.getElementById('cnpj_coligada'));
+    aplicarMascaraCNPJ(document.getElementById('cnpj_filial'));
+    
+    // Monitorar mudança na seleção da empresa
+    const coligadaSelect = document.getElementById('coligada');
+    const empresaInfo = document.getElementById('empresaInfo');
+    const nomeColigada = document.getElementById('nome_coligada');
+    const cnpjColigada = document.getElementById('cnpj_coligada');
+    
+    coligadaSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedOption.value) {
+            // Mostrar informações da empresa
+            document.getElementById('empresaNome').textContent = selectedOption.dataset.nome;
+            document.getElementById('empresaCnpj').textContent = selectedOption.dataset.cnpj;
+            document.getElementById('empresaRazao').textContent = selectedOption.dataset.razao;
+            empresaInfo.style.display = 'block';
+            
+            // Preencher automaticamente os campos da coligada
+            nomeColigada.value = selectedOption.dataset.nome;
+            cnpjColigada.value = selectedOption.dataset.cnpj;
+        } else {
+            empresaInfo.style.display = 'none';
+            nomeColigada.value = '';
+            cnpjColigada.value = '';
+        }
+    });
+    
+    // Trigger inicial se já há seleção
+    if (coligadaSelect.value) {
+        coligadaSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Loading state no submit
+    document.getElementById('filialForm').addEventListener('submit', function() {
+        const button = this.querySelector('button[type="submit"]');
+        button.disabled = true;
+        button.querySelector('.loading').style.display = 'inline';
+        button.querySelector('.not-loading').style.display = 'none';
+    });
+});
+</script>
+{% endblock %}
