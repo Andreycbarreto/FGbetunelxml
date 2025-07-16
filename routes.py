@@ -1098,12 +1098,19 @@ def integrar_fluig(nfe_id):
     result = fluig_integration.integrate_nfe_with_fluig(nfe_id)
     
     if result['success']:
-        return jsonify({
+        response_data = {
             'success': True,
             'message': result['message'],
-            'process_id': result['process_id'],
-            'document_id': result['document_id']
-        })
+            'process_type': result.get('process_type', 'Integração')
+        }
+        
+        # Incluir process_id e document_id apenas se existirem
+        if 'process_id' in result:
+            response_data['process_id'] = result['process_id']
+        if 'document_id' in result:
+            response_data['document_id'] = result['document_id']
+            
+        return jsonify(response_data)
     else:
         return jsonify({
             'success': False,

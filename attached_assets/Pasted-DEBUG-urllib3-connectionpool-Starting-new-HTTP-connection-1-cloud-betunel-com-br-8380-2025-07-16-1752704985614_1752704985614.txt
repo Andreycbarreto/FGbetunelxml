@@ -1,0 +1,91 @@
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+[2025-07-16 22:28:49 +0000] [2114] [INFO] Handling signal: winch
+[2025-07-16 22:28:49 +0000] [2114] [INFO] Handling signal: winch
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /ecm/upload HTTP/1.1" 200 69
+INFO:root:Arquivo enviado com sucesso: 3.2.2 NFe TERMINAL PORTUARIO.pdf
+INFO:root:Testando pasta configurada: 2693638
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [POST]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '18063311564949224851752704930'), ('oauth_timestamp', '1752704930'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=18063311564949224851752704930&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752704930&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: POST&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Fdocument%2FcreateDocument&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D18063311564949224851752704930%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752704930%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: 0eiN8tHpB2Iq18ww0CDmzUfK1z8=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Content-Length': b'165', b'Content-Type': b'application/json', b'Authorization': b'OAuth oauth_nonce="18063311564949224851752704930", oauth_timestamp="1752704930", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="0eiN8tHpB2Iq18ww0CDmzUfK1z8%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: b'{"description": "TESTE - Verifica\\u00e7\\u00e3o de permiss\\u00f5es", "parentId": "2693638", "documentTypeId": 7, "version": 1, "draft": true, "inheritSecurity": true}'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /api/public/ecm/document/createDocument HTTP/1.1" 500 251
+WARNING:root:Pasta configurada 2693638 não tem permissões: Erro 500: User does not have permission to post documents in this folder!
+INFO:root:Descobrindo pasta funcional automaticamente...
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [GET]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('parentId', '0'), ('limit', '100'), ('oauth_nonce', '57110632037537867811752704930'), ('oauth_timestamp', '1752704930'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: limit=100&oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=57110632037537867811752704930&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752704930&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0&parentId=0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/document/getDocuments
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: GET&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Fdocument%2FgetDocuments&limit%3D100%26oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D57110632037537867811752704930%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752704930%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0%26parentId%3D0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: LjF6WIk4S8OawO8Ml6xU7TfadI0=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/document/getDocuments?parentId=0&limit=100
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Authorization': b'OAuth oauth_nonce="57110632037537867811752704930", oauth_timestamp="1752704930", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="LjF6WIk4S8OawO8Ml6xU7TfadI0%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: None
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "GET /api/public/ecm/document/getDocuments?parentId=0&limit=100 HTTP/1.1" 500 102
+ERROR:root:Erro ao listar pastas disponíveis: 500 Server Error: Internal Server Error for url: http://cloud.betunel.com.br:8380/api/public/ecm/document/getDocuments?parentId=0&limit=100
+ERROR:root:Nenhuma pasta com permissões de escrita foi encontrada
+INFO:root:Tentando criar documento na pasta 1
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [POST]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '117512875875145712391752704931'), ('oauth_timestamp', '1752704931'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=117512875875145712391752704931&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752704931&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: POST&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Fdocument%2FcreateDocument&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D117512875875145712391752704931%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752704931%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: onXz65uXUU8r2ZtqyXdTeLgbaDE=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Content-Length': b'300', b'Content-Type': b'application/json', b'Authorization': b'OAuth oauth_nonce="117512875875145712391752704931", oauth_timestamp="1752704931", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="onXz65uXUU8r2ZtqyXdTeLgbaDE%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: b'{"description": "NFE 202519 - APM TERMINALS PECEM OPERACOES PORTUARIAS LTDA - Valor: R$ 4055.31 - Data: 12/06/2025 - Tipo: CT-e (Transporte)", "parentId": 1, "attachments": [{"fileName": "3.2.2 NFe TERMINAL PORTUARIO.pdf"}], "documentTypeId": 7, "version": 1, "draft": false, "inheritSecurity": true}'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /api/public/ecm/document/createDocument HTTP/1.1" 500 171
+INFO:root:Falha na pasta 1: 500 - {"content":"ERROR","message":{"message":"Invalid Parent Document","detail":"Invalid Parent Document","type":"ERROR","param":null,"errorCode":"ECMInsertDocumentException"}}
+INFO:root:Tentando criar documento na pasta 2
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [POST]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '124627619964068475151752704932'), ('oauth_timestamp', '1752704932'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=124627619964068475151752704932&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1752704932&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: POST&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fapi%2Fpublic%2Fecm%2Fdocument%2FcreateDocument&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D124627619964068475151752704932%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1752704932%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: +USnIi22XcnJjCmETzNCzcpBh5Y=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/api/public/ecm/document/createDocument
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Content-Length': b'300', b'Content-Type': b'application/json', b'Authorization': b'OAuth oauth_nonce="124627619964068475151752704932", oauth_timestamp="1752704932", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="%2BUSnIi22XcnJjCmETzNCzcpBh5Y%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: b'{"description": "NFE 202519 - APM TERMINALS PECEM OPERACOES PORTUARIAS LTDA - Valor: R$ 4055.31 - Data: 12/06/2025 - Tipo: CT-e (Transporte)", "parentId": 2, "attachments": [{"fileName": "3.2.2 NFe TERMINAL PORTUARIO.pdf"}], "documentTypeId": 7, "version": 1, "draft": false, "inheritSecurity": true}'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /api/public/ecm/document/createDocument HTTP/1.1" 500 251
+INFO:root:Falha na pasta 2: 500 - {"content":"ERROR","message":{"message":"User does not have permission to post documents in this folder!","detail":"User does not have permission to post documents in this folder!","type":"ERROR","param":null,"errorCode":"ECMInsertDocumentException"}}
+ERROR:root:Erro geral ao criar documento no GED: Não foi possível criar documento em nenhuma pasta testada
+WARNING:root:Erro ao criar documento no GED: Não foi possível criar documento em nenhuma pasta testada
+INFO:root:Tentando integração simples apenas com upload do arquivo...
+ERROR:app:Exception on /nfe/integrar-fluig/312 [GET]
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes.py", line 61, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes.py", line 1104, in integrar_fluig
+    'process_id': result['process_id'],
+                  ~~~~~~^^^^^^^^^^^^^^
+KeyError: 'process_id'
+^[[1;2D
