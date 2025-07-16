@@ -373,6 +373,9 @@
                         <button type="button" class="btn btn-test btn-sm" onclick="testarFluig()">
                             <i class="feather-check-circle me-1"></i>Testar Conexão
                         </button>
+                        <a href="{{ url_for('fluig_debug') }}" class="btn btn-outline-warning btn-sm">
+                            <i class="feather-folder-plus me-1"></i>Descobrir Pastas
+                        </a>
                         <a href="{{ url_for('limpar_configuracao', config_type='fluig') }}" 
                            class="btn btn-clear btn-sm"
                            onclick="return confirm('Tem certeza que deseja limpar a configuração Fluig?')">

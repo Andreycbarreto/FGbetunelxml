@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Configuração de Pastas Fluig{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i data-feather="folder"></i>
+                    Configuração de Pastas Fluig
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="search"></i>
+                        Descobrir Pasta Funcional
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        O sistema irá testar todas as pastas disponíveis no Fluig para encontrar uma que você tenha permissão para criar documentos.
+                    </p>
+                    
+                    <button id="descobrirPastaBtn" class="btn btn-primary">
+                        <i data-feather="search"></i>
+                        Descobrir Pasta Funcional
+                    </button>
+                    
+                    <div id="loadingDiscovery" class="d-none mt-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <span class="ms-2">Testando pastas...</span>
+                    </div>
+                    
+                    <div id="resultDiscovery" class="mt-3"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="list"></i>
+                        Todas as Pastas Disponíveis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <button id="listarPastasBtn" class="btn btn-secondary mb-3">
+                        <i data-feather="refresh-cw"></i>
+                        Listar Pastas
+                    </button>
+                    
+                    <div id="loadingList" class="d-none">
+                        <div class="spinner-border text-secondary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <span class="ms-2">Carregando pastas...</span>
+                    </div>
+                    
+                    <div id="pastasTable" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="settings"></i>
+                        Configuração Atual
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Pasta Configurada:</strong> <span id="pastaAtual">{{ current_user.settings.ged_folder_id if current_user.settings else 'Não configurada' }}</span></p>
+                    <p><strong>URL do Fluig:</strong> <span id="fluigUrl">{{ current_user.settings.fluig_url if current_user.settings else 'Não configurada' }}</span></p>
+                    
+                    <div class="mt-3">
+                        <button id="testarConexaoBtn" class="btn btn-outline-primary btn-sm">
+                            <i data-feather="wifi"></i>
+                            Testar Conexão
+                        </button>
+                    </div>
+                    
+                    <div id="conexaoResult" class="mt-3"></div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="info"></i>
+                        Instruções
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ol class="text-muted">
+                        <li>Primeiro, teste sua conexão com o Fluig</li>
+                        <li>Use "Descobrir Pasta Funcional" para encontrar automaticamente uma pasta que funcione</li>
+                        <li>Ou liste todas as pastas e teste individualmente</li>
+                        <li>Configure a pasta funcional nas configurações do sistema</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const descobrirPastaBtn = document.getElementById('descobrirPastaBtn');
+    const listarPastasBtn = document.getElementById('listarPastasBtn');
+    const testarConexaoBtn = document.getElementById('testarConexaoBtn');
+    
+    // Descobrir pasta funcional
+    descobrirPastaBtn.addEventListener('click', function() {
+        const loading = document.getElementById('loadingDiscovery');
+        const result = document.getElementById('resultDiscovery');
+        
+        loading.classList.remove('d-none');
+        result.innerHTML = '';
+        descobrirPastaBtn.disabled = true;
+        
+        fetch('/fluig/descobrir-pasta-funcional')
+            .then(response => response.json())
+            .then(data => {
+                loading.classList.add('d-none');
+                descobrirPastaBtn.disabled = false;
+                
+                if (data.success) {
+                    if (data.pasta_funcional) {
+                        result.innerHTML = `
+                            <div class="alert alert-success">
+                                <h6><i data-feather="check-circle"></i> Pasta Funcional Encontrada!</h6>
+                                <p><strong>ID:</strong> ${data.pasta_funcional.id}</p>
+                                <p><strong>Nome:</strong> ${data.pasta_funcional.name}</p>
+                                <button onclick="configurarPasta(${data.pasta_funcional.id}, '${data.pasta_funcional.name}')" 
+                                        class="btn btn-sm btn-success">
+                                    <i data-feather="settings"></i> Configurar Esta Pasta
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        result.innerHTML = `
+                            <div class="alert alert-warning">
+                                <h6><i data-feather="alert-triangle"></i> Nenhuma Pasta Funcional Encontrada</h6>
+                                <p>Não foi possível encontrar uma pasta com permissão de criação de documentos.</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // Mostrar detalhes de todos os testes
+                    let detalhes = '<div class="mt-3"><h6>Detalhes dos Testes:</h6>';
+                    data.todos_resultados.forEach(resultado => {
+                        const status = resultado.success ? 'success' : 'danger';
+                        const icon = resultado.success ? 'check-circle' : 'x-circle';
+                        detalhes += `
+                            <div class="alert alert-${status} py-2">
+                                <small>
+                                    <i data-feather="${icon}"></i>
+                                    <strong>${resultado.folder.name}</strong> (ID: ${resultado.folder.id})
+                                    <br><em>${resultado.message}</em>
+                                </small>
+                            </div>
+                        `;
+                    });
+                    detalhes += '</div>';
+                    result.innerHTML += detalhes;
+                } else {
+                    result.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h6><i data-feather="alert-circle"></i> Erro</h6>
+                            <p>${data.message}</p>
+                        </div>
+                    `;
+                }
+                
+                // Reinicializar ícones Feather
+                feather.replace();
+            })
+            .catch(error => {
+                loading.classList.add('d-none');
+                descobrirPastaBtn.disabled = false;
+                result.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6><i data-feather="alert-circle"></i> Erro de Conexão</h6>
+                        <p>Erro ao descobrir pastas: ${error.message}</p>
+                    </div>
+                `;
+                feather.replace();
+            });
+    });
+    
+    // Listar pastas
+    listarPastasBtn.addEventListener('click', function() {
+        const loading = document.getElementById('loadingList');
+        const table = document.getElementById('pastasTable');
+        
+        loading.classList.remove('d-none');
+        table.innerHTML = '';
+        listarPastasBtn.disabled = true;
+        
+        fetch('/fluig/listar-pastas')
+            .then(response => response.json())
+            .then(data => {
+                loading.classList.add('d-none');
+                listarPastasBtn.disabled = false;
+                
+                if (data.success) {
+                    let html = `
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    data.folders.forEach(folder => {
+                        html += `
+                            <tr>
+                                <td>${folder.id}</td>
+                                <td>${folder.name}</td>
+                                <td>
+                                    <button onclick="testarPasta(${folder.id}, '${folder.name}')" 
+                                            class="btn btn-sm btn-outline-primary">
+                                        <i data-feather="check"></i> Testar
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    table.innerHTML = html;
+                } else {
+                    table.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h6><i data-feather="alert-circle"></i> Erro</h6>
+                            <p>${data.message}</p>
+                        </div>
+                    `;
+                }
+                
+                feather.replace();
+            })
+            .catch(error => {
+                loading.classList.add('d-none');
+                listarPastasBtn.disabled = false;
+                table.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6><i data-feather="alert-circle"></i> Erro de Conexão</h6>
+                        <p>Erro ao listar pastas: ${error.message}</p>
+                    </div>
+                `;
+                feather.replace();
+            });
+    });
+    
+    // Testar conexão
+    testarConexaoBtn.addEventListener('click', function() {
+        const result = document.getElementById('conexaoResult');
+        result.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Testando...';
+        
+        fetch('/test-fluig-connection')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="alert alert-success py-2">
+                            <small><i data-feather="check-circle"></i> ${data.message}</small>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="alert alert-danger py-2">
+                            <small><i data-feather="x-circle"></i> ${data.message}</small>
+                        </div>
+                    `;
+                }
+                feather.replace();
+            })
+            .catch(error => {
+                result.innerHTML = `
+                    <div class="alert alert-danger py-2">
+                        <small><i data-feather="alert-circle"></i> Erro: ${error.message}</small>
+                    </div>
+                `;
+                feather.replace();
+            });
+    });
+});
+
+// Função para testar pasta individual
+function testarPasta(pastaId, pastaNome) {
+    const result = document.createElement('div');
+    result.className = 'mt-2';
+    result.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Testando pasta...';
+    
+    const button = event.target;
+    const row = button.closest('tr');
+    row.appendChild(result);
+    
+    fetch(`/fluig/testar-pasta/${pastaId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                result.innerHTML = `
+                    <div class="alert alert-success py-1">
+                        <small>
+                            <i data-feather="check-circle"></i> ${data.message}
+                            <button onclick="configurarPasta(${pastaId}, '${pastaNome}')" 
+                                    class="btn btn-xs btn-success ms-2">
+                                Configurar
+                            </button>
+                        </small>
+                    </div>
+                `;
+            } else {
+                result.innerHTML = `
+                    <div class="alert alert-danger py-1">
+                        <small><i data-feather="x-circle"></i> ${data.message}</small>
+                    </div>
+                `;
+            }
+            feather.replace();
+        })
+        .catch(error => {
+            result.innerHTML = `
+                <div class="alert alert-danger py-1">
+                    <small><i data-feather="alert-circle"></i> Erro: ${error.message}</small>
+                </div>
+            `;
+            feather.replace();
+        });
+}
+
+// Função para configurar pasta
+function configurarPasta(pastaId, pastaNome) {
+    if (confirm(`Deseja configurar a pasta "${pastaNome}" (ID: ${pastaId}) como pasta padrão para documentos?`)) {
+        // Redirecionar para a página de configurações com os dados da pasta
+        window.location.href = `/settings/config?ged_folder_id=${pastaId}&pasta_nome=${encodeURIComponent(pastaNome)}`;
+    }
+}
+</script>
+{% endblock %}

@@ -110,6 +110,132 @@ class FluigIntegration:
         logging.info("Nenhuma pasta configurada, usando pasta padrão: 1")
         return 1
     
+    def list_available_folders(self):
+        """
+        Lista todas as pastas disponíveis para o usuário
+        
+        Returns:
+            list: Lista de pastas com ID, nome e permissões
+        """
+        try:
+            # Buscar pastas raiz primeiro
+            response = requests.get(
+                f"{self.fluig_url}/api/public/ecm/document/getDocuments",
+                params={
+                    'parentId': 0,
+                    'limit': 100
+                },
+                auth=self.auth
+            )
+            response.raise_for_status()
+            
+            folders = []
+            data = response.json()
+            
+            if 'content' in data:
+                for item in data['content']:
+                    if item.get('documentType') == 'folder':
+                        folders.append({
+                            'id': item['documentId'],
+                            'name': item.get('description', f"Pasta {item['documentId']}"),
+                            'parent': item.get('parentDocumentId', 0)
+                        })
+            
+            # Buscar subpastas das pastas encontradas
+            for folder in folders.copy():
+                try:
+                    sub_response = requests.get(
+                        f"{self.fluig_url}/api/public/ecm/document/getDocuments",
+                        params={
+                            'parentId': folder['id'],
+                            'limit': 50
+                        },
+                        auth=self.auth
+                    )
+                    if sub_response.status_code == 200:
+                        sub_data = sub_response.json()
+                        if 'content' in sub_data:
+                            for sub_item in sub_data['content']:
+                                if sub_item.get('documentType') == 'folder':
+                                    folders.append({
+                                        'id': sub_item['documentId'],
+                                        'name': f"{folder['name']} / {sub_item.get('description', 'Pasta ' + str(sub_item['documentId']))}",
+                                        'parent': sub_item.get('parentDocumentId', folder['id'])
+                                    })
+                except Exception:
+                    continue
+            
+            return folders
+            
+        except Exception as e:
+            logging.error(f"Erro ao listar pastas disponíveis: {str(e)}")
+            return []
+    
+    def test_folder_permission(self, folder_id):
+        """
+        Testa se é possível criar documentos na pasta especificada
+        
+        Args:
+            folder_id: ID da pasta para testar
+            
+        Returns:
+            dict: Resultado do teste com sucesso/erro
+        """
+        try:
+            # Fazer uma requisição de teste para verificar permissões
+            test_data = {
+                "description": "TESTE - Verificação de permissões",
+                "parentId": folder_id,
+                "documentTypeId": 7,
+                "version": 1,
+                "draft": True,  # Usar draft para não criar documento real
+                "inheritSecurity": True
+            }
+            
+            response = requests.post(
+                f"{self.fluig_url}/api/public/ecm/document/createDocument",
+                json=test_data,
+                auth=self.auth
+            )
+            
+            if response.status_code == 200:
+                # Se criou com sucesso, deletar o documento de teste
+                result = response.json()
+                if 'content' in result:
+                    doc_id = result['content'].get('documentId')
+                    if doc_id:
+                        try:
+                            requests.delete(f"{self.fluig_url}/api/public/ecm/document/deleteDocument/{doc_id}", auth=self.auth)
+                        except Exception:
+                            pass
+                
+                return {
+                    'success': True,
+                    'message': 'Pasta acessível para criação de documentos'
+                }
+            else:
+                error_msg = response.text
+                try:
+                    error_data = response.json()
+                    if 'message' in error_data:
+                        if isinstance(error_data['message'], dict):
+                            error_msg = error_data['message'].get('message', error_msg)
+                        else:
+                            error_msg = str(error_data['message'])
+                except:
+                    pass
+                
+                return {
+                    'success': False,
+                    'message': f'Erro {response.status_code}: {error_msg}'
+                }
+                
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'Erro ao testar pasta: {str(e)}'
+            }
+    
     def create_document_in_ged(self, uploaded_file_name, nfe_record=None):
         """
         Cria um documento no GED do Fluig com informações específicas do NFE

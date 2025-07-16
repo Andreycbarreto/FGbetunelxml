@@ -1203,3 +1203,80 @@ def debug_fluig_folders():
             'success': False,
             'message': f'Erro ao debug pastas: {str(e)}'
         })
+
+
+@app.route('/fluig/listar-pastas')
+@login_required_hybrid
+def fluig_listar_pastas():
+    """Lista todas as pastas disponíveis no Fluig"""
+    try:
+        fluig_integration = get_fluig_integration_for_user(current_user.id)
+        if not fluig_integration:
+            return jsonify({'success': False, 'message': 'Fluig não configurado'}), 400
+        
+        folders = fluig_integration.list_available_folders()
+        return jsonify({
+            'success': True,
+            'folders': folders
+        })
+        
+    except Exception as e:
+        logging.error(f"Erro ao listar pastas do Fluig: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro: {str(e)}'}), 500
+
+@app.route('/fluig/testar-pasta/<int:pasta_id>')
+@login_required_hybrid
+def fluig_testar_pasta(pasta_id):
+    """Testa se é possível criar documentos na pasta especificada"""
+    try:
+        fluig_integration = get_fluig_integration_for_user(current_user.id)
+        if not fluig_integration:
+            return jsonify({'success': False, 'message': 'Fluig não configurado'}), 400
+        
+        resultado = fluig_integration.test_folder_permission(pasta_id)
+        return jsonify(resultado)
+        
+    except Exception as e:
+        logging.error(f"Erro ao testar pasta {pasta_id}: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro: {str(e)}'}), 500
+
+@app.route('/fluig/descobrir-pasta-funcional')
+@login_required_hybrid
+def fluig_descobrir_pasta_funcional():
+    """Descobre qual pasta funciona para criação de documentos"""
+    try:
+        fluig_integration = get_fluig_integration_for_user(current_user.id)
+        if not fluig_integration:
+            return jsonify({'success': False, 'message': 'Fluig não configurado'}), 400
+        
+        # Listar todas as pastas
+        folders = fluig_integration.list_available_folders()
+        
+        # Testar cada pasta
+        resultados = []
+        pasta_funcional = None
+        
+        for folder in folders:
+            resultado = fluig_integration.test_folder_permission(folder['id'])
+            resultado['folder'] = folder
+            resultados.append(resultado)
+            
+            if resultado['success'] and not pasta_funcional:
+                pasta_funcional = folder
+                
+        return jsonify({
+            'success': True,
+            'pasta_funcional': pasta_funcional,
+            'todos_resultados': resultados
+        })
+        
+    except Exception as e:
+        logging.error(f"Erro ao descobrir pasta funcional: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro: {str(e)}'}), 500
+
+
+@app.route('/fluig/debug')
+@login_required_hybrid
+def fluig_debug():
+    """Página de debug e configuração de pastas Fluig"""
+    return render_template('fluig_debug.html')
