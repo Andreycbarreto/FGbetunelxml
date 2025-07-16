@@ -112,6 +112,11 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
   * Automatic classification stored in tipo_operacao field for all processing methods
   * Fallback to "Serviços e Produtos" if classification fails
   * Tested successfully: All formats correctly classify transport vs service operations
+  * FIXED: XML processor now uses AI (GPT-4o) for accurate classification instead of text-based rules
+  * Added _classify_with_ai method that analyzes document context and content intelligently
+  * AI analyzes natureza_operacao, items, descriptions, and additional information
+  * Prevents misclassification of products (cement, materials) as transport operations
+  * Specific AI instructions distinguish between product sales and actual transport services
 - July 9, 2025. Enhanced Date Extraction System for Brazilian Documents:
   * Created specialized date extraction functions with pattern matching for emission dates
   * Enhanced date validation with OCR error correction (O→0, I→1, l→1)

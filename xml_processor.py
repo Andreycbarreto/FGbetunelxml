@@ -62,11 +62,9 @@ class NFEXMLProcessor:
             # Items/Products
             data['items'] = self._extract_items(root)
             
-            # Apply intelligent operation type classification
+            # Apply intelligent operation type classification using AI
             try:
-                from document_type_classifier import classify_document_operation_type
-                # Use text-based classification since we don't have image for XML
-                operation_type = self._classify_operation_type_from_xml_data(data)
+                operation_type = self._classify_with_ai(data)
                 data['tipo_operacao'] = operation_type
                 logger.info(f"XML classified as: {operation_type}")
             except Exception as e:
@@ -150,6 +148,82 @@ class NFEXMLProcessor:
             
         except Exception as e:
             logger.warning(f"Error in XML operation type classification: {e}")
+            return "Serviços e Produtos"
+    
+    def _classify_with_ai(self, data):
+        """
+        Use AI to classify operation type based on XML content
+        
+        Args:
+            data: Extracted XML data
+            
+        Returns:
+            str: "CT-e (Transporte)" or "Serviços e Produtos"
+        """
+        try:
+            import os
+            from openai import OpenAI
+            
+            client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            
+            # Prepare context for AI analysis
+            context_parts = []
+            
+            # Add document info
+            if data.get('natureza_operacao'):
+                context_parts.append(f"Natureza da operação: {data['natureza_operacao']}")
+            
+            # Add items information
+            items = data.get('items', [])
+            if items:
+                context_parts.append(f"Total de itens: {len(items)}")
+                for i, item in enumerate(items[:3]):  # First 3 items
+                    produto = item.get('produto', 'N/A')
+                    descricao = item.get('descricao', 'N/A')
+                    cfop = item.get('cfop', 'N/A')
+                    context_parts.append(f"Item {i+1}: {produto} - {descricao} (CFOP: {cfop})")
+            
+            # Add additional information
+            if data.get('informacoes_adicionais'):
+                context_parts.append(f"Informações adicionais: {data['informacoes_adicionais']}")
+            
+            context_text = "\n".join(context_parts)
+            
+            prompt = f"""
+Analise o seguinte documento NFe e classifique o tipo de operação:
+
+{context_text}
+
+Classifique APENAS como uma das duas opções:
+1. "CT-e (Transporte)" - Para documentos relacionados a transporte, logística, frete, serviços portuários, movimentação de cargas
+2. "Serviços e Produtos" - Para todos os outros documentos (vendas, produtos, serviços profissionais, consultoria, etc.)
+
+IMPORTANTE: 
+- Produtos como cimento, materiais de construção, equipamentos são "Serviços e Produtos"
+- Apenas operações de transporte real (frete, logística, terminal portuário) são "CT-e (Transporte)"
+- Venda de produtos não é transporte, mesmo que envolva entrega
+
+Responda APENAS com uma das duas opções exatas:
+"""
+            
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=50,
+                temperature=0.1
+            )
+            
+            result = response.choices[0].message.content.strip()
+            
+            # Validate result
+            if result in ["CT-e (Transporte)", "Serviços e Produtos"]:
+                return result
+            else:
+                logger.warning(f"Invalid AI classification result: {result}")
+                return "Serviços e Produtos"
+                
+        except Exception as e:
+            logger.warning(f"Error in AI classification: {e}")
             return "Serviços e Produtos"
     
     def _extract_identification(self, root):
