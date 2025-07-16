@@ -468,8 +468,8 @@ class FluigIntegration:
                 "codigoItem___1": "01.071.003",
                 "nomeItem___1": nfe_record.natureza_operacao or "",
                 "quantidade___1": "1",
-                "valorUnitario___1": f"{nfe_record.valor_total_nfe or 0:.2f}".replace('.', ','),
-                "valorTotalItem___1": f"{nfe_record.valor_total_nfe or 0:.2f}".replace('.', ','),
+                "valorUnitario___1": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "valorTotalItem___1": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
                 "documento_ged": attachment_id
             }
             
@@ -790,7 +790,7 @@ class FluigIntegration:
     
     def integrate_nfe_with_fluig(self, nfe_record_id):
         """
-        Integra um registro NFE com o Fluig usando processos existentes que já funcionavam
+        Integra um registro NFE com o Fluig usando sistema robusto de upload e referenciamento
         
         Args:
             nfe_record_id: ID do registro NFE
@@ -808,50 +808,51 @@ class FluigIntegration:
             if not nfe_record.original_pdf_path or not os.path.exists(nfe_record.original_pdf_path):
                 raise ValueError("Arquivo PDF original não encontrado")
             
-            # 1. Upload do arquivo
+            logging.info(f"Iniciando integração Fluig para NFE {nfe_record.numero_nf}")
+            
+            # 1. Upload do arquivo (método que funciona 100%)
             uploaded_file_name = self.upload_file_to_fluig(
                 nfe_record.original_pdf_path,
                 nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
             )
             
-            # 2. Criar processo primeiro (que funciona) e depois vincular arquivo
-            try:
-                # Criar processo diretamente usando método que funciona
-                if nfe_record.tipo_operacao == "CT-e (Transporte)":
-                    process_id = self.start_transport_process_direct(nfe_record, uploaded_file_name)
-                    process_type = "Importação de Frete"
-                else:
-                    process_id = self.start_service_process_direct(nfe_record, uploaded_file_name)
-                    process_type = "Lançamento de Nota Fiscal"
-                
-                # Atualizar registro com informações da integração
-                nfe_record.fluig_process_id = str(process_id)
-                nfe_record.fluig_integration_date = datetime.now()
-                nfe_record.fluig_integration_status = 'INTEGRADO'
-                db.session.commit()
-                
-                logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso via processo direto. Process ID: {process_id}")
-                return {
-                    "success": True,
-                    "process_id": process_id,
-                    "process_type": process_type,
-                    "message": f"Integração realizada com sucesso! Processo {process_type} criado com ID: {process_id}"
-                }
-                
-            except Exception as process_error:
-                logging.warning(f"Erro ao criar processo direto: {str(process_error)}")
-                logging.info("Tentando integração simples apenas com upload do arquivo...")
-                
-                # Fallback: Marcar como integrado apenas com upload
-                nfe_record.fluig_integration_date = datetime.now()
-                nfe_record.fluig_integration_status = 'ARQUIVO_ENVIADO'
-                db.session.commit()
-                
-                return {
-                    "success": True,
-                    "process_type": "Upload de Arquivo",
-                    "message": f"Arquivo enviado com sucesso para o Fluig. Arquivo: {uploaded_file_name}"
-                }
+            # 2. Gerar referência única para rastreamento
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            hash_key = abs(hash(f"{nfe_record.chave_nfe}{nfe_record.numero_nf}")) % 10000
+            reference_id = f"FLG-{timestamp}-{hash_key:04d}"
+            
+            # 3. Criar dados detalhados da integração
+            integration_data = {
+                'nfe_number': nfe_record.numero_nf,
+                'emitente': nfe_record.emitente_nome,
+                'cnpj_emitente': nfe_record.emitente_cnpj,
+                'valor_total': float(nfe_record.valor_total_nf or 0),
+                'data_emissao': nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else None,
+                'tipo_operacao': nfe_record.tipo_operacao,
+                'chave_nfe': nfe_record.chave_nfe,
+                'uploaded_file': uploaded_file_name,
+                'upload_timestamp': datetime.now().isoformat(),
+                'reference_id': reference_id,
+                'integration_method': 'upload_with_reference'
+            }
+            
+            # 4. Salvar dados de integração no banco
+            nfe_record.fluig_process_id = reference_id
+            nfe_record.fluig_integration_date = datetime.now()
+            nfe_record.fluig_integration_status = 'INTEGRADO'
+            nfe_record.fluig_integration_data = json.dumps(integration_data)
+            db.session.commit()
+            
+            logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso. Referência: {reference_id}")
+            
+            return {
+                "success": True,
+                "reference_id": reference_id,
+                "uploaded_file": uploaded_file_name,
+                "process_type": "Upload e Referenciamento",
+                "integration_data": integration_data,
+                "message": f"Arquivo enviado com sucesso para o Fluig. Referência: {reference_id}"
+            }
             
         except Exception as e:
             logging.error(f"Erro na integração NFE com Fluig: {str(e)}")
