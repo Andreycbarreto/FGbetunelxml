@@ -1069,7 +1069,7 @@ def local_logout():
 
 # Rotas de integração com Fluig
 @app.route('/nfe/integrar-fluig/<int:nfe_id>')
-@require_login
+@login_required_hybrid
 def integrar_fluig(nfe_id):
     """Integrar NFE com o sistema Fluig"""
     nfe_record = NFERecord.query.get_or_404(nfe_id)
@@ -1112,7 +1112,7 @@ def integrar_fluig(nfe_id):
 
 
 @app.route('/nfe/status-fluig/<int:nfe_id>')
-@require_login
+@login_required_hybrid
 def status_fluig(nfe_id):
     """Verificar status da integração Fluig"""
     nfe_record = NFERecord.query.get_or_404(nfe_id)
