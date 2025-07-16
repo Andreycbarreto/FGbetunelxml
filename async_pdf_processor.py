@@ -345,7 +345,7 @@ class AsyncPDFProcessor:
                 self.logger.info(f"Raw data received for {job.original_filename}: keys={list(raw_data.keys()) if raw_data else 'No data'}")
                 
                 # Log main document fields that should be filled
-                main_fields = ['numero_nf', 'serie', 'razao_social_emitente', 'cnpj_emitente', 'valor_total_nota']
+                main_fields = ['numero_nf', 'serie', 'razao_social_emitente', 'cnpj_emitente', 'valor_total_nota', 'tipo_operacao']
                 for field in main_fields:
                     value = raw_data.get(field, 'NOT_FOUND')
                     self.logger.info(f"Document field {field}: {value}")
@@ -358,10 +358,17 @@ class AsyncPDFProcessor:
                 nfe_record.user_id = job.user_id
                 nfe_record.uploaded_file_id = job.file_id
                 
+                # Set batch_id if the file has one
+                file_record = UploadedFile.query.get(job.file_id)
+                if file_record and file_record.batch_id:
+                    nfe_record.batch_id = file_record.batch_id
+                
                 # Set all compatible fields from raw_data
                 for key, value in raw_data.items():
                     if key != 'items' and hasattr(nfe_record, key):
                         setattr(nfe_record, key, value)
+                        if key == 'tipo_operacao':
+                            self.logger.info(f"Set NFE record tipo_operacao = {value}")
                 
                 # Set processing info
                 nfe_record.raw_xml_data = f"PDF processed with GPT-4 Vision: {job.original_filename}"

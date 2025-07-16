@@ -169,12 +169,24 @@
                                         <tr>
                                             <td><strong>Tipo Operação:</strong></td>
                                             <td>
-                                                {% if record.tipo_operacao == '1' %}
+                                                {% if record.tipo_operacao == 'CT-e (Transporte)' %}
+                                                    <span class="badge bg-warning">CT-e (Transporte)</span>
+                                                {% elif record.tipo_operacao == 'Serviços e Produtos' %}
+                                                    <span class="badge bg-success">Serviços e Produtos</span>
+                                                {% elif record.tipo_operacao == 'Serviço' %}
+                                                    <span class="badge bg-success">Serviço</span>
+                                                {% elif record.tipo_operacao == 'Entrada' %}
+                                                    <span class="badge bg-info">Entrada</span>
+                                                {% elif record.tipo_operacao == 'Saída' %}
+                                                    <span class="badge bg-success">Saída</span>
+                                                {% elif record.tipo_operacao == '1' %}
                                                     <span class="badge bg-success">Saída</span>
                                                 {% elif record.tipo_operacao == '0' %}
                                                     <span class="badge bg-info">Entrada</span>
+                                                {% elif record.tipo_operacao and record.tipo_operacao != 'None' %}
+                                                    <span class="badge bg-secondary">{{ record.tipo_operacao }}</span>
                                                 {% else %}
-                                                    N/A
+                                                    <span class="text-muted">N/A</span>
                                                 {% endif %}
                                             </td>
                                         </tr>
