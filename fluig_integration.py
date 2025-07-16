@@ -127,8 +127,8 @@ class FluigIntegration:
             
             # Criar descrição específica do NFE
             if nfe_record:
-                description = f"NFE {nfe_record.numero_nfe} - {nfe_record.nome_emitente} - " \
-                             f"Valor: R$ {nfe_record.valor_total_nfe or 0:.2f} - " \
+                description = f"NFE {nfe_record.numero_nf} - {nfe_record.emitente_nome} - " \
+                             f"Valor: R$ {nfe_record.valor_total_nf or 0:.2f} - " \
                              f"Data: {nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else 'N/A'} - " \
                              f"Tipo: {nfe_record.tipo_operacao or 'N/A'}"
             else:
@@ -204,7 +204,7 @@ class FluigIntegration:
             # Buscar dados da empresa e filial
             empresa = Empresa.query.filter_by(
                 user_id=nfe_record.user_id,
-                cnpj=nfe_record.cnpj_emitente.replace('.', '').replace('/', '').replace('-', '')
+                cnpj=nfe_record.emitente_cnpj.replace('.', '').replace('/', '').replace('-', '')
             ).first()
             
             filial = None
@@ -212,14 +212,14 @@ class FluigIntegration:
                 filial = Filial.query.filter_by(
                     user_id=nfe_record.user_id,
                     coligada=empresa.numero,
-                    cnpj_filial=nfe_record.cnpj_emitente.replace('.', '').replace('/', '').replace('-', '')
+                    cnpj_filial=nfe_record.emitente_cnpj.replace('.', '').replace('/', '').replace('-', '')
                 ).first()
             
             # Montar identificador
             identificador = f"Empresa: {empresa.nome_fantasia if empresa else 'N/A'} " \
-                          f"Fornecedor: {nfe_record.cnpj_emitente} - {nfe_record.nome_emitente} " \
-                          f"Numero: {nfe_record.numero_nfe} " \
-                          f"Valor: {nfe_record.valor_total_nfe or 0:.2f} " \
+                          f"Fornecedor: {nfe_record.emitente_cnpj} - {nfe_record.emitente_nome} " \
+                          f"Numero: {nfe_record.numero_nf} " \
+                          f"Valor: {nfe_record.valor_total_nf or 0:.2f} " \
                           f"Data de Vencimento: {nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else 'N/A'}"
             
             form_fields = {
@@ -234,16 +234,16 @@ class FluigIntegration:
                 "atividadeConjunta": "",
                 "cod_item": "01.071.003",  # Código padrão, pode ser customizado
                 "nome_aprovador": "",
-                "NOME_FORNECEDOR": nfe_record.nome_emitente or "",
+                "NOME_FORNECEDOR": nfe_record.emitente_nome or "",
                 "numAtiv": "224",
                 "numProc": "731485",
                 "boletoAnexado": "",
                 "prazo": "",
-                "chave_acesso": nfe_record.chave_acesso or "",
+                "chave_acesso": nfe_record.chave_nfe or "",
                 "tpDocXML": "CTE",
                 "tpFreteXML": "2",
                 "uniMedXML": "T",
-                "aliqICMSXML": f"{nfe_record.aliquota_icms or 0:.2f}",
+                "aliqICMSXML": f"{nfe_record.valor_icms or 0:.2f}",
                 "vlICMSXML": f"{nfe_record.valor_icms or 0:.2f}",
                 "idNatXML": "21735",
                 "idMov": "1760807",
@@ -255,8 +255,8 @@ class FluigIntegration:
                 "tipoDestinatarioXML": "C",
                 "codTranspXML": "41432",
                 "vlPedagioXML": "0,00",
-                "produtoXML": nfe_record.descricao_produto or "",
-                "chaveNFE": nfe_record.chave_acesso or "",
+                "produtoXML": nfe_record.natureza_operacao or "",
+                "chaveNFE": nfe_record.chave_nfe or "",
                 "dtSaidaXML": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
                 "fretePorContaXML": "2",
                 "importadoXML": "S",
@@ -267,7 +267,7 @@ class FluigIntegration:
                 "FRETE_INTERCOMPANY_FORN_TERC": "S",
                 "destinacao_clone": "FOB",
                 "codigoItem___1": "01.071.003",
-                "nomeItem___1": nfe_record.descricao_produto or "",
+                "nomeItem___1": nfe_record.natureza_operacao or "",
                 "quantidade___1": "1",
                 "valorUnitario___1": f"{nfe_record.valor_total_nfe or 0:.2f}".replace('.', ','),
                 "valorTotalItem___1": f"{nfe_record.valor_total_nfe or 0:.2f}".replace('.', ','),
@@ -312,7 +312,7 @@ class FluigIntegration:
             # Buscar dados da empresa e filial
             empresa = Empresa.query.filter_by(
                 user_id=nfe_record.user_id,
-                cnpj=nfe_record.cnpj_emitente.replace('.', '').replace('/', '').replace('-', '')
+                cnpj=nfe_record.emitente_cnpj.replace('.', '').replace('/', '').replace('-', '')
             ).first()
             
             filial = None
@@ -320,14 +320,14 @@ class FluigIntegration:
                 filial = Filial.query.filter_by(
                     user_id=nfe_record.user_id,
                     coligada=empresa.numero,
-                    cnpj_filial=nfe_record.cnpj_emitente.replace('.', '').replace('/', '').replace('-', '')
+                    cnpj_filial=nfe_record.emitente_cnpj.replace('.', '').replace('/', '').replace('-', '')
                 ).first()
             
             # Montar identificador
             identificador = f"Empresa: {empresa.nome_fantasia if empresa else 'N/A'} " \
-                          f"Fornecedor: {nfe_record.nome_emitente} - {nfe_record.cnpj_emitente} " \
-                          f"Numero: {nfe_record.numero_nfe} " \
-                          f"Valor: {nfe_record.valor_total_nfe or 0:.2f} " \
+                          f"Fornecedor: {nfe_record.emitente_nome} - {nfe_record.emitente_cnpj} " \
+                          f"Numero: {nfe_record.numero_nf} " \
+                          f"Valor: {nfe_record.valor_total_nf or 0:.2f} " \
                           f"Data de Vencimento: {nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else 'N/A'} " \
                           f"Forma de Pagamento: {nfe_record.forma_pagamento or 'N/A'}"
             
@@ -339,29 +339,29 @@ class FluigIntegration:
                 "dt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
                 "nm_empresa": empresa.nome_fantasia if empresa else "N/A",
                 "cod_empresa": str(empresa.numero) if empresa else "1",
-                "cnpj": nfe_record.cnpj_emitente or "",
+                "cnpj": nfe_record.emitente_cnpj or "",
                 "nm_filial": filial.nome_filial if filial else "N/A",
                 "cod_filial": str(filial.filial) if filial else "1",
-                "cnpj_filial": nfe_record.cnpj_emitente or "",
+                "cnpj_filial": nfe_record.emitente_cnpj or "",
                 "unid_negoc": "SUPPLY E CUSTOS",
                 "cod_un": "0.10.02.01.001",
                 "centro_custo": "1.0.3299 - SUPRIMENTOS",
                 "cod_cc": "1.0.3299",
                 "tp_doc": "Nota fiscal de serviço eletrônica",
-                "numero_NF": nfe_record.numero_nfe or "",
+                "numero_NF": nfe_record.numero_nf or "",
                 "serie": nfe_record.serie or "",
-                "valor_NF": f"{nfe_record.valor_total_nfe or 0:.2f}".replace('.', ','),
+                "valor_NF": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
                 "dt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
                 "Hdt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
                 "dt_vencimento_NF": nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else "",
-                "fornecedor": f"{nfe_record.nome_emitente} - {nfe_record.cnpj_emitente}",
-                "cod_fornecedor": nfe_record.codigo_fornecedor or "N/A",
+                "fornecedor": f"{nfe_record.emitente_nome} - {nfe_record.emitente_cnpj}",
+                "cod_fornecedor": nfe_record.emitente_cnpj or "N/A",
                 "fm_pagamento": nfe_record.forma_pagamento or "N/A",
                 "chk_boleto": "NAO",
                 "justificativa": "NFe processada automaticamente pelo sistema.",
                 "destinacao": nfe_record.natureza_operacao or "N/A",
                 "column1_1___1": "02.007.014",
-                "column1_2___1": nfe_record.descricao_produto or "",
+                "column1_2___1": nfe_record.natureza_operacao or "",
                 "projeto___1": "SEMPROJETO",
                 "subprojeto___1": "SEMSUBPROJETO",
                 "identificador": identificador,
@@ -414,7 +414,7 @@ class FluigIntegration:
             # 1. Upload do arquivo
             uploaded_file_name = self.upload_file_to_fluig(
                 nfe_record.original_pdf_path,
-                nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nfe}.pdf"
+                nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
             )
             
             # 2. Criar documento no GED com informações específicas do NFE
