@@ -1,0 +1,106 @@
+ERROR:app:Exception on /data/312 [GET]
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.UndefinedColumn: column nfe_items.fluig_process_id does not exist
+LINE 1: ...ll, nfe_items.valor_csll AS nfe_items_valor_csll, nfe_items....
+                                                             ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes.py", line 61, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes.py", line 786, in view_record
+    return render_template('record_detail.html', record=record)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/runner/workspace/templates/record_detail.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/runner/workspace/templates/base.html", line 145, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/templates/record_detail.html", line 122, in block 'content'
+    <i class="feather-package me-2"></i>Itens ({{ record.items|length }})
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/attributes.py", line 566, in __get__
+    return self.impl.get(state, dict_)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/attributes.py", line 1086, in get
+    value = self._fire_loader_callables(state, key, passive)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/attributes.py", line 1121, in _fire_loader_callables
+    return self.callable_(state, passive)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategies.py", line 978, in _load_for_state
+    return self._emit_lazyload(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategies.py", line 1141, in _emit_lazyload
+    result = session.execute(
+             ^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+    return meth(
+           ^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column nfe_items.fluig_process_id does not exist
+LINE 1: ...ll, nfe_items.valor_csll AS nfe_items_valor_csll, nfe_items....
+                                                             ^
+
+[SQL: SELECT nfe_items.id AS nfe_items_id, nfe_items.nfe_record_id AS nfe_items_nfe_record_id, nfe_items.numero_item AS nfe_items_numero_item, nfe_items.codigo_produto AS nfe_items_codigo_produto, nfe_items.codigo_servico AS nfe_items_codigo_servico, nfe_items.codigo_atividade AS nfe_items_codigo_atividade, nfe_items.descricao_produto AS nfe_items_descricao_produto, nfe_items.descricao_servico AS nfe_items_descricao_servico, nfe_items.ncm AS nfe_items_ncm, nfe_items.cfop AS nfe_items_cfop, nfe_items.servico_codigo AS nfe_items_servico_codigo, nfe_items.servico_local_prestacao AS nfe_items_servico_local_prestacao, nfe_items.servico_aliquota AS nfe_items_servico_aliquota, nfe_items.servico_valor AS nfe_items_servico_valor, nfe_items.servico_descricao_incondicional AS nfe_items_servico_descricao_incondicional, nfe_items.servico_valor_deducao AS nfe_items_servico_valor_deducao, nfe_items.servico_valor_iss AS nfe_items_servico_valor_iss, nfe_items.servico_natureza_operacao AS nfe_items_servico_natureza_operacao, nfe_items.servico_discriminacao AS nfe_items_servico_discriminacao, nfe_items.tax_ir AS nfe_items_tax_ir, nfe_items.tax_inss AS nfe_items_tax_inss, nfe_items.tax_csll AS nfe_items_tax_csll, nfe_items.tax_cofins AS nfe_items_tax_cofins, nfe_items.tax_pis AS nfe_items_tax_pis, nfe_items.tax_outras_retencoes AS nfe_items_tax_outras_retencoes, nfe_items.tax_total_tributos_federais AS nfe_items_tax_total_tributos_federais, nfe_items.tax_descricao_condicional AS nfe_items_tax_descricao_condicional, nfe_items.tax_base_calculo AS nfe_items_tax_base_calculo, nfe_items.tax_issqn AS nfe_items_tax_issqn, nfe_items.tax_valor_liquido AS nfe_items_tax_valor_liquido, nfe_items.unidade_comercial AS nfe_items_unidade_comercial, nfe_items.quantidade_comercial AS nfe_items_quantidade_comercial, nfe_items.valor_unitario_comercial AS nfe_items_valor_unitario_comercial, nfe_items.valor_total_produto AS nfe_items_valor_total_produto, nfe_items.unidade_tributavel AS nfe_items_unidade_tributavel, nfe_items.quantidade_tributavel AS nfe_items_quantidade_tributavel, nfe_items.valor_unitario_tributavel AS nfe_items_valor_unitario_tributavel, nfe_items.origem_mercadoria AS nfe_items_origem_mercadoria, nfe_items.situacao_tributaria_icms AS nfe_items_situacao_tributaria_icms, nfe_items.base_calculo_icms AS nfe_items_base_calculo_icms, nfe_items.aliquota_icms AS nfe_items_aliquota_icms, nfe_items.valor_icms AS nfe_items_valor_icms, nfe_items.situacao_tributaria_ipi AS nfe_items_situacao_tributaria_ipi, nfe_items.valor_ipi AS nfe_items_valor_ipi, nfe_items.situacao_tributaria_pis AS nfe_items_situacao_tributaria_pis, nfe_items.base_calculo_pis AS nfe_items_base_calculo_pis, nfe_items.aliquota_pis AS nfe_items_aliquota_pis, nfe_items.valor_pis AS nfe_items_valor_pis, nfe_items.situacao_tributaria_cofins AS nfe_items_situacao_tributaria_cofins, nfe_items.base_calculo_cofins AS nfe_items_base_calculo_cofins, nfe_items.aliquota_cofins AS nfe_items_aliquota_cofins, nfe_items.valor_cofins AS nfe_items_valor_cofins, nfe_items.situacao_tributaria_issqn AS nfe_items_situacao_tributaria_issqn, nfe_items.base_calculo_issqn AS nfe_items_base_calculo_issqn, nfe_items.aliquota_issqn AS nfe_items_aliquota_issqn, nfe_items.valor_issqn AS nfe_items_valor_issqn, nfe_items.base_calculo_ir AS nfe_items_base_calculo_ir, nfe_items.aliquota_ir AS nfe_items_aliquota_ir, nfe_items.valor_ir AS nfe_items_valor_ir, nfe_items.base_calculo_iss_retido AS nfe_items_base_calculo_iss_retido, nfe_items.aliquota_iss_retido AS nfe_items_aliquota_iss_retido, nfe_items.valor_iss_retido AS nfe_items_valor_iss_retido, nfe_items.situacao_tributaria_issrf AS nfe_items_situacao_tributaria_issrf, nfe_items.base_calculo_issrf AS nfe_items_base_calculo_issrf, nfe_items.aliquota_issrf AS nfe_items_aliquota_issrf, nfe_items.valor_issrf AS nfe_items_valor_issrf, nfe_items.situacao_tributaria_inss AS nfe_items_situacao_tributaria_inss, nfe_items.base_calculo_inss AS nfe_items_base_calculo_inss, nfe_items.aliquota_inss AS nfe_items_aliquota_inss, nfe_items.valor_inss AS nfe_items_valor_inss, nfe_items.situacao_tributaria_csll AS nfe_items_situacao_tributaria_csll, nfe_items.base_calculo_csll AS nfe_items_base_calculo_csll, nfe_items.aliquota_csll AS nfe_items_aliquota_csll, nfe_items.valor_csll AS nfe_items_valor_csll, nfe_items.fluig_process_id AS nfe_items_fluig_process_id, nfe_items.fluig_document_id AS nfe_items_fluig_document_id, nfe_items.fluig_integration_date AS nfe_items_fluig_integration_date, nfe_items.original_pdf_path AS nfe_items_original_pdf_path, nfe_items.original_pdf_filename AS nfe_items_original_pdf_filename, nfe_items.created_at AS nfe_items_created_at 
+FROM nfe_items 
+WHERE %(param_1)s = nfe_items.nfe_record_id]
+[parameters: {'param_1': 312}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
