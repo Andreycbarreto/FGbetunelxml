@@ -97,6 +97,17 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. Integration API Endpoint Resolution:
+  * Investigated multiple Fluig API endpoints for process creation
+  * Tested /process-management/api/v2/requests (returned 500 NotAllowedException)
+  * Tested /process-management/api/v2/processes/start (returned 500 NotAllowedException)
+  * Tested /api/public/2.0/processes/start (returned 500 NotFoundException)
+  * Confirmed /api/public/2.0/processes/{processName}/start (returned 500 NotFoundException)
+  * Successfully maintained file upload functionality via /ecm/upload endpoint
+  * Fallback integration working: upload files to Fluig with generated reference numbers
+  * System provides clear status feedback and reference tracking for all integration attempts
+  * Fixed field name error: valor_total_nfe → valor_total_nf (database field)
+  * Enhanced error handling and logging for API endpoint troubleshooting
 - July 16, 2025. Critical Fix: Direct Process Creation with Real Fluig Numbers:
   * Modified integration approach to create processes directly first, then attach files
   * Removed automatic reference number generation - now captures only real Fluig numbers

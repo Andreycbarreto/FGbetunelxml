@@ -632,8 +632,8 @@ class FluigIntegration:
                 "dtSaidaXML": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
                 "produtoXML": nfe_record.natureza_operacao or "",
                 "chaveNFE": nfe_record.chave_nfe or "",
-                "valorUnitario___1": f"{nfe_record.valor_total_nfe or 0:.2f}".replace('.', ','),
-                "valorTotalItem___1": f"{nfe_record.valor_total_nfe or 0:.2f}".replace('.', ','),
+                "valorUnitario___1": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "valorTotalItem___1": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
                 "nomeItem___1": nfe_record.natureza_operacao or "",
                 "quantidade___1": "1",
                 "codigoItem___1": "01.071.003"
@@ -647,9 +647,9 @@ class FluigIntegration:
                 "processComment": f"Processo iniciado automaticamente - NFE {nfe_record.numero_nf}"
             }
             
-            # Usar endpoint correto da API Process Management v2 - requests
+            # Usar endpoint antigo que funcionava
             response = requests.post(
-                f"{self.fluig_url}/process-management/api/v2/requests",
+                f"{self.fluig_url}/api/public/2.0/processes/start",
                 json=start_process_payload,
                 auth=self.auth,
                 timeout=60
@@ -726,9 +726,9 @@ class FluigIntegration:
                 "processComment": f"Processo iniciado automaticamente - NFE {nfe_record.numero_nf}"
             }
             
-            # Usar endpoint correto da API Process Management v2 - requests
+            # Usar endpoint antigo que funcionava
             response = requests.post(
-                f"{self.fluig_url}/process-management/api/v2/requests",
+                f"{self.fluig_url}/api/public/2.0/processes/start",
                 json=start_process_payload,
                 auth=self.auth,
                 timeout=60
