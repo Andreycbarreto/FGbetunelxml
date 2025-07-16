@@ -655,7 +655,16 @@ class FluigIntegration:
             if response.status_code == 200:
                 result = response.json()
                 process_id = result.get('processInstanceId')
+                
+                # Log da resposta completa para capturar número real do Fluig
+                logging.info(f"Resposta completa do processo de transporte direto: {result}")
                 logging.info(f"Processo de transporte criado com sucesso. ID: {process_id}")
+                
+                # Tentar capturar número do processo se disponível
+                process_number = result.get("processNumber")
+                if process_number:
+                    logging.info(f"Número do processo de transporte no Fluig: {process_number}")
+                
                 return process_id
             else:
                 logging.error(f"Erro ao criar processo de transporte: {response.status_code} - {response.text}")
@@ -712,7 +721,16 @@ class FluigIntegration:
             if response.status_code == 200:
                 result = response.json()
                 process_id = result.get('processInstanceId')
+                
+                # Log da resposta completa para capturar número real do Fluig
+                logging.info(f"Resposta completa do processo de serviço direto: {result}")
                 logging.info(f"Processo de serviço criado com sucesso. ID: {process_id}")
+                
+                # Tentar capturar número do processo se disponível
+                process_number = result.get("processNumber")
+                if process_number:
+                    logging.info(f"Número do processo de serviço no Fluig: {process_number}")
+                
                 return process_id
             else:
                 logging.error(f"Erro ao criar processo de serviço: {response.status_code} - {response.text}")
@@ -748,37 +766,32 @@ class FluigIntegration:
                 nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
             )
             
-            # 2. Tentar criar documento no GED com fallback para processos diretos
+            # 2. Criar processo primeiro (que funciona) e depois vincular arquivo
             try:
-                # Tentar criar no GED primeiro (método original que funcionava)
-                attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
-                
-                # 3. Iniciar processo com attachment_id
+                # Criar processo diretamente usando método que funciona
                 if nfe_record.tipo_operacao == "CT-e (Transporte)":
-                    process_id = self.start_transport_process(nfe_record, attachment_id)
+                    process_id = self.start_transport_process_direct(nfe_record, uploaded_file_name)
                     process_type = "Importação de Frete"
                 else:
-                    process_id = self.start_service_process(nfe_record, attachment_id)
+                    process_id = self.start_service_process_direct(nfe_record, uploaded_file_name)
                     process_type = "Lançamento de Nota Fiscal"
                 
                 # Atualizar registro com informações da integração
-                nfe_record.fluig_process_id = process_id
-                nfe_record.fluig_document_id = attachment_id
+                nfe_record.fluig_process_id = str(process_id)
                 nfe_record.fluig_integration_date = datetime.now()
                 nfe_record.fluig_integration_status = 'INTEGRADO'
                 db.session.commit()
                 
-                logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso. Process ID: {process_id}")
+                logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso via processo direto. Process ID: {process_id}")
                 return {
                     "success": True,
                     "process_id": process_id,
-                    "document_id": attachment_id,
                     "process_type": process_type,
                     "message": f"Integração realizada com sucesso! Processo {process_type} criado com ID: {process_id}"
                 }
                 
-            except Exception as ged_error:
-                logging.warning(f"Erro ao criar documento no GED: {str(ged_error)}")
+            except Exception as process_error:
+                logging.warning(f"Erro ao criar processo direto: {str(process_error)}")
                 logging.info("Tentando integração simples apenas com upload do arquivo...")
                 
                 # Fallback: Marcar como integrado apenas com upload

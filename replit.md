@@ -97,6 +97,16 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. Critical Fix: Direct Process Creation with Real Fluig Numbers:
+  * Modified integration approach to create processes directly first, then attach files
+  * Removed automatic reference number generation - now captures only real Fluig numbers
+  * Changed integration flow: upload file → create process → attach file to process
+  * Added comprehensive logging to capture processInstanceId and processNumber from Fluig
+  * Enhanced start_transport_process_direct() and start_service_process_direct() methods
+  * System now bypasses GED document creation (permission issues) and uses direct process API
+  * Integrated real-time capture of Fluig-generated process numbers in logs
+  * Fixed integration to prioritize process creation over document creation
+  * Enhanced error handling for direct process creation with upload fallback
 - July 16, 2025. Revolutionary Fluig Integration: Workflow Launch API Implementation:
   * Completely redesigned Fluig integration to use workflow launch API instead of folder-based approach
   * Created create_workflow_launch() method for proper document submission to Fluig processes
