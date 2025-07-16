@@ -363,6 +363,10 @@ class AsyncPDFProcessor:
                 if file_record and file_record.batch_id:
                     nfe_record.batch_id = file_record.batch_id
                 
+                # Save original PDF path and filename for later access
+                nfe_record.original_pdf_path = job.file_path
+                nfe_record.original_pdf_filename = job.original_filename
+                
                 # Set all compatible fields from raw_data
                 for key, value in raw_data.items():
                     if key != 'items' and hasattr(nfe_record, key):

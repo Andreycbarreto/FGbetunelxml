@@ -2,7 +2,7 @@ import os
 import logging
 from datetime import datetime, timezone, timedelta
 from functools import wraps
-from flask import session, render_template, request, redirect, url_for, flash, jsonify
+from flask import session, render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_login import current_user, login_user, logout_user
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -845,6 +845,38 @@ def api_processing_status():
         'processing_files': processing_files,
         'error_files': error_files
     })
+
+@app.route('/download_pdf/<int:record_id>')
+@login_required_hybrid
+def download_pdf(record_id):
+    """Download original PDF file for a specific NFE record."""
+    record = NFERecord.query.filter_by(
+        id=record_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    # Check if the record has an original PDF path
+    if not record.original_pdf_path or not record.original_pdf_filename:
+        flash('PDF original não encontrado para este lançamento.', 'error')
+        return redirect(url_for('view_record', record_id=record_id))
+    
+    # Check if the file exists
+    if not os.path.exists(record.original_pdf_path):
+        flash('Arquivo PDF não encontrado no sistema.', 'error')
+        return redirect(url_for('view_record', record_id=record_id))
+    
+    try:
+        # Send the file with the original filename
+        return send_file(
+            record.original_pdf_path,
+            as_attachment=True,
+            download_name=record.original_pdf_filename,
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        logger.error(f"Error downloading PDF for record {record_id}: {str(e)}")
+        flash('Erro ao fazer download do PDF.', 'error')
+        return redirect(url_for('view_record', record_id=record_id))
 
 @app.errorhandler(404)
 def not_found_error(error):

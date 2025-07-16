@@ -97,6 +97,15 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. PDF Download Feature Implementation:
+  * Added original_pdf_path and original_pdf_filename columns to NFERecord model
+  * Modified async_pdf_processor to save PDF file paths in database during processing
+  * Created download_pdf route with security checks (user ownership, file existence)
+  * Added PDF download button to record detail template (only shows if PDF exists)
+  * Secure file serving with original filename preservation
+  * Database migration applied to add new columns to existing schema
+  * Download functionality restricted to file owners only
+  * Error handling for missing or corrupted PDF files
 - July 16, 2025. Complete Universal Operation Type Classification System:
   * Created DocumentTypeClassifier with AI-powered classification system
   * Classifies NFe documents into "Serviços e Produtos" or "CT-e (Transporte)"

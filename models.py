@@ -179,6 +179,10 @@ class NFERecord(db.Model):
     ai_processing_notes = db.Column(db.Text, nullable=True)
     raw_xml_data = db.Column(db.Text, nullable=True)  # Store original XML for reference
     
+    # Original PDF file path (for PDF uploads)
+    original_pdf_path = db.Column(db.String(500), nullable=True)
+    original_pdf_filename = db.Column(db.String(255), nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     

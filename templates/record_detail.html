@@ -35,6 +35,11 @@
                     <button class="btn btn-outline-secondary" onclick="showXmlModal()">
                         <i class="feather-code me-2"></i>Ver XML
                     </button>
+                    {% if record.original_pdf_path %}
+                    <a href="{{ url_for('download_pdf', record_id=record.id) }}" class="btn btn-outline-primary">
+                        <i class="feather-download me-2"></i>Baixar PDF
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
