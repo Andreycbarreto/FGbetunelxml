@@ -4,6 +4,24 @@
 
 {% block content %}
 <style>
+/* Força visibilidade para todos os textos */
+.config-section * {
+    color: #212529 !important;
+}
+
+.config-section h4 {
+    color: #212529 !important;
+    font-weight: 700 !important;
+}
+
+.config-section .description {
+    color: #6c757d !important;
+}
+
+.config-section .form-label {
+    color: #212529 !important;
+    font-weight: 700 !important;
+}
 .settings-card {
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -18,10 +36,12 @@
 }
 
 .config-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: #ffffff;
     border-radius: 10px;
     padding: 1.5rem;
     margin-bottom: 2rem;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .status-indicator {
@@ -81,8 +101,19 @@
 
 .form-label {
     font-weight: 600;
-    color: #495057;
+    color: #212529;
     margin-bottom: 0.5rem;
+}
+
+.config-section h4 {
+    color: #212529;
+    font-weight: 600;
+}
+
+.description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
 }
 
 .form-control {
@@ -117,11 +148,19 @@
     margin-bottom: 1rem;
 }
 
-.description {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin-bottom: 1rem;
+.config-icon.text-primary {
+    color: #667eea !important;
 }
+
+.config-icon.text-info {
+    color: #17a2b8 !important;
+}
+
+.config-icon.text-warning {
+    color: #ffc107 !important;
+}
+
+
 
 .test-result {
     margin-top: 1rem;
