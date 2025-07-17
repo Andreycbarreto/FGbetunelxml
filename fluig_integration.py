@@ -777,11 +777,31 @@ class FluigIntegration:
             }
             
             logging.info("🚀 Iniciando processo usando código de exemplo funcional...")
-            start_proc_resp = requests.post(
-                f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
-                json=start_process_payload,
-                auth=self.auth
-            )
+            
+            # Múltiplas tentativas com timeout aumentado
+            max_attempts = 3
+            timeout = 30  # 30 segundos
+            
+            for attempt in range(max_attempts):
+                try:
+                    logging.info(f"Tentativa {attempt + 1}/{max_attempts} - Timeout: {timeout}s")
+                    start_proc_resp = requests.post(
+                        f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
+                        json=start_process_payload,
+                        auth=self.auth,
+                        timeout=timeout
+                    )
+                    break  # Se chegou aqui, deu certo
+                except requests.exceptions.Timeout:
+                    logging.warning(f"Timeout na tentativa {attempt + 1}")
+                    if attempt == max_attempts - 1:
+                        logging.error("Todas as tentativas falharam por timeout")
+                        return None
+                    timeout += 15  # Aumenta timeout para próxima tentativa
+                except Exception as e:
+                    logging.error(f"Erro na tentativa {attempt + 1}: {str(e)}")
+                    if attempt == max_attempts - 1:
+                        return None
             
             logging.info(f"Response status: {start_proc_resp.status_code}")
             logging.info(f"Response text: {start_proc_resp.text}")
@@ -1019,51 +1039,66 @@ class FluigIntegration:
                 form_fields["column1_2___1"] = nfe_record.natureza_operacao or "TRIBUTAÇÃO NO MUNICÍPIO"
                 logging.warning("Nenhum item encontrado, usando dados padrão")
             
-            # Requisição com timeout muito baixo para evitar travamento
-            response = requests.post(
-                f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
-                json={
-                    "targetState": 59,
-                    "targetAssignee": "",
-                    "subProcessTargetState": 0,
-                    "comment": "Iniciado via API",
-                    "formFields": form_fields
-                },
-                auth=self.auth,
-                timeout=10  # Reduzido para 10 segundos
-            )
+            # Múltiplas tentativas com timeout progressivo
+            payload = {
+                "targetState": 59,
+                "targetAssignee": "",
+                "subProcessTargetState": 0,
+                "comment": "Iniciado via API",
+                "formFields": form_fields
+            }
             
-            if response.status_code == 200:
-                logging.info("✅ Processo criado com sucesso!")
-                return response.json().get('processInstanceId')
-            else:
-                logging.error(f"❌ Erro: {response.status_code} - {response.text}")
-                return None
-                
-        except Exception as e:
-            logging.error(f"❌ Erro: {str(e)}")
-            return None
+            max_attempts = 3
+            timeout = 30  # Começar com 30 segundos
             
-            # Requisição simples com timeout baixo
-            response = requests.post(
-                f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
-                json={
-                    "targetState": 59,
-                    "targetAssignee": "",
-                    "subProcessTargetState": 0,
-                    "comment": "Iniciado via API",
-                    "formFields": form_fields
-                },
-                auth=self.auth,
-                timeout=20
-            )
-            
-            if response.status_code == 200:
-                logging.info("✅ Processo criado com sucesso!")
-                return response.json().get('processInstanceId')
-            else:
-                logging.error(f"❌ Erro: {response.status_code} - {response.text}")
-                return None
+            for attempt in range(max_attempts):
+                try:
+                    logging.info(f"🔄 Tentativa {attempt + 1}/{max_attempts} - Timeout: {timeout}s")
+                    response = requests.post(
+                        f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
+                        json=payload,
+                        auth=self.auth,
+                        timeout=timeout
+                    )
+                    
+                    if response.status_code == 200:
+                        response_data = response.json()
+                        process_instance_id = response_data.get('processInstanceId')
+                        
+                        if process_instance_id:
+                            logging.info(f"✅ Processo criado com sucesso! ID: {process_instance_id}")
+                            
+                            # Tentar extrair número de solicitação
+                            process_number = (
+                                response_data.get('processNumber') or 
+                                response_data.get('solicitationNumber') or 
+                                response_data.get('requestNumber') or
+                                process_instance_id
+                            )
+                            
+                            logging.info(f"🎯 Número da solicitação: {process_number}")
+                            logging.info(f"📋 Resposta completa: {response_data}")
+                            
+                            return process_instance_id
+                        else:
+                            logging.error("❌ Processo criado mas sem ID retornado")
+                            return None
+                    else:
+                        logging.error(f"❌ Erro HTTP {response.status_code}: {response.text}")
+                        if attempt == max_attempts - 1:
+                            return None
+                        
+                except requests.exceptions.Timeout:
+                    logging.warning(f"⏱️ Timeout na tentativa {attempt + 1}")
+                    if attempt == max_attempts - 1:
+                        logging.error("❌ Todas as tentativas falharam por timeout")
+                        return None
+                    timeout += 15  # Aumentar timeout para próxima tentativa
+                    
+                except Exception as e:
+                    logging.error(f"❌ Erro na tentativa {attempt + 1}: {str(e)}")
+                    if attempt == max_attempts - 1:
+                        return None
                 
         except Exception as e:
             logging.error(f"❌ Erro: {str(e)}")
