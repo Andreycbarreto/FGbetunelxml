@@ -1,0 +1,79 @@
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: b'{"targetState": 59, "targetAssignee": "", "subProcessTargetState": 0, "comment": "Iniciado via API", "formFields": {"nome": "Admin Sistema", "matricula": "0d44ddb10e5a41a3a7a378aa5862694d", "email": "admin@sistema.com", "Hdt_entrada_nf": "17/07/2025", "dt_entrada_nf": "17/07/2025", "nm_empresa": "BETUNEL", "cod_empresa": "1", "cnpj": "60.546.801/0001-89", "nm_filial": "Jacarei", "cod_filial": "16", "cnpj_filial": "60.546.801/0025-56", "unid_negoc": "SUPPLY E CUSTOS", "cod_un": "0.10.02.01.001", "centro_custo": "1.0.3299 - SUPRIMENTOS", "cod_cc": "1.0.3299", "tp_doc": "Nota fiscal de servi\\u00e7o eletr\\u00f4nica", "numero_NF": "73", "serie": "001", "valor_NF": "13960,00", "dt_emissao_NF": "13/06/2025", "Hdt_emissao_NF": "13/06/2025", "dt_vencimento_NF": "17/07/2025", "fornecedor": "FERNANDO CESAR VASCONCELOS LTDA - 46172632000133 - 20.0581", "cod_fornecedor": "20.0581", "fm_pagamento": "DESPACHANTE", "chk_boleto": "NAO", "justificativa": "NFe recebida nesta data.", "destinacao": "TRIBUTA\\u00c7\\u00c3O NO MUNICIPIO", "column1_1___1": "02.007.014", "column1_2___1": "TRIBUTA\\u00c7\\u00c3O NO MUNICIPIO", "projeto___1": "SEMPROJETO", "subprojeto___1": "SEMSUBPROJETO", "identificador": "Empresa: BETUNEL Fornecedor: FERNANDO CESAR VASCONCELOS LTDA - 46172632000133 - 20.0581 Numero: 73 Valor: 13960.00 Data de Vencimento: N/A Forma de Pagamento: DESPACHANTE", "documento_ged": "3.3.2 NFe  CROSS DOCK.pdf"}}'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+[2025-07-17 01:34:55 +0000] [4244] [CRITICAL] WORKER TIMEOUT (pid:4255)
+[2025-07-17 01:34:55 +0000] [4255] [ERROR] Error handling request /nfe/integrar-fluig/322
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes.py", line 61, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes.py", line 1098, in integrar_fluig
+    result = fluig_integration.integrate_nfe_with_fluig(nfe_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/fluig_integration.py", line 1415, in integrate_nfe_with_fluig
+    process_instance_id = self.start_service_process_capture_solicitation_number(nfe_record, attachment_id)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/fluig_integration.py", line 879, in start_service_process_capture_solicitation_number
+    start_proc_resp = requests.post(
+                      ^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/client.py", line 1395, in getresponse
+    response.begin()
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/client.py", line 325, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/client.py", line 286, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/socket.py", line 718, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-07-17 01:34:55 +0000] [4255] [INFO] Worker exiting (pid: 4255)
+[2025-07-17 01:34:55 +0000] [4433] [INFO] Booting worker with pid: 4433
+INFO:async_pdf_processor:PDF processing worker started
+INFO:async_pdf_processor:Async PDF processor started

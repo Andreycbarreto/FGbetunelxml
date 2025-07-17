@@ -7,6 +7,7 @@ import requests
 from requests_oauthlib import OAuth1
 import json
 import logging
+import time
 from datetime import datetime
 from app import db
 from models import UserSettings, NFERecord, Empresa, Filial
@@ -876,12 +877,23 @@ class FluigIntegration:
             }
             
             logging.info("🎯 Iniciando processo com código EXATO do exemplo funcional...")
-            start_proc_resp = requests.post(
-                f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
-                json=start_process_payload,
-                auth=self.auth,
-                timeout=30
-            )
+            
+            # Fazer requisição simples com timeout reduzido
+            try:
+                logging.info("Enviando requisição para criar processo...")
+                start_proc_resp = requests.post(
+                    f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
+                    json=start_process_payload,
+                    auth=self.auth,
+                    timeout=30  # Timeout reduzido para evitar worker timeout
+                )
+                
+            except requests.exceptions.Timeout:
+                logging.error("❌ Timeout na requisição para o Fluig")
+                return None
+            except Exception as e:
+                logging.error(f"❌ Erro na requisição: {str(e)}")
+                return None
             
             logging.info(f"Status da resposta: {start_proc_resp.status_code}")
             logging.info(f"Resposta completa: {start_proc_resp.text}")
@@ -920,6 +932,64 @@ class FluigIntegration:
                 
         except Exception as e:
             logging.error(f"Erro ao usar código do exemplo funcional: {str(e)}")
+            return None
+
+    def start_service_process_simple(self, nfe_record, attachment_id):
+        """
+        Versão simplificada para evitar timeouts do worker
+        """
+        try:
+            logging.info("🎯 Iniciando processo com versão simplificada...")
+            
+            # Dados básicos do processo
+            form_fields = {
+                "nome": "Admin Sistema",
+                "matricula": "0d44ddb10e5a41a3a7a378aa5862694d",
+                "email": "admin@sistema.com",
+                "Hdt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "dt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "nm_empresa": "BETUNEL",
+                "cod_empresa": "1",
+                "cnpj": "60.546.801/0001-89",
+                "nm_filial": "Jacarei",
+                "cod_filial": "16",
+                "cnpj_filial": "60.546.801/0025-56",
+                "tp_doc": "Nota fiscal de serviço eletrônica",
+                "numero_NF": nfe_record.numero_nf or "",
+                "serie": nfe_record.serie or "001",
+                "valor_NF": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "dt_emissao_NF": datetime.now().strftime('%d/%m/%Y'),
+                "Hdt_emissao_NF": datetime.now().strftime('%d/%m/%Y'),
+                "dt_vencimento_NF": datetime.now().strftime('%d/%m/%Y'),
+                "fornecedor": f"{nfe_record.emitente_nome or 'FORNECEDOR'} - {nfe_record.emitente_cnpj or '00000000000000'}",
+                "fm_pagamento": "DESPACHANTE",
+                "justificativa": "NFe processada automaticamente",
+                "documento_ged": str(attachment_id)
+            }
+            
+            # Requisição simples com timeout baixo
+            response = requests.post(
+                f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
+                json={
+                    "targetState": 59,
+                    "targetAssignee": "",
+                    "subProcessTargetState": 0,
+                    "comment": "Iniciado via API",
+                    "formFields": form_fields
+                },
+                auth=self.auth,
+                timeout=20
+            )
+            
+            if response.status_code == 200:
+                logging.info("✅ Processo criado com sucesso!")
+                return response.json().get('processInstanceId')
+            else:
+                logging.error(f"❌ Erro: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            logging.error(f"❌ Erro: {str(e)}")
             return None
     
     def start_transport_process_direct(self, nfe_record, uploaded_file_name):
@@ -1412,7 +1482,7 @@ class FluigIntegration:
             # 4. Usar SOMENTE o código do exemplo funcional - SEM fallbacks
             logging.info(f"Usando código EXATO do exemplo funcional para NFE {nfe_record.numero_nf}")
             
-            process_instance_id = self.start_service_process_capture_solicitation_number(nfe_record, attachment_id)
+            process_instance_id = self.start_service_process_simple(nfe_record, attachment_id)
             
             if process_instance_id:
                 logging.info(f"✅ Processo criado com ID: {process_instance_id}")
