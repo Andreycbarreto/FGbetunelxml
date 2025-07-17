@@ -499,6 +499,26 @@ class FluigIntegration:
             process_number = response_data.get("processNumber")
             if process_number:
                 logging.info(f"Número do processo de frete no Fluig: {process_number}")
+                
+                # Salvar o número da solicitação no banco
+                from app import db
+                nfe_record.fluig_process_id = process_number  # Salvar o número da solicitação
+                nfe_record.fluig_integration_status = "INTEGRADO"
+                
+                # Salvar dados detalhados da integração
+                integration_data = {
+                    'integration_method': 'transport_process',
+                    'process_id': process_instance_id,
+                    'process_number': process_number,
+                    'document_id': attachment_id,
+                    'process_name': 'Importação de Frete',
+                    'integration_timestamp': datetime.now().isoformat(),
+                    'full_response': response_data
+                }
+                nfe_record.fluig_integration_data = json.dumps(integration_data)
+                db.session.commit()
+                
+                logging.info(f"✓ Número da solicitação salvo no banco: {process_number}")
             
             return process_instance_id
             
@@ -574,7 +594,16 @@ class FluigIntegration:
                 "projeto___1": "SEMPROJETO",
                 "subprojeto___1": "SEMSUBPROJETO",
                 "identificador": identificador,
-                "documento_ged": attachment_id
+                "documento_ged": attachment_id,
+                # Campos de item obrigatórios
+                "item___1": "01",
+                "codigoItem___1": "02.007.014",
+                "nomeItem___1": nfe_record.natureza_operacao or "SERVIÇO",
+                "quantidade___1": "1",
+                "valorUnitario___1": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "valorTotalItem___1": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "unidadeMedida___1": "UN",
+                "centroCusto___1": "1.0.3299"
             }
             
             start_process_payload = {
@@ -603,6 +632,26 @@ class FluigIntegration:
             process_number = response_data.get("processNumber")
             if process_number:
                 logging.info(f"Número do processo de serviço no Fluig: {process_number}")
+                
+                # Salvar o número da solicitação no banco
+                from app import db
+                nfe_record.fluig_process_id = process_number  # Salvar o número da solicitação
+                nfe_record.fluig_integration_status = "INTEGRADO"
+                
+                # Salvar dados detalhados da integração
+                integration_data = {
+                    'integration_method': 'service_process',
+                    'process_id': process_instance_id,
+                    'process_number': process_number,
+                    'document_id': attachment_id,
+                    'process_name': 'Processo de Lançamento de Nota Fiscal',
+                    'integration_timestamp': datetime.now().isoformat(),
+                    'full_response': response_data
+                }
+                nfe_record.fluig_integration_data = json.dumps(integration_data)
+                db.session.commit()
+                
+                logging.info(f"✓ Número da solicitação salvo no banco: {process_number}")
             
             return process_instance_id
             
@@ -913,6 +962,27 @@ class FluigIntegration:
                 logging.info(f"Process ID: {process_id}")
                 logging.info(f"Process Number (Número da Solicitação): {process_number}")
                 
+                # Salvar o número da solicitação no banco
+                if process_number:
+                    from app import db
+                    nfe_record.fluig_process_id = process_number  # Salvar o número da solicitação
+                    nfe_record.fluig_integration_status = "INTEGRADO"
+                    
+                    # Salvar dados detalhados da integração
+                    integration_data = {
+                        'integration_method': 'api_v2_complete',
+                        'process_id': process_id,
+                        'process_number': process_number,
+                        'document_id': attachment_id,
+                        'process_name': process_name,
+                        'integration_timestamp': datetime.now().isoformat(),
+                        'full_response': process_result
+                    }
+                    nfe_record.fluig_integration_data = json.dumps(integration_data)
+                    db.session.commit()
+                    
+                    logging.info(f"✓ Número da solicitação salvo no banco: {process_number}")
+                
                 # Retornar tanto o ID quanto o número da solicitação
                 return {
                     'process_id': process_id,
@@ -947,62 +1017,86 @@ class FluigIntegration:
             
             # Tentar criar processo direto usando método simplificado
             from urllib.parse import quote
+            from datetime import datetime
             
             # Encodar nome do processo
             encoded_process_name = quote(process_name)
             
-            # Campos básicos do formulário
+            # Campos do formulário baseados no método start_service_process que funciona
             form_fields = {
-                "nome": "Sistema API",
-                "matricula": "sistema_api",
+                "nome": "Sistema Automatizado",
+                "matricula": "sistema",
                 "email": "sistema@betunel.com.br",
+                "Hdt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "dt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "nm_empresa": "BETUNEL",
+                "cod_empresa": "1",
+                "cnpj": "60.546.801/0001-89",
+                "nm_filial": "Matriz",
+                "cod_filial": "1",
+                "cnpj_filial": "60.546.801/0001-89",
+                "unid_negoc": "SUPPLY E CUSTOS",
+                "cod_un": "0.10.02.01.001",
+                "centro_custo": "1.0.3299 - SUPRIMENTOS",
+                "cod_cc": "1.0.3299",
+                "tp_doc": "Nota fiscal de serviço eletrônica",
                 "numero_NF": str(nfe_record.numero_nf or ""),
-                "serie": str(nfe_record.serie or "001"),  # Série obrigatória
+                "serie": str(nfe_record.serie or "001"),
                 "valor_NF": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
                 "dt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
+                "Hdt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
+                "dt_vencimento_NF": nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else "",
                 "fornecedor": f"{nfe_record.emitente_nome} - {nfe_record.emitente_cnpj}",
+                "cod_fornecedor": "20.0000",
+                "fm_pagamento": nfe_record.forma_pagamento or "A VISTA",
+                "chk_boleto": "NAO",
                 "justificativa": f"NFe {nfe_record.numero_nf} integrada via API - Arquivo: {uploaded_file_name}",
-                "identificador": f"NFE {nfe_record.numero_nf} - {nfe_record.emitente_nome}"
+                "destinacao": nfe_record.natureza_operacao or "OPERACIONAL",
+                "identificador": f"Empresa: BETUNEL Fornecedor: {nfe_record.emitente_nome} - {nfe_record.emitente_cnpj} Numero: {nfe_record.numero_nf} Valor: {nfe_record.valor_total_nf or 0:.2f} Data de Vencimento: {nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else 'N/A'} Forma de Pagamento: {nfe_record.forma_pagamento or 'A VISTA'}"
             }
             
-            # Tentar apenas o estado 11 que mostrou ser promissor
-            start_process_payload = {
-                "targetState": 11,
-                "targetAssignee": "",
-                "comment": f"Processo iniciado automaticamente para NFE {nfe_record.numero_nf}",
-                "formFields": form_fields
-            }
+            # Tentar estados 0 e 11 que mostraram pedir pelo campo "Item"
+            target_states = [0, 11]
             
-            logging.info(f"Tentando estado 11 para processo '{process_name}'")
-            
-            response = requests.post(
-                f"{self.fluig_url}/process-management/api/v2/processes/{encoded_process_name}/start",
-                json=start_process_payload,
-                auth=self.auth,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                process_result = response.json()
-                process_id = process_result.get('processInstanceId')
-                process_number = process_result.get('processNumber')
-                
-                logging.info(f"✓ SUCESSO com estado 11!")
-                logging.info(f"Process ID: {process_id}")
-                logging.info(f"Process Number (Número da Solicitação): {process_number}")
-                logging.info(f"Resposta completa: {process_result}")
-                
-                return {
-                    'process_id': process_id,
-                    'process_number': process_number,
-                    'process_name': process_name,
-                    'target_state': 11,
-                    'full_response': process_result
+            for target_state in target_states:
+                start_process_payload = {
+                    "targetState": target_state,
+                    "targetAssignee": "",
+                    "comment": f"Processo iniciado automaticamente para NFE {nfe_record.numero_nf}",
+                    "formFields": form_fields
                 }
-            else:
-                logging.debug(f"Estado 11 falhou: {response.status_code} - {response.text}")
-                logging.warning(f"Não foi possível criar processo com estado 11 para '{process_name}'")
-                return None
+                
+                logging.info(f"Tentando estado {target_state} para processo '{process_name}'")
+                
+                response = requests.post(
+                    f"{self.fluig_url}/process-management/api/v2/processes/{encoded_process_name}/start",
+                    json=start_process_payload,
+                    auth=self.auth,
+                    timeout=30
+                )
+                
+                if response.status_code == 200:
+                    process_result = response.json()
+                    process_id = process_result.get('processInstanceId')
+                    process_number = process_result.get('processNumber')
+                    
+                    logging.info(f"✓ SUCESSO com estado {target_state}!")
+                    logging.info(f"Process ID: {process_id}")
+                    logging.info(f"Process Number (Número da Solicitação): {process_number}")
+                    logging.info(f"Resposta completa: {process_result}")
+                    
+                    return {
+                        'process_id': process_id,
+                        'process_number': process_number,
+                        'process_name': process_name,
+                        'target_state': target_state,
+                        'full_response': process_result
+                    }
+                else:
+                    logging.debug(f"Estado {target_state} falhou: {response.status_code} - {response.text}")
+            
+            logging.warning(f"Não foi possível criar processo com nenhum estado para '{process_name}'")
+            return None
 
                 
         except Exception as e:
@@ -1045,12 +1139,18 @@ class FluigIntegration:
             if nfe_record.tipo_operacao == "CT-e (Transporte)":
                 process_name = "Importação de Frete"
             
-            # 4. Iniciar processo usando API v2
-            process_result = self.start_process_with_v2_api(nfe_record, attachment_id, process_name)
+            # 4. Iniciar processo usando métodos existentes que funcionam
+            if nfe_record.tipo_operacao == "CT-e (Transporte)":
+                process_id = self.start_transport_process(nfe_record, attachment_id)
+            else:
+                process_id = self.start_service_process(nfe_record, attachment_id)
             
-            # Extrair dados do resultado
-            process_id = process_result.get('process_id')
-            process_number = process_result.get('process_number')  # Número da solicitação do Fluig
+            # Verificar se o número da solicitação foi capturado pelos métodos existentes
+            process_number = None
+            if nfe_record.fluig_process_id and not nfe_record.fluig_process_id.startswith('FLG-'):
+                # O número da solicitação foi salvo pelos métodos existentes
+                process_number = nfe_record.fluig_process_id
+                logging.info(f"✓ Número da solicitação capturado: {process_number}")
             
             # 5. Criar dados detalhados da integração
             integration_data = {
@@ -1067,8 +1167,8 @@ class FluigIntegration:
                 'process_number': process_number,  # Número da solicitação real do Fluig
                 'process_name': process_name,
                 'upload_timestamp': datetime.now().isoformat(),
-                'integration_method': 'api_v2_complete',
-                'fluig_full_response': process_result.get('full_response')
+                'integration_method': 'existing_methods',
+                'note': 'Usado métodos existentes start_transport_process e start_service_process'
             }
             
             # 6. Salvar dados de integração no banco
