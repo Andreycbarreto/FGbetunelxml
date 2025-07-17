@@ -941,7 +941,7 @@ class FluigIntegration:
         try:
             logging.info("🎯 Iniciando processo com versão simplificada...")
             
-            # Dados básicos do processo
+            # Dados básicos do processo com campos de itens obrigatórios
             form_fields = {
                 "nome": "Admin Sistema",
                 "matricula": "0d44ddb10e5a41a3a7a378aa5862694d",
@@ -954,16 +954,29 @@ class FluigIntegration:
                 "nm_filial": "Jacarei",
                 "cod_filial": "16",
                 "cnpj_filial": "60.546.801/0025-56",
+                "unid_negoc": "SUPPLY E CUSTOS",
+                "cod_un": "0.10.02.01.001",
+                "centro_custo": "1.0.3299 - SUPRIMENTOS",
+                "cod_cc": "1.0.3299",
                 "tp_doc": "Nota fiscal de serviço eletrônica",
                 "numero_NF": nfe_record.numero_nf or "",
                 "serie": nfe_record.serie or "001",
                 "valor_NF": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
-                "dt_emissao_NF": datetime.now().strftime('%d/%m/%Y'),
-                "Hdt_emissao_NF": datetime.now().strftime('%d/%m/%Y'),
-                "dt_vencimento_NF": datetime.now().strftime('%d/%m/%Y'),
-                "fornecedor": f"{nfe_record.emitente_nome or 'FORNECEDOR'} - {nfe_record.emitente_cnpj or '00000000000000'}",
-                "fm_pagamento": "DESPACHANTE",
-                "justificativa": "NFe processada automaticamente",
+                "dt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else datetime.now().strftime('%d/%m/%Y'),
+                "Hdt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else datetime.now().strftime('%d/%m/%Y'),
+                "dt_vencimento_NF": nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else datetime.now().strftime('%d/%m/%Y'),
+                "fornecedor": f"{nfe_record.emitente_nome} - {nfe_record.emitente_cnpj} - 20.0581",
+                "cod_fornecedor": "20.0581",
+                "fm_pagamento": nfe_record.forma_pagamento or "DESPACHANTE",
+                "chk_boleto": "NAO",
+                "justificativa": "NFe recebida nesta data.",
+                "destinacao": nfe_record.natureza_operacao or "TRIBUTAÇÃO NO MUNICÍPIO",
+                # Campos de itens obrigatórios
+                "column1_1___1": "02.007.014",
+                "column1_2___1": nfe_record.natureza_operacao or "TRIBUTAÇÃO NO MUNICÍPIO",
+                "projeto___1": "SEMPROJETO",
+                "subprojeto___1": "SEMSUBPROJETO",
+                "identificador": f"Empresa: BETUNEL Fornecedor: {nfe_record.emitente_nome} - {nfe_record.emitente_cnpj} - 20.0581 Numero: {nfe_record.numero_nf} Valor: {nfe_record.valor_total_nf or 0:.2f} Data de Vencimento: {nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else 'N/A'} Forma de Pagamento: {nfe_record.forma_pagamento or 'DESPACHANTE'}",
                 "documento_ged": str(attachment_id)
             }
             
