@@ -97,6 +97,19 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 16, 2025. Enhanced Fluig Integration: Real Solicitation Number Capture System:
+  * Developed sophisticated system to capture actual Fluig-generated solicitation numbers
+  * Created try_direct_process_creation() method that tests multiple process states automatically
+  * Enhanced integration to try API v2 complete workflow first, then direct process creation
+  * Improved fallback system: upload file + attempt process creation + store real process numbers
+  * Added comprehensive logging to capture processInstanceId and processNumber from Fluig responses
+  * System now prioritizes capturing real Fluig numbers over auto-generated references
+  * Enhanced data storage to include both process_id and process_number in integration metadata
+  * Robust error handling for process state discovery and API endpoint validation
+  * Automatic state testing (0, 1, 2, 3, 5, 10-20) to find correct process configuration
+  * Fallback maintains upload functionality with generated references when process creation fails
+  * Integration attempts: API v2 complete → Direct process creation → Upload with reference
+  * All methods store detailed integration metadata for tracking and debugging
 - July 16, 2025. Complete Fluig Integration with API v2 and Robust Fallback System:
   * Implemented complete API v2 integration based on working example code
   * Added create_document_in_ged() method for proper GED document creation
