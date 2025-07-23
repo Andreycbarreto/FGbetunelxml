@@ -1335,13 +1335,22 @@ class FluigIntegration:
             # Buscar primeiro item para dados básicos
             nfe_items = NFEItem.query.filter_by(nfe_record_id=nfe_record.id).first()
             
+            # Calcular data de entrada (deve ser >= data de emissão)
+            from datetime import datetime, timedelta
+            if nfe_record.data_emissao:
+                # Data de entrada = data de emissão + 1 dia
+                data_entrada = nfe_record.data_emissao + timedelta(days=1)
+                dt_entrada_str = data_entrada.strftime('%d/%m/%Y')
+            else:
+                dt_entrada_str = "09/06/2025"  # Padrão se não tiver data de emissão
+            
             # Campos EXATAMENTE como no exemplo que funciona
             form_fields = {
                 "nome": "Roberto Galdino",
                 "matricula": "e7f2q0ulk2s1qwxw1496403470877",
                 "email": "roberto.galdino@betunel.com.br",
-                "Hdt_entrada_nf": "09/06/2025",  # Fixo como no exemplo
-                "dt_entrada_nf": "09/06/2025",   # Fixo como no exemplo
+                "Hdt_entrada_nf": dt_entrada_str,  # Data entrada calculada
+                "dt_entrada_nf": dt_entrada_str,   # Data entrada calculada
                 "nm_empresa": nm_empresa,
                 "cod_empresa": cod_empresa,
                 "cnpj": cnpj_empresa,
@@ -1358,7 +1367,7 @@ class FluigIntegration:
                 "valor_NF": f"{nfe_record.valor_total_nf or 3187.80:.2f}".replace('.', ','),
                 "dt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "12/05/2025",
                 "Hdt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "12/05/2025",
-                "dt_vencimento_NF": "09/06/2025",  # Fixo como no exemplo
+                "dt_vencimento_NF": dt_entrada_str,  # Usar mesma data da entrada para evitar conflitos
                 "fornecedor": f"{nfe_record.emitente_nome or 'NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP'} - {nfe_record.emitente_cnpj or '00.147.271/0001-74'} - 20.0581",
                 "cod_fornecedor": "20.0581",
                 "fm_pagamento": "DESPACHANTE",
@@ -1369,7 +1378,7 @@ class FluigIntegration:
                 "column1_2___1": (nfe_items.descricao_servico or nfe_items.descricao_produto)[:100] if nfe_items else "CAP 50/70 (CIMENTO ASFALTICO DE PETROLEO 50/70) (BAG)",
                 "projeto___1": "SEMPROJETO",
                 "subprojeto___1": "SEMSUBPROJETO",
-                "identificador": f"Empresa: {nm_empresa} Fornecedor: {nfe_record.emitente_nome or 'NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP'} - {nfe_record.emitente_cnpj or '00.147.271/0001-74'} - 20.0581 Numero: {nfe_record.numero_nf or '11022'} Valor: {nfe_record.valor_total_nf or 3187.80:.2f} Data de Vencimento: 09/06/2025 Forma de Pagamento: DESPACHANTE"
+                "identificador": f"Empresa: {nm_empresa} Fornecedor: {nfe_record.emitente_nome or 'NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP'} - {nfe_record.emitente_cnpj or '00.147.271/0001-74'} - 20.0581 Numero: {nfe_record.numero_nf or '11022'} Valor: {nfe_record.valor_total_nf or 3187.80:.2f} Data de Vencimento: {dt_entrada_str} Forma de Pagamento: DESPACHANTE"
             }
             
             # Payload EXATO do exemplo
