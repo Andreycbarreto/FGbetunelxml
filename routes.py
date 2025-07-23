@@ -1100,18 +1100,20 @@ def integrar_fluig(nfe_id):
     
     # Executar integração em thread separada para evitar timeout
     import threading
+    from app import app
     
     def execute_integration():
-        try:
-            result = fluig_integration.integrate_nfe_with_fluig(nfe_id)
-            logging.info(f"🎯 Resultado da integração assíncrona: {result}")
-        except Exception as e:
-            logging.error(f"❌ Erro na integração assíncrona: {str(e)}")
-            # Marcar como erro no banco
-            nfe_record = NFERecord.query.get(nfe_id)
-            if nfe_record:
-                nfe_record.fluig_integration_status = 'ERRO'
-                db.session.commit()
+        with app.app_context():  # Criar contexto da aplicação Flask
+            try:
+                result = fluig_integration.integrate_nfe_with_fluig(nfe_id)
+                logging.info(f"🎯 Resultado da integração assíncrona: {result}")
+            except Exception as e:
+                logging.error(f"❌ Erro na integração assíncrona: {str(e)}")
+                # Marcar como erro no banco
+                nfe_record = NFERecord.query.get(nfe_id)
+                if nfe_record:
+                    nfe_record.fluig_integration_status = 'ERRO'
+                    db.session.commit()
     
     # Iniciar thread em segundo plano
     thread = threading.Thread(target=execute_integration)
