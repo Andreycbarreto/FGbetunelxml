@@ -1378,9 +1378,9 @@ class FluigIntegration:
                 "column1_1___1": first_item.servico_codigo if first_item and first_item.servico_codigo else "02.007.014",
                 "column1_2___1": (first_item.descricao_servico or first_item.descricao_produto)[:100] if first_item else "CAP 50/70 (CIMENTO ASFALTICO DE PETROLEO 50/70) (BAG)",
                 # Adicionar campos de valores que podem estar faltando
-                "column1_3___1": f"{first_item.quantidade or 1:.2f}".replace('.', ',') if first_item else "1,00",  # Quantidade
-                "column1_4___1": f"{first_item.valor_unitario or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor unitário
-                "column1_5___1": f"{first_item.valor_total or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor total do item
+                "column1_3___1": f"{first_item.quantidade_comercial or 1:.2f}".replace('.', ',') if first_item else "1,00",  # Quantidade
+                "column1_4___1": f"{first_item.valor_unitario_comercial or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor unitário
+                "column1_5___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor total do item
                 "projeto___1": "SEMPROJETO",
                 "subprojeto___1": "SEMSUBPROJETO",
                 "identificador": f"Empresa: {nm_empresa} Fornecedor: {nfe_record.emitente_nome or 'NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP'} - {nfe_record.emitente_cnpj or '00.147.271/0001-74'} - 20.0581 Numero: {nfe_record.numero_nf or '11022'} Valor: {nfe_record.valor_total_nf or 3187.80:.2f} Data de Vencimento: {dt_entrada_str} Forma de Pagamento: DESPACHANTE"
@@ -1401,9 +1401,10 @@ class FluigIntegration:
                 for i, item in enumerate(nfe_items):
                     logging.info(f"   Item {i+1}: {item.descricao_produto or item.descricao_servico}")
                     logging.info(f"     Código: {item.servico_codigo}")
-                    logging.info(f"     Quantidade: {item.quantidade}")
-                    logging.info(f"     Valor Unitário: {item.valor_unitario}")
-                    logging.info(f"     Valor Total: {item.valor_total}")
+                    logging.info(f"     Quantidade Comercial: {item.quantidade_comercial}")
+                    logging.info(f"     Valor Unitário Comercial: {item.valor_unitario_comercial}")
+                    logging.info(f"     Valor Total Produto: {item.valor_total_produto}")
+                    logging.info(f"     Valor Serviço: {item.servico_valor}")
             else:
                 logging.info("   ⚠️ Nenhum item encontrado na NFe!")
             
