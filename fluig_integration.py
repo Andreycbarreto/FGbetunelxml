@@ -1104,6 +1104,185 @@ class FluigIntegration:
             logging.error(f"❌ Erro: {str(e)}")
             return None
     
+    def start_process_only_launch(self, nfe_record):
+        """
+        Cria lançamento direto no Fluig baseado no código de exemplo fornecido
+        Busca dados da filial correta pelo CNPJ e usa informações reais
+        """
+        try:
+            from models import Empresa, Filial, User, NFEItem
+            
+            logging.info("🎯 Iniciando lançamento direto - baseado no código de exemplo")
+            
+            # Buscar filial pelo CNPJ destinatário (quem recebe a NFE)
+            cnpj_destinatario = nfe_record.destinatario_cnpj
+            if cnpj_destinatario:
+                cnpj_limpo = cnpj_destinatario.replace('.', '').replace('/', '').replace('-', '')
+                
+                # Buscar filial pelo CNPJ
+                filial = Filial.query.filter_by(
+                    user_id=nfe_record.user_id,
+                    cnpj_filial=cnpj_limpo
+                ).first()
+                
+                if filial:
+                    # Buscar empresa da filial
+                    empresa = Empresa.query.filter_by(
+                        user_id=nfe_record.user_id,
+                        numero=filial.coligada
+                    ).first()
+                    
+                    logging.info(f"✅ Filial encontrada: {filial.nome_filial} - {filial.cnpj_filial}")
+                    logging.info(f"✅ Empresa encontrada: {empresa.nome_fantasia if empresa else 'N/A'}")
+                else:
+                    logging.warning(f"❌ Filial não encontrada para CNPJ: {cnpj_destinatario}")
+                    filial = None
+                    empresa = None
+            else:
+                filial = None
+                empresa = None
+            
+            # Buscar usuário
+            user = User.query.get(nfe_record.user_id)
+            
+            # Buscar itens da NFE
+            nfe_items = NFEItem.query.filter_by(nfe_record_id=nfe_record.id).all()
+            logging.info(f"📋 Encontrados {len(nfe_items)} itens para NFE")
+            
+            # Usar dados da filial encontrada ou padrão BETUNEL
+            if filial and empresa:
+                nm_empresa = empresa.nome_fantasia
+                cod_empresa = str(empresa.numero)
+                cnpj_empresa = empresa.cnpj
+                nm_filial = filial.nome_filial
+                cod_filial = str(filial.filial)
+                cnpj_filial = filial.cnpj_filial
+            else:
+                # Padrão BETUNEL como no exemplo
+                nm_empresa = "BETUNEL"
+                cod_empresa = "1"
+                cnpj_empresa = "60.546.801/0001-89"
+                nm_filial = "Jacarei"
+                cod_filial = "16"
+                cnpj_filial = "60.546.801/0025-56"
+            
+            # Montar campos do formulário baseado no exemplo fornecido
+            form_fields = {
+                "nome": f"{user.first_name} {user.last_name}" if user and user.first_name else "Sistema Automatizado",
+                "matricula": user.id if user else "0d44ddb10e5a41a3a7a378aa5862694d",
+                "email": user.email if user else "sistema@betunel.com.br",
+                "Hdt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "dt_entrada_nf": datetime.now().strftime('%d/%m/%Y'),
+                "nm_empresa": nm_empresa,
+                "cod_empresa": cod_empresa,
+                "cnpj": cnpj_empresa,
+                "nm_filial": nm_filial,
+                "cod_filial": cod_filial,
+                "cnpj_filial": cnpj_filial,
+                "unid_negoc": "SUPPLY E CUSTOS",
+                "cod_un": "0.10.02.01.001",
+                "centro_custo": "1.0.3299 - SUPRIMENTOS",
+                "cod_cc": "1.0.3299",
+                "tp_doc": "Nota fiscal de serviço eletrônica",
+                "numero_NF": nfe_record.numero_nf or "",
+                "serie": nfe_record.serie or "E1",
+                "valor_NF": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "dt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
+                "Hdt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "",
+                "dt_vencimento_NF": nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else "",
+                "fornecedor": f"{nfe_record.emitente_nome} - {nfe_record.emitente_cnpj} - 20.0581",
+                "cod_fornecedor": "20.0581",
+                "fm_pagamento": nfe_record.forma_pagamento or "DESPACHANTE",
+                "chk_boleto": "NAO",
+                "justificativa": "NFe recebida nesta data.",
+                "destinacao": nfe_record.natureza_operacao or "SERVIÇOS OPERACIONAIS",
+                "projeto___1": "SEMPROJETO",
+                "subprojeto___1": "SEMSUBPROJETO",
+                "identificador": f"Empresa: {nm_empresa} Fornecedor: {nfe_record.emitente_nome} - {nfe_record.emitente_cnpj} - 20.0581 Numero: {nfe_record.numero_nf} Valor: {nfe_record.valor_total_nf or 0:.2f} Data de Vencimento: {nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else 'N/A'} Forma de Pagamento: {nfe_record.forma_pagamento or 'DESPACHANTE'}"
+            }
+            
+            # Adicionar dados dos itens se existirem
+            if nfe_items:
+                for i, item in enumerate(nfe_items[:10], 1):  # Máximo 10 itens
+                    if item.servico_codigo:
+                        form_fields[f"column1_1___{i}"] = item.servico_codigo
+                    else:
+                        form_fields[f"column1_1___{i}"] = "02.007.014"
+                    
+                    descricao = item.descricao_servico or item.descricao_produto or nfe_record.natureza_operacao or "SERVIÇOS OPERACIONAIS"
+                    form_fields[f"column1_2___{i}"] = descricao[:100]
+                    
+                    logging.info(f"Item {i}: {item.servico_codigo or '02.007.014'} - {descricao}")
+            else:
+                # Item padrão se não houver itens
+                form_fields["column1_1___1"] = "02.007.014"
+                form_fields["column1_2___1"] = nfe_record.natureza_operacao or "SERVIÇOS OPERACIONAIS"
+            
+            # Payload exatamente como no exemplo
+            start_process_payload = {
+                "targetState": 59,
+                "targetAssignee": "",
+                "subProcessTargetState": 0,
+                "comment": "Iniciado via API",
+                "formFields": form_fields
+            }
+            
+            logging.info("🚀 Iniciando processo via API v2...")
+            
+            # Fazer requisição com timeout e retry
+            max_attempts = 2
+            timeout = 45
+            
+            for attempt in range(max_attempts):
+                try:
+                    response = requests.post(
+                        f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
+                        json=start_process_payload,
+                        auth=self.auth,
+                        timeout=timeout
+                    )
+                    
+                    response.raise_for_status()
+                    response_data = response.json()
+                    process_instance_id = response_data.get("processInstanceId")
+                    
+                    if process_instance_id:
+                        logging.info(f"✅ Processo criado com sucesso! ID: {process_instance_id}")
+                        
+                        # Tentar extrair número de solicitação
+                        process_number = (
+                            response_data.get('processNumber') or 
+                            response_data.get('solicitationNumber') or 
+                            response_data.get('requestNumber') or
+                            process_instance_id
+                        )
+                        
+                        logging.info(f"🎯 Número da solicitação: {process_number}")
+                        logging.info(f"📋 Resposta completa: {response_data}")
+                        
+                        return process_instance_id
+                    else:
+                        logging.error("❌ Processo criado mas sem ID retornado")
+                        return None
+                        
+                except requests.exceptions.Timeout:
+                    logging.warning(f"⏱️ Timeout na tentativa {attempt + 1}")
+                    if attempt == max_attempts - 1:
+                        logging.error("❌ Timeout - processo pode ter sido criado, verificar manualmente")
+                        return None
+                    timeout += 15
+                    
+                except Exception as e:
+                    logging.error(f"❌ Erro na tentativa {attempt + 1}: {str(e)}")
+                    if attempt == max_attempts - 1:
+                        return None
+            
+            return None
+            
+        except Exception as e:
+            logging.error(f"❌ Erro no lançamento direto: {str(e)}")
+            return None
+    
     def start_transport_process_direct(self, nfe_record, uploaded_file_name):
         """
         Inicia processo de transporte diretamente usando API correta do Fluig
@@ -1564,37 +1743,17 @@ class FluigIntegration:
             if not nfe_record:
                 raise ValueError(f"Registro NFE não encontrado: {nfe_record_id}")
             
-            # Verificar se tem arquivo PDF original
-            if not nfe_record.original_pdf_path or not os.path.exists(nfe_record.original_pdf_path):
-                raise ValueError("Arquivo PDF original não encontrado")
+            logging.info(f"🎯 Iniciando lançamento direto no Fluig para NFE {nfe_record.numero_nf}")
             
-            logging.info(f"Iniciando integração Fluig API v2 para NFE {nfe_record.numero_nf}")
-            
-            # 1. Upload do arquivo para o Fluig
-            uploaded_file_name = self.upload_file_to_fluig(
-                nfe_record.original_pdf_path,
-                nfe_record.original_pdf_filename or f"nfe_{nfe_record.numero_nf}.pdf"
-            )
-            
-            # 2. Tentar criar documento no GED
-            try:
-                attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
-                logging.info(f"✓ Documento criado no GED: {attachment_id}")
-            except Exception as e:
-                logging.warning(f"Erro ao criar documento no GED: {e}")
-                # Usar nome do arquivo como attachment_id para o novo método
-                attachment_id = uploaded_file_name
-                logging.info(f"✓ Usando nome do arquivo como attachment_id: {attachment_id}")
-            
-            # 3. Definir o nome do processo baseado no tipo de operação
+            # Apenas lançamento - SEM upload de arquivo
             process_name = "Processo de Lançamento de Nota Fiscal"
             if nfe_record.tipo_operacao == "CT-e (Transporte)":
                 process_name = "Importação de Frete"
             
-            # 4. Usar SOMENTE o código do exemplo funcional - SEM fallbacks
-            logging.info(f"Usando código EXATO do exemplo funcional para NFE {nfe_record.numero_nf}")
+            # 4. Criar processo direto sem upload - usando código de exemplo
+            logging.info(f"🎯 Criando lançamento direto no Fluig para NFE {nfe_record.numero_nf}")
             
-            process_instance_id = self.start_service_process_simple(nfe_record, attachment_id)
+            process_instance_id = self.start_process_only_launch(nfe_record)
             
             # Preparar dados de integração
             integration_data = {
@@ -1605,13 +1764,11 @@ class FluigIntegration:
                 'data_emissao': nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else None,
                 'tipo_operacao': nfe_record.tipo_operacao,
                 'chave_nfe': nfe_record.chave_nfe,
-                'uploaded_file': uploaded_file_name,
-                'attachment_id': attachment_id,
                 'process_instance_id': process_instance_id,
                 'process_name': process_name,
-                'upload_timestamp': datetime.now().isoformat(),
-                'integration_method': 'exact_example_code',
-                'note': 'Usado código EXATO do exemplo funcional fornecido'
+                'integration_timestamp': datetime.now().isoformat(),
+                'integration_method': 'launch_only_example_code',
+                'note': 'Lançamento direto baseado no código de exemplo fornecido - SEM upload de arquivo'
             }
             
             if process_instance_id:
@@ -1619,35 +1776,28 @@ class FluigIntegration:
                 
                 # Salvar dados de integração no banco
                 nfe_record.fluig_process_id = str(process_instance_id)
-                nfe_record.fluig_document_id = str(attachment_id)
                 nfe_record.fluig_integration_date = datetime.now()
                 nfe_record.fluig_integration_status = 'INTEGRADO'
-            else:
-                # Fallback em caso de timeout: marcar como enviado com sucesso
-                logging.info("⚠️ Timeout/erro no processo - marcando como enviado com sucesso")
-                import time
-                unique_ref = f"FLG-{int(time.time())}-{hash(str(nfe_record.id))}"
-                nfe_record.fluig_process_id = unique_ref
-                nfe_record.fluig_document_id = str(attachment_id)
-                nfe_record.fluig_integration_date = datetime.now()
-                nfe_record.fluig_integration_status = 'ENVIADO'
-                integration_data['process_instance_id'] = unique_ref
                 
-            nfe_record.fluig_integration_data = json.dumps(integration_data)
-            db.session.commit()
-            
-            logging.info(f"NFE {nfe_record.numero_nf} integrado com sucesso!")
-            logging.info(f"Process Instance ID: {process_instance_id or 'timeout'}")
-            
-            return {
-                "success": True,
-                "message": f"NFE integrado com sucesso! Process ID: {process_instance_id or 'timeout'}",
-                "process_id": process_instance_id,
-                "document_id": attachment_id,
-                "uploaded_file": uploaded_file_name,
-                "process_type": process_name,
-                "integration_data": integration_data
-            }
+                nfe_record.fluig_integration_data = json.dumps(integration_data)
+                db.session.commit()
+                
+                logging.info(f"✅ NFE {nfe_record.numero_nf} integrado com sucesso!")
+                logging.info(f"🎯 Process Instance ID: {process_instance_id}")
+                
+                return {
+                    "success": True,
+                    "message": f"NFE integrado com sucesso! Process ID: {process_instance_id}",
+                    "process_id": process_instance_id,
+                    "process_type": process_name,
+                    "integration_data": integration_data
+                }
+            else:
+                logging.error(f"❌ Não foi possível criar processo para NFE {nfe_record.numero_nf}")
+                return {
+                    "success": False,
+                    "message": f"Não foi possível criar processo no Fluig para NFE {nfe_record.numero_nf}"
+                }
             
         except Exception as e:
             logging.error(f"Erro na integração NFE com Fluig: {str(e)}")

@@ -97,6 +97,21 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 23, 2025. Fluig Integration: Simplified Launch-Only Integration (No File Upload):
+  * Implemented simplified Fluig integration based on user's working example code
+  * Created start_process_only_launch() method that creates lançamento without file upload
+  * System now searches for correct filial by CNPJ destinatário and uses real company data
+  * Enhanced form field mapping with real NFE data and item information
+  * Removed file upload requirements that were causing API timeout issues
+  * Uses exact payload structure from user's functional example code
+  * Automatic filial/empresa lookup based on NFE destinatário CNPJ
+  * Fallback to BETUNEL default data when filial not found in system
+  * Enhanced logging with detailed form field information for troubleshooting
+  * Timeout handling with 45-second initial timeout and retry mechanism
+  * Integration method changed from 'upload + process' to 'launch only'
+  * System prioritizes process creation success over file attachment
+  * Real NFE item data mapped to form fields (servico_codigo, descricao)
+  * Enhanced error handling and detailed response logging for debugging
 - July 17, 2025. Fluig Integration: Real Solicitation Number Capture System Implementation:
   * Created sophisticated start_service_process_capture_solicitation_number() method for real number capture
   * System now tests multiple Fluig process states (59, 0, 1, 2, 3, 5, 10, 11, 20) automatically
