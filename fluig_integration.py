@@ -1332,8 +1332,9 @@ class FluigIntegration:
                 cod_filial = "16"
                 cnpj_filial = "60.546.801/0025-56"
             
-            # Buscar primeiro item para dados básicos
-            nfe_items = NFEItem.query.filter_by(nfe_record_id=nfe_record.id).first()
+            # Buscar TODOS os itens para dados básicos e valores
+            nfe_items = NFEItem.query.filter_by(nfe_record_id=nfe_record.id).all()
+            first_item = nfe_items[0] if nfe_items else None
             
             # Calcular data de entrada (deve ser >= data de emissão)
             from datetime import datetime, timedelta
@@ -1374,8 +1375,12 @@ class FluigIntegration:
                 "chk_boleto": "NAO",
                 "justificativa": "NFe recebida nesta data.",
                 "destinacao": f"PO475_20225 {nfe_record.natureza_operacao or 'TIE PETROL'}",
-                "column1_1___1": nfe_items.servico_codigo if nfe_items and nfe_items.servico_codigo else "02.007.014",
-                "column1_2___1": (nfe_items.descricao_servico or nfe_items.descricao_produto)[:100] if nfe_items else "CAP 50/70 (CIMENTO ASFALTICO DE PETROLEO 50/70) (BAG)",
+                "column1_1___1": first_item.servico_codigo if first_item and first_item.servico_codigo else "02.007.014",
+                "column1_2___1": (first_item.descricao_servico or first_item.descricao_produto)[:100] if first_item else "CAP 50/70 (CIMENTO ASFALTICO DE PETROLEO 50/70) (BAG)",
+                # Adicionar campos de valores que podem estar faltando
+                "column1_3___1": f"{first_item.quantidade or 1:.2f}".replace('.', ',') if first_item else "1,00",  # Quantidade
+                "column1_4___1": f"{first_item.valor_unitario or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor unitário
+                "column1_5___1": f"{first_item.valor_total or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor total do item
                 "projeto___1": "SEMPROJETO",
                 "subprojeto___1": "SEMSUBPROJETO",
                 "identificador": f"Empresa: {nm_empresa} Fornecedor: {nfe_record.emitente_nome or 'NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP'} - {nfe_record.emitente_cnpj or '00.147.271/0001-74'} - 20.0581 Numero: {nfe_record.numero_nf or '11022'} Valor: {nfe_record.valor_total_nf or 3187.80:.2f} Data de Vencimento: {dt_entrada_str} Forma de Pagamento: DESPACHANTE"
@@ -1389,6 +1394,24 @@ class FluigIntegration:
                 "comment": "Iniciado via API",
                 "formFields": form_fields
             }
+            
+            # Log detalhado dos dados dos itens sendo enviados
+            logging.info("🔍 Dados dos itens sendo enviados:")
+            if nfe_items:
+                for i, item in enumerate(nfe_items):
+                    logging.info(f"   Item {i+1}: {item.descricao_produto or item.descricao_servico}")
+                    logging.info(f"     Código: {item.servico_codigo}")
+                    logging.info(f"     Quantidade: {item.quantidade}")
+                    logging.info(f"     Valor Unitário: {item.valor_unitario}")
+                    logging.info(f"     Valor Total: {item.valor_total}")
+            else:
+                logging.info("   ⚠️ Nenhum item encontrado na NFe!")
+            
+            # Log dos campos de formulário relacionados a itens
+            logging.info("📝 Campos de itens no formulário:")
+            for key, value in form_fields.items():
+                if 'column' in key.lower():
+                    logging.info(f"   {key}: {value}")
             
             logging.info("🚀 Fazendo requisição EXATA como no exemplo...")
             
