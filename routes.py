@@ -1094,28 +1094,36 @@ def integrar_fluig(nfe_id):
             'message': 'Configuração do Fluig não encontrada. Configure suas credenciais nas configurações do sistema.'
         })
     
-    # Executar integração
-    result = fluig_integration.integrate_nfe_with_fluig(nfe_id)
+    # Marcar como processando
+    nfe_record.fluig_integration_status = 'PROCESSANDO'
+    db.session.commit()
     
-    if result['success']:
-        response_data = {
-            'success': True,
-            'message': result['message'],
-            'process_type': result.get('process_type', 'Integração')
-        }
-        
-        # Incluir process_id e document_id apenas se existirem
-        if 'process_id' in result:
-            response_data['process_id'] = result['process_id']
-        if 'document_id' in result:
-            response_data['document_id'] = result['document_id']
-            
-        return jsonify(response_data)
-    else:
-        return jsonify({
-            'success': False,
-            'message': result['message']
-        })
+    # Executar integração em thread separada para evitar timeout
+    import threading
+    
+    def execute_integration():
+        try:
+            result = fluig_integration.integrate_nfe_with_fluig(nfe_id)
+            logging.info(f"🎯 Resultado da integração assíncrona: {result}")
+        except Exception as e:
+            logging.error(f"❌ Erro na integração assíncrona: {str(e)}")
+            # Marcar como erro no banco
+            nfe_record = NFERecord.query.get(nfe_id)
+            if nfe_record:
+                nfe_record.fluig_integration_status = 'ERRO'
+                db.session.commit()
+    
+    # Iniciar thread em segundo plano
+    thread = threading.Thread(target=execute_integration)
+    thread.daemon = True
+    thread.start()
+    
+    # Retornar resposta imediata
+    return jsonify({
+        'success': True,
+        'message': 'Integração iniciada! Processo será executado em segundo plano. Aguarde alguns minutos e verifique o status.',
+        'status': 'PROCESSANDO'
+    })
 
 
 @app.route('/nfe/status-fluig/<int:nfe_id>')
@@ -1128,18 +1136,36 @@ def status_fluig(nfe_id):
     if nfe_record.user_id != current_user.id:
         return jsonify({'success': False, 'message': 'Acesso negado!'})
     
+    status = nfe_record.fluig_integration_status or 'PENDENTE'
+    
     if nfe_record.fluig_process_id:
         return jsonify({
             'success': True,
             'integrated': True,
+            'status': 'INTEGRADO',
             'process_id': nfe_record.fluig_process_id,
             'document_id': nfe_record.fluig_document_id,
             'integration_date': nfe_record.fluig_integration_date.strftime('%d/%m/%Y %H:%M:%S') if nfe_record.fluig_integration_date else None
+        })
+    elif status == 'PROCESSANDO':
+        return jsonify({
+            'success': True,
+            'integrated': False,
+            'status': 'PROCESSANDO',
+            'message': 'Integração em andamento... Aguarde alguns minutos.'
+        })
+    elif status == 'ERRO':
+        return jsonify({
+            'success': True,
+            'integrated': False,
+            'status': 'ERRO',
+            'message': 'Erro na integração. Verifique os logs ou tente novamente.'
         })
     else:
         return jsonify({
             'success': True,
             'integrated': False,
+            'status': 'PENDENTE',
             'message': 'NFE não integrada ao Fluig'
         })
 

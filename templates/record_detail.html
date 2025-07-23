@@ -869,17 +869,46 @@ function integrarFluig(nfeId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Sucesso
-                button.innerHTML = '<i class="feather-check me-2"></i>Integrado!';
-                button.className = 'btn btn-success';
-                
-                // Mostrar mensagem de sucesso
-                showAlert('success', data.message);
-                
-                // Opcional: recarregar a página após alguns segundos
-                setTimeout(() => {
-                    location.reload();
-                }, 3000);
+                if (data.status === 'PROCESSANDO') {
+                    // Integração iniciada em background
+                    button.innerHTML = '<i class="feather-clock me-2"></i>Processando...';
+                    button.className = 'btn btn-warning';
+                    showAlert('success', data.message);
+                    
+                    // Verificar status a cada 10 segundos
+                    const checkInterval = setInterval(() => {
+                        fetch('/nfe/status-fluig/' + nfeId)
+                            .then(response => response.json())
+                            .then(statusData => {
+                                if (statusData.success) {
+                                    if (statusData.integrated) {
+                                        // Concluído
+                                        button.innerHTML = '<i class="feather-check me-2"></i>Integrado!';
+                                        button.className = 'btn btn-success';
+                                        showAlert('success', 'Integração concluída com sucesso!');
+                                        clearInterval(checkInterval);
+                                        setTimeout(() => location.reload(), 2000);
+                                    } else if (statusData.status === 'ERRO') {
+                                        // Erro
+                                        button.innerHTML = originalText;
+                                        button.className = 'btn btn-outline-success';
+                                        button.disabled = false;
+                                        showAlert('error', 'Erro na integração. Tente novamente.');
+                                        clearInterval(checkInterval);
+                                    }
+                                    // Se ainda PROCESSANDO, continua verificando
+                                }
+                            })
+                            .catch(error => console.log('Erro ao verificar status:', error));
+                    }, 10000); // Verificar a cada 10 segundos
+                    
+                } else {
+                    // Sucesso imediato (caso não use async)
+                    button.innerHTML = '<i class="feather-check me-2"></i>Integrado!';
+                    button.className = 'btn btn-success';
+                    showAlert('success', data.message);
+                    setTimeout(() => location.reload(), 3000);
+                }
             } else {
                 // Erro
                 button.innerHTML = originalText;
@@ -978,24 +1007,59 @@ function updateFluigStatusCard(data) {
             </div>
         `;
     } else if (data.success && !data.integrated) {
-        // Disponível para integração
-        statusCard.className = 'card border-warning';
-        statusCard.innerHTML = `
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
+        if (data.status === 'PROCESSANDO') {
+            // Processando integração
+            statusCard.className = 'card border-warning';
+            statusCard.innerHTML = `
+                <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <i class="feather-alert-triangle text-warning me-2"></i>
+                        <div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
                         <div>
-                            <h6 class="mb-0">Aguardando Integração</h6>
-                            <small class="text-muted">Documento ainda não foi integrado ao Fluig</small>
+                            <h6 class="mb-0">Processando Integração</h6>
+                            <small class="text-muted">${data.message || 'Integração em andamento... Aguarde alguns minutos.'}</small>
                         </div>
                     </div>
-                    <button class="btn btn-outline-success btn-sm" onclick="integrarFluig(${data.nfe_id || {{ record.id }}})">
-                        <i class="feather-upload me-1"></i>Integrar Agora
-                    </button>
                 </div>
-            </div>
-        `;
+            `;
+        } else if (data.status === 'ERRO') {
+            // Erro na integração
+            statusCard.className = 'card border-danger';
+            statusCard.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="feather-x-circle text-danger me-2"></i>
+                            <div>
+                                <h6 class="mb-0">Erro na Integração</h6>
+                                <small class="text-muted">${data.message || 'Erro na integração. Tente novamente.'}</small>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-success btn-sm" onclick="integrarFluig(${data.nfe_id || {{ record.id }}})">
+                            <i class="feather-refresh-cw me-1"></i>Tentar Novamente
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Disponível para integração
+            statusCard.className = 'card border-warning';
+            statusCard.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="feather-alert-triangle text-warning me-2"></i>
+                            <div>
+                                <h6 class="mb-0">Aguardando Integração</h6>
+                                <small class="text-muted">Documento ainda não foi integrado ao Fluig</small>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-success btn-sm" onclick="integrarFluig(${data.nfe_id || {{ record.id }}})">
+                            <i class="feather-upload me-1"></i>Integrar Agora
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
     } else {
         // Erro
         statusCard.className = 'card border-danger';

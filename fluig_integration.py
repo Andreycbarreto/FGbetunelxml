@@ -1387,7 +1387,7 @@ class FluigIntegration:
                 f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
                 json=start_process_payload,
                 auth=self.auth,
-                timeout=60
+                timeout=None  # Sem timeout - aguarda o tempo necessário
             )
             
             response.raise_for_status()
