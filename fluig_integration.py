@@ -1214,32 +1214,49 @@ class FluigIntegration:
                     descricao = item.descricao_servico or item.descricao_produto or nfe_record.natureza_operacao or "Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres"
                     form_fields[f"column1_2___{i}"] = descricao[:100]
                     
-                    # LÓGICA INTELIGENTE DE VALORES - Usar a hierarquia correta
+                    # LÓGICA INTELIGENTE DE VALORES - SEMPRE preencher valor total
                     valor_final = 0.0
+                    quantidade_final = float(item.quantidade_comercial or 1)
+                    valor_unitario_final = 0.0
                     fonte_valor = "zero"
                     
-                    # Prioridade: servico_valor > valor_total_produto > valor_unitario_comercial
+                    # Prioridade: servico_valor > valor_total_produto > valor_unitario_comercial > valor_total_nfe
                     if item.servico_valor and float(item.servico_valor) > 0:
                         valor_final = float(item.servico_valor)
+                        valor_unitario_final = valor_final / quantidade_final if quantidade_final > 0 else valor_final
                         fonte_valor = "servico_valor"
                     elif item.valor_total_produto and float(item.valor_total_produto) > 0:
                         valor_final = float(item.valor_total_produto)
+                        valor_unitario_final = valor_final / quantidade_final if quantidade_final > 0 else valor_final
                         fonte_valor = "valor_total_produto"
                     elif item.valor_unitario_comercial and float(item.valor_unitario_comercial) > 0:
-                        # Multiplicar pela quantidade se existir
-                        quantidade = float(item.quantidade_comercial or 1)
-                        valor_final = float(item.valor_unitario_comercial) * quantidade
-                        fonte_valor = f"valor_unitario_comercial * {quantidade}"
+                        valor_unitario_final = float(item.valor_unitario_comercial)
+                        valor_final = valor_unitario_final * quantidade_final
+                        fonte_valor = f"valor_unitario_comercial * {quantidade_final}"
+                    else:
+                        # FALLBACK: usar valor total da NFE dividido pelo número de itens
+                        valor_total_nfe = float(nfe_record.valor_total_nf or 0)
+                        total_items = len(nfe_items)
+                        valor_final = valor_total_nfe / total_items if total_items > 0 else valor_total_nfe
+                        valor_unitario_final = valor_final / quantidade_final if quantidade_final > 0 else valor_final
+                        fonte_valor = f"valor_total_nfe/{total_items}"
                     
-                    # Quantidade
-                    quantidade_str = f"{float(item.quantidade_comercial or 1):.2f}".replace('.', ',')
+                    # Garantir que sempre há um valor mínimo
+                    if valor_final <= 0:
+                        valor_final = float(nfe_record.valor_total_nf or 0)
+                        valor_unitario_final = valor_final
+                        quantidade_final = 1.0
+                        fonte_valor = "fallback_valor_total_nfe"
+                    
+                    # Quantidade - sempre pelo menos 1
+                    quantidade_str = f"{quantidade_final:.2f}".replace('.', ',')
                     form_fields[f"column1_3___{i}"] = quantidade_str
                     
-                    # Valor unitário - usar o valor final calculado
-                    valor_unitario_str = f"{valor_final:.2f}".replace('.', ',')
+                    # Valor unitário
+                    valor_unitario_str = f"{valor_unitario_final:.2f}".replace('.', ',')
                     form_fields[f"column1_4___{i}"] = valor_unitario_str
                     
-                    # Valor total do item
+                    # Valor total do item - SEMPRE preenchido
                     valor_total_str = f"{valor_final:.2f}".replace('.', ',')
                     form_fields[f"column1_5___{i}"] = valor_total_str
                     
@@ -1405,7 +1422,7 @@ class FluigIntegration:
             nfe_items = NFEItem.query.filter_by(nfe_record_id=nfe_record.id).all()
             first_item = nfe_items[0] if nfe_items else None
             
-            # Lógica inteligente para cálculo de valores
+            # Lógica inteligente para cálculo de valores - SEMPRE garantir valor total
             if first_item:
                 quantidade = first_item.quantidade_comercial or 1.0
                 
@@ -1417,21 +1434,29 @@ class FluigIntegration:
                 
                 # Prioridade: servico_valor > valor_total_produto > valor_unitario_comercial > valor_total_nf
                 if valor_servico > 0:
-                    valor_final_unitario = valor_servico
                     valor_final_total = valor_servico
+                    valor_final_unitario = valor_servico / quantidade if quantidade > 0 else valor_servico
                     fonte_valor = "servico_valor"
                 elif valor_total_produto > 0:
-                    valor_final_unitario = valor_total_produto / quantidade if quantidade > 0 else valor_total_produto
                     valor_final_total = valor_total_produto
+                    valor_final_unitario = valor_total_produto / quantidade if quantidade > 0 else valor_total_produto
                     fonte_valor = "valor_total_produto"
                 elif valor_unitario_comercial > 0:
                     valor_final_unitario = valor_unitario_comercial
                     valor_final_total = valor_unitario_comercial * quantidade
                     fonte_valor = "valor_unitario_comercial"
                 else:
-                    valor_final_unitario = valor_nfe_total / quantidade if quantidade > 0 else valor_nfe_total
+                    # FALLBACK: sempre usar valor total da NFE
                     valor_final_total = valor_nfe_total
+                    valor_final_unitario = valor_nfe_total / quantidade if quantidade > 0 else valor_nfe_total
                     fonte_valor = "valor_total_nf"
+                
+                # GARANTIA: Se ainda está zero, forçar o valor total da NFE
+                if valor_final_total <= 0:
+                    valor_final_total = valor_nfe_total
+                    valor_final_unitario = valor_nfe_total
+                    quantidade = 1.0
+                    fonte_valor = "fallback_garantido_valor_total_nf"
                 
                 logging.info(f"🔢 Cálculo inteligente de valores:")
                 logging.info(f"   Valor Unitário Comercial: {valor_unitario_comercial}")

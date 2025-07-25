@@ -97,6 +97,16 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 25, 2025. CRITICAL FIX: Intelligent Value Calculation for Fluig Item Values:
+  * Implemented comprehensive value hierarchy system: servico_valor > valor_total_produto > valor_unitario_comercial > valor_total_nf
+  * Fixed zero values in Fluig by ensuring valor_total is ALWAYS populated regardless of unitário/quantidade availability
+  * Added fallback system: if no specific item values, divide total NFE value by number of items
+  * Ultimate fallback: use complete NFE value as item value to guarantee non-zero display
+  * Enhanced logging shows exact value source and calculation method used
+  * Multiple value fields sent to Fluig (column1_3___1, column1_4___1, column1_5___1, plus 7 backup fields)
+  * System now handles service documents where produto values are zero but servico_valor exists
+  * Database field fluig_process_id expanded to VARCHAR(255) to support complex integration data
+  * Comprehensive error handling prevents integration failures due to field size limitations
 - July 25, 2025. Fluig Integration: Complete Values Transfer and Duplicate Detection:
   * Resolved Flask application context issues in threaded async integration operations
   * Fixed automatic date calculation: entry date = emission date + 1 day to pass Fluig validation
