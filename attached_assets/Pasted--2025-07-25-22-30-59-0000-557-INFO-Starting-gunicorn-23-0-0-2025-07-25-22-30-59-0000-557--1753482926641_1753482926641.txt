@@ -1,0 +1,66 @@
+[2025-07-25 22:30:59 +0000] [557] [INFO] Starting gunicorn 23.0.0
+[2025-07-25 22:30:59 +0000] [557] [INFO] Listening at: http://0.0.0.0:5000 (557)
+[2025-07-25 22:30:59 +0000] [557] [INFO] Using worker: sync
+[2025-07-25 22:30:59 +0000] [568] [INFO] Booting worker with pid: 568
+[2025-07-25 22:30:59 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:30:59 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:30:59 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:30:59 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:30:59 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:31:00 +0000] [557] [INFO] Handling signal: winch
+INFO:async_pdf_processor:PDF processing worker started
+INFO:async_pdf_processor:Async PDF processor started
+[2025-07-25 22:31:01 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:31:01 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:31:01 +0000] [557] [INFO] Handling signal: winch
+INFO:root:Database tables created
+[2025-07-25 22:31:01 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:31:01 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:31:01 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:31:01 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:31:02 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:31:02 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:32:56 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:32:56 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:32:56 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:32:56 +0000] [557] [INFO] Handling signal: winch
+INFO:root:🎯 Iniciando lançamento direto no Fluig para NFE 73
+INFO:root:🎯 Criando lançamento direto no Fluig para NFE 73
+INFO:root:🎯 Usando código EXATO do exemplo que funciona
+INFO:root:✅ Usando filial: Maracanau
+INFO:root:🔍 Dados dos itens sendo enviados:
+INFO:root:   Item 1: OUTROS SERVIÇOS DE TRANSPORTE DE NATUREZA MUNICIPAL
+INFO:root:     Código: 
+INFO:root:     Quantidade Comercial: 0.0000
+INFO:root:     Valor Unitário Comercial: 0.0000
+INFO:root:     Valor Total Produto: 13960.00
+INFO:root:     Valor Serviço: 0.00
+INFO:root:📝 Campos de itens no formulário:
+INFO:root:   column1_1___1: 02.007.014
+INFO:root:   column1_2___1: OUTROS SERVIÇOS DE TRANSPORTE DE NATUREZA MUNICIPAL
+INFO:root:   column1_3___1: 1,00
+INFO:root:   column1_4___1: 13960,00
+INFO:root:   column1_5___1: 13960,00
+INFO:root:🚀 Fazendo requisição EXATA como no exemplo...
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [POST]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '107644005781318413801753482779'), ('oauth_timestamp', '1753482779'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=107644005781318413801753482779&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1753482779&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/process-management/api/v2/processes/Processo%20de%20Lan%C3%A7amento%20de%20Nota%20Fiscal/start
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: POST&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fprocess-management%2Fapi%2Fv2%2Fprocesses%2FProcesso%2520de%2520Lan%25C3%25A7amento%2520de%2520Nota%2520Fiscal%2Fstart&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D107644005781318413801753482779%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1753482779%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: X/I2wqxfgp+1VI1p8sABxyRynbo=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/process-management/api/v2/processes/Processo%20de%20Lan%C3%A7amento%20de%20Nota%20Fiscal/start
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Content-Length': b'1528', b'Content-Type': b'application/json', b'Authorization': b'OAuth oauth_nonce="107644005781318413801753482779", oauth_timestamp="1753482779", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="X%2FI2wqxfgp%2B1VI1p8sABxyRynbo%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: b'{"targetState": 59, "targetAssignee": "", "subProcessTargetState": 0, "comment": "Iniciado via API", "formFields": {"nome": "Roberto Galdino", "matricula": "e7f2q0ulk2s1qwxw1496403470877", "email": "roberto.galdino@betunel.com.br", "Hdt_entrada_nf": "14/06/2025", "dt_entrada_nf": "14/06/2025", "nm_empresa": "BETUNEL INDUSTRIA E COMERCIOS S/A", "cod_empresa": "1", "cnpj": "60546801000189", "nm_filial": "Maracanau", "cod_filial": "2", "cnpj_filial": "60546801000260", "unid_negoc": "SUPPLY E CUSTOS", "cod_un": "0.10.02.01.001", "centro_custo": "1.0.3299 - SUPRIMENTOS", "cod_cc": "1.0.3299", "tp_doc": "Nota fiscal de servi\\u00e7o eletr\\u00f4nica", "numero_NF": "73", "serie": "E1", "valor_NF": "13960,00", "dt_emissao_NF": "13/06/2025", "Hdt_emissao_NF": "13/06/2025", "dt_vencimento_NF": "14/06/2025", "fornecedor": "FERNANDO CESAR VASCONCELOS LTDA - 46172632000133 - 20.0581", "cod_fornecedor": "20.0581", "fm_pagamento": "DESPACHANTE", "chk_boleto": "NAO", "justificativa": "NFe recebida nesta data.", "destinacao": "PO475_20225 TIE PETROL", "column1_1___1": "02.007.014", "column1_2___1": "OUTROS SERVI\\u00c7OS DE TRANSPORTE DE NATUREZA MUNICIPAL", "column1_3___1": "1,00", "column1_4___1": "13960,00", "column1_5___1": "13960,00", "projeto___1": "SEMPROJETO", "subprojeto___1": "SEMSUBPROJETO", "identificador": "Empresa: BETUNEL INDUSTRIA E COMERCIOS S/A Fornecedor: FERNANDO CESAR VASCONCELOS LTDA - 46172632000133 - 20.0581 Numero: 73 Valor: 13960.00 Data de Vencimento: 14/06/2025 Forma de Pagamento: DESPACHANTE"}}'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+[2025-07-25 22:32:59 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:32:59 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:32:59 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:32:59 +0000] [557] [INFO] Handling signal: winch
+[2025-07-25 22:32:59 +0000] [557] [INFO] Handling signal: winch
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /process-management/api/v2/processes/Processo%20de%20Lan%C3%A7amento%20de%20Nota%20Fiscal/start HTTP/1.1" 500 152
+INFO:root:✅ NFe 73 já foi integrada anteriormente
+ERROR:root:❌ Erro: 'FluigIntegration' object has no attribute '_create_integration_data'
+ERROR:root:❌ Não foi possível criar processo para NFE 73
+INFO:root:🎯 Resultado da integração assíncrona: {'success': False, 'message': 'Não foi possível criar processo no Fluig para NFE 73'}

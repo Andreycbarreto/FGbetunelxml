@@ -1298,7 +1298,13 @@ class FluigIntegration:
                     'message': f'NFE já integrado! Process ID: {nfe_record.fluig_process_id}',
                     'process_id': nfe_record.fluig_process_id,
                     'process_type': 'Importação de Frete',
-                    'integration_data': self._create_integration_data(nfe_record, nfe_record.fluig_process_id, 'already_integrated')
+                    'integration_data': {
+                        'method': 'already_integrated',
+                        'process_id': nfe_record.fluig_process_id,
+                        'timestamp': datetime.now().isoformat(),
+                        'nfe_number': nfe_record.numero_nf,
+                        'status': 'INTEGRADO'
+                    }
                 }
             
             logging.info("🎯 Usando código EXATO do exemplo que funciona")
@@ -1392,6 +1398,12 @@ class FluigIntegration:
                 "column1_3___1": f"{first_item.quantidade_comercial or 1:.2f}".replace('.', ',') if first_item else "1,00",  # Quantidade
                 "column1_4___1": f"{first_item.valor_unitario_comercial or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor unitário
                 "column1_5___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor total do item
+                # Campos adicionais que podem controlar o valor final no Fluig
+                "column1_6___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Possível campo valor
+                "valorTotalItem___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "valorItem___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "valor___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "vlr_item___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
                 "projeto___1": "SEMPROJETO",
                 "subprojeto___1": "SEMSUBPROJETO",
                 "identificador": f"Empresa: {nm_empresa} Fornecedor: {nfe_record.emitente_nome or 'NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP'} - {nfe_record.emitente_cnpj or '00.147.271/0001-74'} - 20.0581 Numero: {nfe_record.numero_nf or '11022'} Valor: {nfe_record.valor_total_nf or 3187.80:.2f} Data de Vencimento: {dt_entrada_str} Forma de Pagamento: DESPACHANTE"
@@ -1422,7 +1434,7 @@ class FluigIntegration:
             # Log dos campos de formulário relacionados a itens
             logging.info("📝 Campos de itens no formulário:")
             for key, value in form_fields.items():
-                if 'column' in key.lower():
+                if 'column' in key.lower() or 'valor' in key.lower() or 'vlr' in key.lower():
                     logging.info(f"   {key}: {value}")
             
             logging.info("🚀 Fazendo requisição EXATA como no exemplo...")
@@ -1455,7 +1467,13 @@ class FluigIntegration:
                             'message': f'NFE já integrado anteriormente! Process ID: {existing_id}',
                             'process_id': existing_id,
                             'process_type': 'Importação de Frete',
-                            'integration_data': self._create_integration_data(nfe_record, existing_id, 'launch_only_existing')
+                            'integration_data': {
+                                'method': 'launch_only_existing',
+                                'process_id': existing_id,
+                                'timestamp': datetime.now().isoformat(),
+                                'nfe_number': nfe_record.numero_nf,
+                                'status': 'INTEGRADO'
+                            }
                         }
                 else:
                     logging.error(f"❌ Erro HTTP: {response.status_code} - {error_text}")
