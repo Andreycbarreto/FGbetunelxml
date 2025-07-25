@@ -1353,6 +1353,48 @@ class FluigIntegration:
             nfe_items = NFEItem.query.filter_by(nfe_record_id=nfe_record.id).all()
             first_item = nfe_items[0] if nfe_items else None
             
+            # Lógica inteligente para cálculo de valores
+            if first_item:
+                quantidade = first_item.quantidade_comercial or 1.0
+                
+                # Capturar valores disponíveis
+                valor_unitario_comercial = first_item.valor_unitario_comercial or 0.0
+                valor_total_produto = first_item.valor_total_produto or 0.0
+                valor_servico = first_item.servico_valor or 0.0
+                valor_nfe_total = nfe_record.valor_total_nf or 0.0
+                
+                # Prioridade: servico_valor > valor_total_produto > valor_unitario_comercial > valor_total_nf
+                if valor_servico > 0:
+                    valor_final_unitario = valor_servico
+                    valor_final_total = valor_servico
+                    fonte_valor = "servico_valor"
+                elif valor_total_produto > 0:
+                    valor_final_unitario = valor_total_produto / quantidade if quantidade > 0 else valor_total_produto
+                    valor_final_total = valor_total_produto
+                    fonte_valor = "valor_total_produto"
+                elif valor_unitario_comercial > 0:
+                    valor_final_unitario = valor_unitario_comercial
+                    valor_final_total = valor_unitario_comercial * quantidade
+                    fonte_valor = "valor_unitario_comercial"
+                else:
+                    valor_final_unitario = valor_nfe_total / quantidade if quantidade > 0 else valor_nfe_total
+                    valor_final_total = valor_nfe_total
+                    fonte_valor = "valor_total_nf"
+                
+                logging.info(f"🔢 Cálculo inteligente de valores:")
+                logging.info(f"   Valor Unitário Comercial: {valor_unitario_comercial}")
+                logging.info(f"   Valor Total Produto: {valor_total_produto}")
+                logging.info(f"   Valor Serviço: {valor_servico}")
+                logging.info(f"   Valor Total NFe: {valor_nfe_total}")
+                logging.info(f"   ✅ Fonte escolhida: {fonte_valor}")
+                logging.info(f"   ✅ Valor Final Unitário: {valor_final_unitario}")
+                logging.info(f"   ✅ Valor Final Total: {valor_final_total}")
+            else:
+                quantidade = 1.0
+                valor_final_unitario = nfe_record.valor_total_nf or 0.0
+                valor_final_total = nfe_record.valor_total_nf or 0.0
+                fonte_valor = "valor_total_nf_fallback"
+            
             # Calcular data de entrada (deve ser >= data de emissão)
             from datetime import datetime, timedelta
             if nfe_record.data_emissao:
@@ -1394,16 +1436,19 @@ class FluigIntegration:
                 "destinacao": f"PO475_20225 {nfe_record.natureza_operacao or 'TIE PETROL'}",
                 "column1_1___1": first_item.servico_codigo if first_item and first_item.servico_codigo else "02.007.014",
                 "column1_2___1": (first_item.descricao_servico or first_item.descricao_produto)[:100] if first_item else "CAP 50/70 (CIMENTO ASFALTICO DE PETROLEO 50/70) (BAG)",
-                # Adicionar campos de valores que podem estar faltando
-                "column1_3___1": f"{first_item.quantidade_comercial or 1:.2f}".replace('.', ',') if first_item else "1,00",  # Quantidade
-                "column1_4___1": f"{first_item.valor_unitario_comercial or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor unitário
-                "column1_5___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Valor total do item
+                # Usar valores calculados inteligentemente
+                "column1_3___1": f"{quantidade:.2f}".replace('.', ','),  # Quantidade
+                "column1_4___1": f"{valor_final_unitario:.2f}".replace('.', ','),  # Valor unitário
+                "column1_5___1": f"{valor_final_total:.2f}".replace('.', ','),  # Valor total do item
                 # Campos adicionais que podem controlar o valor final no Fluig
-                "column1_6___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),  # Possível campo valor
-                "valorTotalItem___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
-                "valorItem___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
-                "valor___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
-                "vlr_item___1": f"{first_item.valor_total_produto or first_item.servico_valor or nfe_record.valor_total_nf or 0:.2f}".replace('.', ',') if first_item else f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
+                "column1_6___1": f"{valor_final_total:.2f}".replace('.', ','),  # Possível campo valor
+                "valorTotalItem___1": f"{valor_final_total:.2f}".replace('.', ','),
+                "valorItem___1": f"{valor_final_total:.2f}".replace('.', ','),
+                "valor___1": f"{valor_final_total:.2f}".replace('.', ','),
+                "vlr_item___1": f"{valor_final_total:.2f}".replace('.', ','),
+                # Campos extras para garantir que o valor apareça
+                "vlrTotalItem___1": f"{valor_final_total:.2f}".replace('.', ','),
+                "valorTotalServico___1": f"{valor_final_total:.2f}".replace('.', ','),
                 "projeto___1": "SEMPROJETO",
                 "subprojeto___1": "SEMSUBPROJETO",
                 "identificador": f"Empresa: {nm_empresa} Fornecedor: {nfe_record.emitente_nome or 'NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP'} - {nfe_record.emitente_cnpj or '00.147.271/0001-74'} - 20.0581 Numero: {nfe_record.numero_nf or '11022'} Valor: {nfe_record.valor_total_nf or 3187.80:.2f} Data de Vencimento: {dt_entrada_str} Forma de Pagamento: DESPACHANTE"
@@ -1457,7 +1502,7 @@ class FluigIntegration:
                     existing_id = match.group(1) if match else None
                     
                     if existing_id:
-                        # Atualizar registro com ID existente
+                        # Atualizar registro com ID existente (apenas o ID, não o objeto complexo)
                         nfe_record.fluig_process_id = existing_id
                         nfe_record.fluig_integration_status = 'INTEGRADO'
                         db.session.commit()
