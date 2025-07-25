@@ -97,6 +97,17 @@ This is a Flask-based web application designed to process Brazilian NFe (Nota Fi
 - **Caching**: SQLAlchemy query optimization with eager loading
 
 ## Changelog
+- July 25, 2025. Fluig Integration: Complete Values Transfer and Duplicate Detection:
+  * Resolved Flask application context issues in threaded async integration operations
+  * Fixed automatic date calculation: entry date = emission date + 1 day to pass Fluig validation
+  * Corrected NFEItem field mapping: quantidade_comercial, valor_unitario_comercial, valor_total_produto
+  * Successfully implemented item values transfer to Fluig (column1_3___1, column1_4___1, column1_5___1)
+  * Added intelligent duplicate detection: prevents re-creating existing processes in Fluig
+  * Enhanced error handling: extracts existing process IDs from Fluig duplicate error messages
+  * Implemented comprehensive logging for item data debugging and validation
+  * System now correctly sends quantity, unit value, and total value for each NFE item
+  * Duplicate prevention maintains data integrity while providing clear user feedback
+  * Integration status automatically updated when detecting pre-existing Fluig processes
 - July 23, 2025. Fluig Integration: Simplified Launch-Only Integration (No File Upload):
   * Implemented simplified Fluig integration based on user's working example code
   * Created start_process_only_launch() method that creates lançamento without file upload

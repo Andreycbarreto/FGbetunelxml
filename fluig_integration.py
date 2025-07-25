@@ -1290,6 +1290,17 @@ class FluigIntegration:
         try:
             from models import Empresa, Filial, User, NFEItem
             
+            # Verificar se já foi integrado
+            if nfe_record.fluig_process_id and nfe_record.fluig_integration_status == 'INTEGRADO':
+                logging.info(f"✅ NFE {nfe_record.numero_nf} já está integrada com Fluig (ID: {nfe_record.fluig_process_id})")
+                return {
+                    'success': True,
+                    'message': f'NFE já integrado! Process ID: {nfe_record.fluig_process_id}',
+                    'process_id': nfe_record.fluig_process_id,
+                    'process_type': 'Importação de Frete',
+                    'integration_data': self._create_integration_data(nfe_record, nfe_record.fluig_process_id, 'already_integrated')
+                }
+            
             logging.info("🎯 Usando código EXATO do exemplo que funciona")
             
             # Buscar dados da empresa/filial baseado no CNPJ destinatário
@@ -1422,6 +1433,33 @@ class FluigIntegration:
                 auth=self.auth,
                 timeout=None  # Sem timeout - aguarda o tempo necessário
             )
+            
+            if response.status_code == 500:
+                error_text = response.text
+                # Verificar se é erro de duplicata
+                if "já foi realizado no FLUIG" in error_text:
+                    logging.info(f"✅ NFe {nfe_record.numero_nf} já foi integrada anteriormente")
+                    # Extrair o ID do processo existente se possível
+                    import re
+                    match = re.search(r'ID (\d+)', error_text)
+                    existing_id = match.group(1) if match else None
+                    
+                    if existing_id:
+                        # Atualizar registro com ID existente
+                        nfe_record.fluig_process_id = existing_id
+                        nfe_record.fluig_integration_status = 'INTEGRADO'
+                        db.session.commit()
+                        
+                        return {
+                            'success': True,
+                            'message': f'NFE já integrado anteriormente! Process ID: {existing_id}',
+                            'process_id': existing_id,
+                            'process_type': 'Importação de Frete',
+                            'integration_data': self._create_integration_data(nfe_record, existing_id, 'launch_only_existing')
+                        }
+                else:
+                    logging.error(f"❌ Erro HTTP: {response.status_code} - {error_text}")
+                    raise Exception(f"Erro HTTP {response.status_code}: {error_text}")
             
             response.raise_for_status()
             response_data = response.json()
