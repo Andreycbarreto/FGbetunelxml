@@ -1204,19 +1204,71 @@ class FluigIntegration:
             # Adicionar dados dos itens se existirem
             if nfe_items:
                 for i, item in enumerate(nfe_items[:10], 1):  # Máximo 10 itens
+                    # Código do serviço
                     if item.servico_codigo:
                         form_fields[f"column1_1___{i}"] = item.servico_codigo
                     else:
-                        form_fields[f"column1_1___{i}"] = "02.007.014"
+                        form_fields[f"column1_1___{i}"] = "3301"
                     
-                    descricao = item.descricao_servico or item.descricao_produto or nfe_record.natureza_operacao or "SERVIÇOS OPERACIONAIS"
+                    # Descrição do serviço
+                    descricao = item.descricao_servico or item.descricao_produto or nfe_record.natureza_operacao or "Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres"
                     form_fields[f"column1_2___{i}"] = descricao[:100]
                     
-                    logging.info(f"Item {i}: {item.servico_codigo or '02.007.014'} - {descricao}")
+                    # LÓGICA INTELIGENTE DE VALORES - Usar a hierarquia correta
+                    valor_final = 0.0
+                    fonte_valor = "zero"
+                    
+                    # Prioridade: servico_valor > valor_total_produto > valor_unitario_comercial
+                    if item.servico_valor and float(item.servico_valor) > 0:
+                        valor_final = float(item.servico_valor)
+                        fonte_valor = "servico_valor"
+                    elif item.valor_total_produto and float(item.valor_total_produto) > 0:
+                        valor_final = float(item.valor_total_produto)
+                        fonte_valor = "valor_total_produto"
+                    elif item.valor_unitario_comercial and float(item.valor_unitario_comercial) > 0:
+                        # Multiplicar pela quantidade se existir
+                        quantidade = float(item.quantidade_comercial or 1)
+                        valor_final = float(item.valor_unitario_comercial) * quantidade
+                        fonte_valor = f"valor_unitario_comercial * {quantidade}"
+                    
+                    # Quantidade
+                    quantidade_str = f"{float(item.quantidade_comercial or 1):.2f}".replace('.', ',')
+                    form_fields[f"column1_3___{i}"] = quantidade_str
+                    
+                    # Valor unitário - usar o valor final calculado
+                    valor_unitario_str = f"{valor_final:.2f}".replace('.', ',')
+                    form_fields[f"column1_4___{i}"] = valor_unitario_str
+                    
+                    # Valor total do item
+                    valor_total_str = f"{valor_final:.2f}".replace('.', ',')
+                    form_fields[f"column1_5___{i}"] = valor_total_str
+                    
+                    # Múltiplos campos de valor para garantir que apareça no Fluig
+                    form_fields[f"column1_6___{i}"] = valor_total_str
+                    form_fields[f"valorTotalItem___{i}"] = valor_total_str
+                    form_fields[f"valorItem___{i}"] = valor_total_str
+                    form_fields[f"valor___{i}"] = valor_total_str
+                    form_fields[f"vlr_item___{i}"] = valor_total_str
+                    form_fields[f"vlrTotalItem___{i}"] = valor_total_str
+                    form_fields[f"valorTotalServico___{i}"] = valor_total_str
+                    
+                    logging.info(f"💰 Item {i}: Código={item.servico_codigo or '3301'}")
+                    logging.info(f"💰 Descrição: {descricao[:50]}...")
+                    logging.info(f"💰 Quantidade: {quantidade_str}")
+                    logging.info(f"💰 Valor Final: R$ {valor_final:.2f} (fonte: {fonte_valor})")
+                    logging.info(f"💰 Campos enviados: column1_3___1={quantidade_str}, column1_4___1={valor_unitario_str}, column1_5___1={valor_total_str}")
             else:
                 # Item padrão se não houver itens
-                form_fields["column1_1___1"] = "02.007.014"
-                form_fields["column1_2___1"] = nfe_record.natureza_operacao or "SERVIÇOS OPERACIONAIS"
+                form_fields["column1_1___1"] = "3301"
+                form_fields["column1_2___1"] = "Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres"
+                # Valores padrão baseados no valor total da NFE
+                valor_nfe = float(nfe_record.valor_total_nf or 0)
+                valor_str = f"{valor_nfe:.2f}".replace('.', ',')
+                form_fields["column1_3___1"] = "1,00"
+                form_fields["column1_4___1"] = valor_str
+                form_fields["column1_5___1"] = valor_str
+                
+                logging.info(f"💰 Item padrão: R$ {valor_nfe:.2f} (fonte: valor_total_nf)")
             
             # Payload exatamente como no exemplo
             start_process_payload = {
