@@ -1269,11 +1269,73 @@ class FluigIntegration:
                     form_fields[f"vlrTotalItem___{i}"] = valor_total_str
                     form_fields[f"valorTotalServico___{i}"] = valor_total_str
                     
+                    # Campos alternativos que o Fluig pode reconhecer
+                    form_fields[f"valorTotal___{i}"] = valor_total_str
+                    form_fields[f"valorProduto___{i}"] = valor_total_str
+                    form_fields[f"vlrTotal___{i}"] = valor_total_str
+                    form_fields[f"valorServico___{i}"] = valor_total_str
+                    form_fields[f"vlrServico___{i}"] = valor_total_str
+                    form_fields[f"preco___{i}"] = valor_total_str
+                    form_fields[f"precoTotal___{i}"] = valor_total_str
+                    form_fields[f"valorItemNota___{i}"] = valor_total_str
+                    
+                    # Tentar também sem os underscores triplos
+                    form_fields[f"valorTotal{i}"] = valor_total_str
+                    form_fields[f"valorItem{i}"] = valor_total_str
+                    form_fields[f"vlrTotal{i}"] = valor_total_str
+                    
+                    # Campos de quantidade também
+                    form_fields[f"quantidade___{i}"] = quantidade_str
+                    form_fields[f"qtd___{i}"] = quantidade_str
+                    form_fields[f"qtde___{i}"] = quantidade_str
+                    form_fields[f"quantidade{i}"] = quantidade_str
+                    
+                    # Campos de valor unitário também
+                    form_fields[f"valorUnitario___{i}"] = valor_unitario_str
+                    form_fields[f"vlrUnitario___{i}"] = valor_unitario_str
+                    form_fields[f"precoUnitario___{i}"] = valor_unitario_str
+                    form_fields[f"valorUnitario{i}"] = valor_unitario_str
+                    
+                    # Campos de tabela HTML do Fluig (formato diferente)
+                    form_fields[f"col{i}_valorTotal"] = valor_total_str
+                    form_fields[f"col{i}_valor"] = valor_total_str
+                    form_fields[f"col{i}_vlr"] = valor_total_str
+                    form_fields[f"field_{i}_valorTotal"] = valor_total_str
+                    form_fields[f"field_{i}_valor"] = valor_total_str
+                    form_fields[f"row{i}_valorTotal"] = valor_total_str
+                    form_fields[f"row{i}_valor"] = valor_total_str
+                    
+                    # Formato específico do Fluig para tabelas dinâmicas
+                    form_fields[f"tablename_{i}_valorTotal"] = valor_total_str
+                    form_fields[f"tablename_{i}_valor"] = valor_total_str
+                    form_fields[f"item_{i}_valor"] = valor_total_str
+                    form_fields[f"linha_{i}_valor"] = valor_total_str
+                    
                     logging.info(f"💰 Item {i}: Código={item.servico_codigo or '3301'}")
                     logging.info(f"💰 Descrição: {descricao[:50]}...")
                     logging.info(f"💰 Quantidade: {quantidade_str}")
                     logging.info(f"💰 Valor Final: R$ {valor_final:.2f} (fonte: {fonte_valor})")
                     logging.info(f"💰 Campos enviados: column1_3___1={quantidade_str}, column1_4___1={valor_unitario_str}, column1_5___1={valor_total_str}")
+                    logging.info(f"💰 Total de campos de valor enviados: {len([k for k in form_fields.keys() if 'valor' in k.lower() or 'vlr' in k.lower() or 'preco' in k.lower()])}")
+                    
+                    # ESTRATÉGIA ADICIONAL: Criar arrays de valores para o Fluig
+                    if i == 1:  # Apenas na primeira iteração para evitar duplicação
+                        # Arrays de valores que o Fluig pode reconhecer
+                        form_fields["valoresItens"] = [valor_total_str]
+                        form_fields["quantidadeItens"] = [quantidade_str]
+                        form_fields["valoresUnitarios"] = [valor_unitario_str]
+                        
+                        # JSON de itens (em caso de Fluig reconhecer JSON)
+                        form_fields["itensJson"] = json.dumps([{
+                            "codigo": item.servico_codigo or "3301",
+                            "descricao": descricao,
+                            "quantidade": quantidade_final,
+                            "valorUnitario": valor_unitario_final,
+                            "valorTotal": valor_final
+                        }])
+                        
+                        logging.info(f"💰 Arrays criados: valoresItens={form_fields['valoresItens']}")
+                        logging.info(f"💰 JSON de itens: {form_fields['itensJson'][:100]}...")
             else:
                 # Item padrão se não houver itens
                 form_fields["column1_1___1"] = "3301"
@@ -1285,7 +1347,22 @@ class FluigIntegration:
                 form_fields["column1_4___1"] = valor_str
                 form_fields["column1_5___1"] = valor_str
                 
+                # MÉTODO ADICIONAL: Tentar todos os padrões possíveis de campos de valor
+                valor_campos = [
+                    "valorTotal___1", "valor___1", "vlr___1", "vlrTotal___1",
+                    "valorItem___1", "vlrItem___1", "valorServico___1", "vlrServico___1",
+                    "valorProduto___1", "vlrProduto___1", "precoTotal___1", "preco___1",
+                    "column1_6___1", "column1_7___1", "column1_8___1", "column1_9___1",
+                    "valorTotalItem___1", "valorTotalServico___1", "valorItemNota___1",
+                    "col1_valor", "field_1_valor", "row1_valor", "item_1_valor",
+                    "tablename_1_valor", "linha_1_valor", "valorTotal1", "valorItem1"
+                ]
+                
+                for campo in valor_campos:
+                    form_fields[campo] = valor_str
+                    
                 logging.info(f"💰 Item padrão: R$ {valor_nfe:.2f} (fonte: valor_total_nf)")
+                logging.info(f"💰 Campos de valor preenchidos: {len(valor_campos)} campos diferentes")
             
             # Payload exatamente como no exemplo
             start_process_payload = {
