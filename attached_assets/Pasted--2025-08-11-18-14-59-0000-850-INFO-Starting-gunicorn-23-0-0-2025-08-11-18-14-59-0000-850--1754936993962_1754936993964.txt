@@ -1,0 +1,84 @@
+[2025-08-11 18:14:59 +0000] [850] [INFO] Starting gunicorn 23.0.0
+[2025-08-11 18:14:59 +0000] [850] [INFO] Listening at: http://0.0.0.0:5000 (850)
+[2025-08-11 18:14:59 +0000] [850] [INFO] Using worker: sync
+[2025-08-11 18:14:59 +0000] [861] [INFO] Booting worker with pid: 861
+[2025-08-11 18:14:59 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:14:59 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:14:59 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:14:59 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:14:59 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:14:59 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:14:59 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:14:59 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:00 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:00 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:00 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:00 +0000] [850] [INFO] Handling signal: winch
+INFO:async_pdf_processor:PDF processing worker started
+INFO:async_pdf_processor:Async PDF processor started
+[2025-08-11 18:15:02 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:02 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:02 +0000] [850] [INFO] Handling signal: winch
+INFO:root:Database tables created
+[2025-08-11 18:15:03 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:03 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:03 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:03 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:03 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:15:03 +0000] [850] [INFO] Handling signal: winch
+INFO:root:🎯 Iniciando lançamento direto no Fluig para NFE 10595
+INFO:root:🎯 Criando lançamento direto no Fluig para NFE 10595
+INFO:root:🎯 Usando código EXATO do exemplo que funciona
+INFO:root:✅ Usando filial: COAL - Gurupi
+INFO:root:🔢 Cálculo inteligente de valores:
+INFO:root:   Valor Unitário Comercial: 3187.8000
+INFO:root:   Valor Total Produto: 3187.80
+INFO:root:   Valor Serviço: 3187.80
+INFO:root:   Valor Total NFe: 2991.75
+INFO:root:   ✅ Fonte escolhida: servico_valor
+INFO:root:   ✅ Valor Final Unitário: 3187.8
+INFO:root:   ✅ Valor Final Total: 3187.80
+INFO:root:🔍 Dados dos itens sendo enviados:
+INFO:root:   Item 1: Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres
+INFO:root:     Código: 3301
+INFO:root:     Quantidade Comercial: 1.0000
+INFO:root:     Valor Unitário Comercial: 3187.8000
+INFO:root:     Valor Total Produto: 3187.80
+INFO:root:     Valor Serviço: 3187.80
+INFO:root:📝 Campos de itens no formulário:
+INFO:root:   valor_NF: 2991,75
+INFO:root:   column1_1___1: 3301
+INFO:root:   column1_2___1: Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres
+INFO:root:   column1_3___1: 1,00
+INFO:root:   column1_4___1: 3187,80
+INFO:root:   column1_5___1: 3187,80
+INFO:root:   column1_6___1: 3187,80
+INFO:root:   valorTotalItem___1: 3187,80
+INFO:root:   valorItem___1: 3187,80
+INFO:root:   valor___1: 3187,80
+INFO:root:   vlr_item___1: 3187,80
+INFO:root:   vlrTotalItem___1: 3187,80
+INFO:root:   valorTotalServico___1: 3187,80
+INFO:root:🚀 Fazendo requisição EXATA como no exemplo...
+DEBUG:requests_oauthlib.oauth1_auth:Signing request <PreparedRequest [POST]> using client <Client client_key=5639-4421-2098-7812-4, client_secret=****, resource_owner_key=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa, resource_owner_secret=****, signature_method=HMAC-SHA1, signature_type=AUTH_HEADER, callback_uri=None, rsa_key=None, verifier=None, realm=None, encoding=utf-8, decoding=utf-8, nonce=None, timestamp=None>
+DEBUG:requests_oauthlib.oauth1_auth:Including body in call to sign: False
+DEBUG:oauthlib.oauth1.rfc5849:Collected params: [('oauth_nonce', '27391476445949076651754936813'), ('oauth_timestamp', '1754936813'), ('oauth_version', '1.0'), ('oauth_signature_method', 'HMAC-SHA1'), ('oauth_consumer_key', '5639-4421-2098-7812-4'), ('oauth_token', '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa')]
+DEBUG:oauthlib.oauth1.rfc5849:Normalized params: oauth_consumer_key=5639-4421-2098-7812-4&oauth_nonce=27391476445949076651754936813&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1754936813&oauth_token=5c0f3881-81eb-40ac-80e1-c8000bd8ecfa&oauth_version=1.0
+DEBUG:oauthlib.oauth1.rfc5849:Normalized URI: http://cloud.betunel.com.br:8380/process-management/api/v2/processes/Processo%20de%20Lan%C3%A7amento%20de%20Nota%20Fiscal/start
+DEBUG:oauthlib.oauth1.rfc5849:Signing: signature base string: POST&http%3A%2F%2Fcloud.betunel.com.br%3A8380%2Fprocess-management%2Fapi%2Fv2%2Fprocesses%2FProcesso%2520de%2520Lan%25C3%25A7amento%2520de%2520Nota%2520Fiscal%2Fstart&oauth_consumer_key%3D5639-4421-2098-7812-4%26oauth_nonce%3D27391476445949076651754936813%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1754936813%26oauth_token%3D5c0f3881-81eb-40ac-80e1-c8000bd8ecfa%26oauth_version%3D1.0
+DEBUG:oauthlib.oauth1.rfc5849:Signature: cBgcyEloYIaXa3X8RG8cPwcZxPQ=
+DEBUG:oauthlib.oauth1.rfc5849:Encoding URI, headers and body to utf-8.
+DEBUG:requests_oauthlib.oauth1_auth:Updated url: http://cloud.betunel.com.br:8380/process-management/api/v2/processes/Processo%20de%20Lan%C3%A7amento%20de%20Nota%20Fiscal/start
+DEBUG:requests_oauthlib.oauth1_auth:Updated headers: {b'User-Agent': b'python-requests/2.32.4', b'Accept-Encoding': b'gzip, deflate, zstd', b'Accept': b'*/*', b'Connection': b'keep-alive', b'Content-Length': b'1806', b'Content-Type': b'application/json', b'Authorization': b'OAuth oauth_nonce="27391476445949076651754936813", oauth_timestamp="1754936813", oauth_version="1.0", oauth_signature_method="HMAC-SHA1", oauth_consumer_key="5639-4421-2098-7812-4", oauth_token="5c0f3881-81eb-40ac-80e1-c8000bd8ecfa", oauth_signature="cBgcyEloYIaXa3X8RG8cPwcZxPQ%3D"'}
+DEBUG:requests_oauthlib.oauth1_auth:Updated body: b'{"targetState": 59, "targetAssignee": "", "subProcessTargetState": 0, "comment": "Iniciado via API", "formFields": {"nome": "Roberto Galdino", "matricula": "e7f2q0ulk2s1qwxw1496403470877", "email": "roberto.galdino@betunel.com.br", "Hdt_entrada_nf": "01/05/2025", "dt_entrada_nf": "01/05/2025", "nm_empresa": "CENTRO OESTE ASFALTOS ", "cod_empresa": "16", "cnpj": "01593821000141", "nm_filial": "COAL - Gurupi", "cod_filial": "3", "cnpj_filial": "01593821000303", "unid_negoc": "SUPPLY E CUSTOS", "cod_un": "0.10.02.01.001", "centro_custo": "1.0.3299 - SUPRIMENTOS", "cod_cc": "1.0.3299", "tp_doc": "Nota fiscal de servi\\u00e7o eletr\\u00f4nica", "numero_NF": "10595", "serie": "E1", "valor_NF": "2991,75", "dt_emissao_NF": "30/04/2025", "Hdt_emissao_NF": "30/04/2025", "dt_vencimento_NF": "01/05/2025", "fornecedor": "NEW DEAL ASSESSORIA EM COM\\u00c9RCIO EXTERIOR LTDA. - EPP - 00124771000174 - 20.0581", "cod_fornecedor": "20.0581", "fm_pagamento": "DESPACHANTE", "chk_boleto": "NAO", "justificativa": "NFe recebida nesta data.", "destinacao": "PO475_20225 Exig\\u00edvel", "column1_1___1": "3301", "column1_2___1": "Servi\\u00e7os de desembara\\u00e7o aduaneiro, comiss\\u00e1rios, despachantes e cong\\u00eaneres", "column1_3___1": "1,00", "column1_4___1": "3187,80", "column1_5___1": "3187,80", "column1_6___1": "3187,80", "valorTotalItem___1": "3187,80", "valorItem___1": "3187,80", "valor___1": "3187,80", "vlr_item___1": "3187,80", "vlrTotalItem___1": "3187,80", "valorTotalServico___1": "3187,80", "projeto___1": "SEMPROJETO", "subprojeto___1": "SEMSUBPROJETO", "identificador": "Empresa: CENTRO OESTE ASFALTOS  Fornecedor: NEW DEAL ASSESSORIA EM COM\\u00c9RCIO EXTERIOR LTDA. - EPP - 00124771000174 - 20.0581 Numero: 10595 Valor: 2991.75 Data de Vencimento: 01/05/2025 Forma de Pagamento: DESPACHANTE"}}'
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): cloud.betunel.com.br:8380
+[2025-08-11 18:26:53 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:26:53 +0000] [850] [INFO] Handling signal: winch
+[2025-08-11 18:26:54 +0000] [850] [INFO] Handling signal: winch
+DEBUG:urllib3.connectionpool:http://cloud.betunel.com.br:8380 "POST /process-management/api/v2/processes/Processo%20de%20Lan%C3%A7amento%20de%20Nota%20Fiscal/start HTTP/1.1" 200 564
+INFO:root:✅ Processo criado! ID: 774005
+INFO:root:📋 Resposta: {'possibleAssignees': None, 'toShowPossibleAssignees': False, 'jointActivity': False, 'reachedPercentageForJointActivity': None, 'highestTaskForJointActivity': None, 'highestAssigneeForJointActivity': None, 'nextState': 4, 'nextGateway': None, 'nextStateName': None, 'gatewayComment': None, 'gatewayCondition': 0, 'useManagerAssignees': False, 'conversionLog': None, 'conversionSequence': None, 'cardId': 2899787, 'cardVersion': 1000, 'subProcessRequests': [], 'processId': 'Processo de Lançamento de Nota Fiscal', 'processVersion': 42, 'processInstanceId': 774005, '_expandables': ['possibleAssignees']}
+INFO:root:✅ Processo criado com ID: 774005
+INFO:root:✅ NFE 10595 integrado com sucesso!
+INFO:root:🎯 Process Instance ID: 774005
+INFO:root:🎯 Resultado da integração assíncrona: {'success': True, 'message': 'NFE integrado com sucesso! Process ID: 774005', 'process_id': 774005, 'process_type': 'Processo de Lançamento de Nota Fiscal', 'integration_data': {'nfe_number': '10595', 'emitente': 'NEW DEAL ASSESSORIA EM COMÉRCIO EXTERIOR LTDA. - EPP', 'cnpj_emitente': '00124771000174', 'valor_total': 2991.75, 'data_emissao': '30/04/2025', 'tipo_operacao': 'Serviços e Produtos', 'chave_nfe': '7435300425171628800014272712025047303657', 'process_instance_id': 774005, 'process_name': 'Processo de Lançamento de Nota Fiscal', 'integration_timestamp': '2025-08-11T18:28:58.892454', 'integration_method': 'launch_only_example_code', 'note': 'Lançamento direto baseado no código de exemplo fornecido - SEM upload de arquivo'}}

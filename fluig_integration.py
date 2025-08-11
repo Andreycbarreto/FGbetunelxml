@@ -1277,14 +1277,38 @@ class FluigIntegration:
                     
                     # ESTRATÉGIA SIMPLIFICADA: Apenas os campos essenciais em múltiplos formatos
                     
-                    # CORREÇÃO BASEADA NA ANÁLISE VISUAL DA TABELA:
-                    # Layout real: Código(1) | Nome(2) | Projeto(3) | Sub projeto(4) | Valor(5)
-                    # O valor deve estar na posição 5, mas projeto e subprojeto devem estar corretos nas posições 3 e 4
+                    # ESTRATÉGIA DEFINITIVA: Baseado na imagem, a tabela tem estas colunas:
+                    # Código do item | Nome do item | Projeto | Sub projeto | Valor
+                    # Vamos mapear corretamente respeitando essa estrutura
                     
-                    # Posições corretas conforme layout visual
-                    form_fields[f"column1_3___{i}"] = "SEMPROJETO"  # Projeto fixo na posição 3
-                    form_fields[f"column1_4___{i}"] = "SEMSUBPROJETO"  # Sub projeto fixo na posição 4
-                    form_fields[f"column1_5___{i}"] = valor_total_str_br  # VALOR na posição 5
+                    # Coluna 1: Código (já funciona)
+                    # Coluna 2: Nome (já funciona) 
+                    # Coluna 3: Projeto - deve ser texto do projeto, não valor
+                    form_fields[f"column1_3___{i}"] = "SEMPROJETO"
+                    # Coluna 4: Sub projeto - deve ser texto do subprojeto, não valor  
+                    form_fields[f"column1_4___{i}"] = "SEMSUBPROJETO"
+                    # Coluna 5: Valor - DEVE ser o valor monetário
+                    form_fields[f"column1_5___{i}"] = valor_total_str_br
+                    
+                    # ESTRATÉGIA CRÍTICA: Tentar TODAS as variações possíveis do campo valor
+                    # Baseado nos logs, sabemos que o valor "3187,80" está sendo enviado mas não aparece
+                    
+                    # Variação 1: Sufixos no campo 5
+                    form_fields[f"column1_5___{i}_vlr"] = valor_total_str_br
+                    form_fields[f"column1_5___{i}_valor"] = valor_total_str_br
+                    form_fields[f"column1_5___{i}_money"] = valor_total_str_br
+                    form_fields[f"column1_5___{i}_rs"] = valor_total_str_br
+                    
+                    # Variação 2: O valor pode ser na coluna 3 ou 4 (no lugar do projeto/subprojeto)
+                    # Se projeto e subprojeto estão aparecendo, então pode ser que valores estão indo para lá
+                    form_fields[f"column1_3___{i}_vlr"] = valor_total_str_br  # Valor no lugar do projeto
+                    form_fields[f"column1_4___{i}_vlr"] = valor_total_str_br  # Valor no lugar do subprojeto
+                    
+                    # Variação 3: Campo fora da estrutura column (campos diretos)
+                    form_fields[f"valor_item_{i}"] = valor_total_str_br
+                    form_fields[f"vlr_item_{i}"] = valor_total_str_br
+                    form_fields[f"item_{i}_valor"] = valor_total_str_br
+                    form_fields[f"tabela_valor_{i}"] = valor_total_str_br
                     
                     # TESTES ADICIONAIS PARA O VALOR (formato americano)
                     form_fields[f"column1_5___{i}_us"] = valor_total_str_us  # Valor com ponto
