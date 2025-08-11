@@ -1277,23 +1277,20 @@ class FluigIntegration:
                     
                     # ESTRATÉGIA SIMPLIFICADA: Apenas os campos essenciais em múltiplos formatos
                     
-                    # 1. Campos padrão (formato brasileiro com vírgula)
-                    form_fields[f"column1_3___{i}"] = quantidade_str_br
-                    form_fields[f"column1_4___{i}"] = valor_unitario_str_br
-                    form_fields[f"column1_5___{i}"] = valor_total_str_br
+                    # CORREÇÃO BASEADA NA ANÁLISE VISUAL DA TABELA:
+                    # Layout real: Código(1) | Nome(2) | Projeto(3) | Sub projeto(4) | Valor(5)
+                    # O valor deve estar na posição 5, mas projeto e subprojeto devem estar corretos nas posições 3 e 4
                     
-                    # 2. Mesmos campos em formato americano (com ponto)
-                    form_fields[f"column1_3___{i}_dot"] = quantidade_str_us
-                    form_fields[f"column1_4___{i}_dot"] = valor_unitario_str_us
-                    form_fields[f"column1_5___{i}_dot"] = valor_total_str_us
+                    # Posições corretas conforme layout visual
+                    form_fields[f"column1_3___{i}"] = "SEMPROJETO"  # Projeto fixo na posição 3
+                    form_fields[f"column1_4___{i}"] = "SEMSUBPROJETO"  # Sub projeto fixo na posição 4
+                    form_fields[f"column1_5___{i}"] = valor_total_str_br  # VALOR na posição 5
                     
-                    # 3. Campos sem formatação decimal (inteiros)
+                    # TESTES ADICIONAIS PARA O VALOR (formato americano)
+                    form_fields[f"column1_5___{i}_us"] = valor_total_str_us  # Valor com ponto
+                    
+                    # TESTES ADICIONAIS PARA O VALOR (formato inteiro em centavos)
                     valor_total_int = str(int(valor_final * 100))  # Centavos
-                    valor_unitario_int = str(int(valor_unitario_final * 100))  # Centavos
-                    quantidade_int = str(int(quantidade_final))
-                    
-                    form_fields[f"column1_3___{i}_int"] = quantidade_int
-                    form_fields[f"column1_4___{i}_int"] = valor_unitario_int
                     form_fields[f"column1_5___{i}_int"] = valor_total_int
                     
                     # 4. Campos com nomes alternativos mais simples
@@ -1306,28 +1303,12 @@ class FluigIntegration:
                     form_fields[f"valorTotalItem{i}"] = valor_total_str_br
                     form_fields[f"vlrTotalItem{i}"] = valor_total_str_br
                     
-                    # SOLUÇÃO BASEADA NA IMAGEM: Testar múltiplas posições para o valor
-                    # Layout visual: Código | Nome | Projeto | Sub projeto | Valor
-                    # Vamos testar as posições 3, 4, 5, 6 para o valor
+                    # TESTE ESTRATÉGICO: Testar o valor também em outras posições
+                    # Caso a posição 5 não funcione, testar posições alternativas
+                    form_fields[f"column1_6___{i}"] = valor_total_str_br  # Próxima posição
+                    form_fields[f"column1_7___{i}"] = valor_total_str_br  # Posição seguinte
                     
-                    # Guardar projeto e subprojeto originais
-                    projeto_original = form_fields.get(f"projeto___{i}", "SEMPROJETO")
-                    subprojeto_original = form_fields.get(f"subprojeto___{i}", "SEMSUBPROJETO") 
-                    
-                    # ESTRATÉGIA 1: Valor na posição 3 (projeto vira valor)
-                    form_fields[f"column1_3___{i}_valor"] = valor_total_str_br
-                    
-                    # ESTRATÉGIA 2: Valor na posição 4 (subprojeto vira valor)  
-                    form_fields[f"column1_4___{i}_valor"] = valor_total_str_br
-                    
-                    # ESTRATÉGIA 3: Valor continua na posição 5 mas com formato específico
-                    form_fields[f"column1_5___{i}_valor"] = valor_total_str_br
-                    form_fields[f"column1_5___{i}_vlr"] = valor_total_str_br
-                    
-                    # ESTRATÉGIA 4: Valor na posição 6 (nova coluna)
-                    form_fields[f"column1_6___{i}"] = valor_total_str_br
-                    
-                    # ESTRATÉGIA 5: Campo específico de valor (fora da estrutura column)
+                    # TESTE COM CAMPOS ESPECÍFICOS PARA VALOR
                     form_fields[f"valorItem{i}"] = valor_total_str_br
                     form_fields[f"valor{i}"] = valor_total_str_br
                     
@@ -1335,8 +1316,12 @@ class FluigIntegration:
                     logging.info(f"💰 Descrição: {descricao[:50]}...")
                     logging.info(f"💰 Quantidade: {quantidade_str_br}")
                     logging.info(f"💰 Valor Final: R$ {valor_final:.2f} (fonte: {fonte_valor})")
-                    logging.info(f"💰 Campos enviados: column1_3___1={quantidade_str_br}, column1_4___1={valor_unitario_str_br}, column1_5___1={valor_total_str_br}")
-                    logging.info(f"💰 TESTE COLUNA 6: column1_6___1={valor_total_str_br}")
+                    logging.info(f"💰 CORREÇÃO APLICADA:")
+                    logging.info(f"   column1_3___1 (Projeto): SEMPROJETO") 
+                    logging.info(f"   column1_4___1 (Sub projeto): SEMSUBPROJETO")
+                    logging.info(f"   column1_5___1 (VALOR): {valor_total_str_br}")
+                    logging.info(f"   column1_6___1 (VALOR alt): {valor_total_str_br}")
+                    logging.info(f"   valorItem1: {valor_total_str_br}")
                     logging.info(f"💰 Total de campos de valor enviados: {len([k for k in form_fields.keys() if 'valor' in k.lower() or 'vlr' in k.lower() or 'preco' in k.lower()])}")
                     
                     # ESTRATÉGIA ADICIONAL: Criar arrays de valores para o Fluig
