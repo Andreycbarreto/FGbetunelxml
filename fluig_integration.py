@@ -1201,6 +1201,18 @@ class FluigIntegration:
                 "identificador": f"Empresa: {nm_empresa} Fornecedor: {nfe_record.emitente_nome} - {nfe_record.emitente_cnpj} - 20.0581 Numero: {nfe_record.numero_nf} Valor: {nfe_record.valor_total_nf or 0:.2f} Data de Vencimento: {nfe_record.data_vencimento.strftime('%d/%m/%Y') if nfe_record.data_vencimento else 'N/A'} Forma de Pagamento: {nfe_record.forma_pagamento or 'DESPACHANTE'}"
             }
             
+            # ESTRATÉGIA COMPLEMENTAR: Campos diretos (fora da tabela) para valores
+            valor_total_nfe = float(nfe_record.valor_total_nf or 0)
+            form_fields["valorTotalItens"] = f"{valor_total_nfe:.2f}".replace('.', ',')  # Brasileiro
+            form_fields["valorTotalItensUS"] = f"{valor_total_nfe:.2f}"  # Americano
+            form_fields["valorTotalCentavos"] = str(int(valor_total_nfe * 100))  # Inteiro
+            form_fields["vlrTotal"] = f"{valor_total_nfe}"  # Simples
+            
+            logging.info(f"🧪 CAMPOS DIRETOS ADICIONADOS:")
+            logging.info(f"  valorTotalItens: {form_fields['valorTotalItens']}")
+            logging.info(f"  valorTotalItensUS: {form_fields['valorTotalItensUS']}")
+            logging.info(f"  valorTotalCentavos: {form_fields['valorTotalCentavos']}")
+            
             # Adicionar dados dos itens se existirem
             if nfe_items:
                 for i, item in enumerate(nfe_items[:10], 1):  # Máximo 10 itens
@@ -1288,6 +1300,11 @@ class FluigIntegration:
                     form_fields[f"qtd{i}"] = quantidade_str_br
                     form_fields[f"vlr{i}"] = valor_total_str_br
                     form_fields[f"valor{i}"] = valor_total_str_br
+                    
+                    # 5. NOVA ESTRATÉGIA: Campos que PODEM funcionar baseados em formulários Fluig comuns
+                    form_fields[f"itemValor{i}"] = valor_total_str_br
+                    form_fields[f"valorTotalItem{i}"] = valor_total_str_br
+                    form_fields[f"vlrTotalItem{i}"] = valor_total_str_br
                     
                     # Campos de tabela HTML do Fluig (formato diferente)
                     form_fields[f"col{i}_valorTotal"] = valor_total_str
