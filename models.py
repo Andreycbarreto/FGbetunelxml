@@ -184,7 +184,7 @@ class NFERecord(db.Model):
     original_pdf_filename = db.Column(db.String(255), nullable=True)
     
     # Fluig integration fields
-    fluig_process_id = db.Column(db.String(255), nullable=True)  # Expandido para suportar IDs complexos
+    fluig_process_id = db.Column(db.Text, nullable=True)  # Expandido para suportar dados JSON complexos
     fluig_document_id = db.Column(db.String(100), nullable=True)
     fluig_integration_date = db.Column(db.DateTime, nullable=True)
     fluig_integration_status = db.Column(db.String(50), nullable=True)

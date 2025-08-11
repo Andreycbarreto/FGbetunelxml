@@ -10,7 +10,7 @@ import logging
 import time
 from datetime import datetime
 from app import db
-from models import UserSettings, NFERecord, Empresa, Filial
+from models import UserSettings, NFERecord, Empresa, Filial, User, NFEItem
 import os
 
 
@@ -1248,53 +1248,46 @@ class FluigIntegration:
                         quantidade_final = 1.0
                         fonte_valor = "fallback_valor_total_nfe"
                     
-                    # Quantidade - sempre pelo menos 1
-                    quantidade_str = f"{quantidade_final:.2f}".replace('.', ',')
-                    form_fields[f"column1_3___{i}"] = quantidade_str
+                    # ESTRATÉGIA REFORÇADA: Testar formatos diferentes
+                    quantidade_final_formatted = f"{quantidade_final:.4f}" if quantidade_final != int(quantidade_final) else f"{int(quantidade_final)}"
+                    valor_unitario_formatted = f"{valor_unitario_final:.2f}"
+                    valor_total_formatted = f"{valor_final:.2f}"
                     
-                    # Valor unitário
-                    valor_unitario_str = f"{valor_unitario_final:.2f}".replace('.', ',')
-                    form_fields[f"column1_4___{i}"] = valor_unitario_str
+                    # Formato brasileiro (vírgula)
+                    quantidade_str_br = quantidade_final_formatted.replace('.', ',')
+                    valor_unitario_str_br = valor_unitario_formatted.replace('.', ',')
+                    valor_total_str_br = valor_total_formatted.replace('.', ',')
                     
-                    # Valor total do item - SEMPRE preenchido
-                    valor_total_str = f"{valor_final:.2f}".replace('.', ',')
-                    form_fields[f"column1_5___{i}"] = valor_total_str
+                    # Formato americano (ponto)
+                    quantidade_str_us = quantidade_final_formatted
+                    valor_unitario_str_us = valor_unitario_formatted
+                    valor_total_str_us = valor_total_formatted
                     
-                    # Múltiplos campos de valor para garantir que apareça no Fluig
-                    form_fields[f"column1_6___{i}"] = valor_total_str
-                    form_fields[f"valorTotalItem___{i}"] = valor_total_str
-                    form_fields[f"valorItem___{i}"] = valor_total_str
-                    form_fields[f"valor___{i}"] = valor_total_str
-                    form_fields[f"vlr_item___{i}"] = valor_total_str
-                    form_fields[f"vlrTotalItem___{i}"] = valor_total_str
-                    form_fields[f"valorTotalServico___{i}"] = valor_total_str
+                    # ESTRATÉGIA SIMPLIFICADA: Apenas os campos essenciais em múltiplos formatos
                     
-                    # Campos alternativos que o Fluig pode reconhecer
-                    form_fields[f"valorTotal___{i}"] = valor_total_str
-                    form_fields[f"valorProduto___{i}"] = valor_total_str
-                    form_fields[f"vlrTotal___{i}"] = valor_total_str
-                    form_fields[f"valorServico___{i}"] = valor_total_str
-                    form_fields[f"vlrServico___{i}"] = valor_total_str
-                    form_fields[f"preco___{i}"] = valor_total_str
-                    form_fields[f"precoTotal___{i}"] = valor_total_str
-                    form_fields[f"valorItemNota___{i}"] = valor_total_str
+                    # 1. Campos padrão (formato brasileiro com vírgula)
+                    form_fields[f"column1_3___{i}"] = quantidade_str_br
+                    form_fields[f"column1_4___{i}"] = valor_unitario_str_br
+                    form_fields[f"column1_5___{i}"] = valor_total_str_br
                     
-                    # Tentar também sem os underscores triplos
-                    form_fields[f"valorTotal{i}"] = valor_total_str
-                    form_fields[f"valorItem{i}"] = valor_total_str
-                    form_fields[f"vlrTotal{i}"] = valor_total_str
+                    # 2. Mesmos campos em formato americano (com ponto)
+                    form_fields[f"column1_3___{i}_dot"] = quantidade_str_us
+                    form_fields[f"column1_4___{i}_dot"] = valor_unitario_str_us
+                    form_fields[f"column1_5___{i}_dot"] = valor_total_str_us
                     
-                    # Campos de quantidade também
-                    form_fields[f"quantidade___{i}"] = quantidade_str
-                    form_fields[f"qtd___{i}"] = quantidade_str
-                    form_fields[f"qtde___{i}"] = quantidade_str
-                    form_fields[f"quantidade{i}"] = quantidade_str
+                    # 3. Campos sem formatação decimal (inteiros)
+                    valor_total_int = str(int(valor_final * 100))  # Centavos
+                    valor_unitario_int = str(int(valor_unitario_final * 100))  # Centavos
+                    quantidade_int = str(int(quantidade_final))
                     
-                    # Campos de valor unitário também
-                    form_fields[f"valorUnitario___{i}"] = valor_unitario_str
-                    form_fields[f"vlrUnitario___{i}"] = valor_unitario_str
-                    form_fields[f"precoUnitario___{i}"] = valor_unitario_str
-                    form_fields[f"valorUnitario{i}"] = valor_unitario_str
+                    form_fields[f"column1_3___{i}_int"] = quantidade_int
+                    form_fields[f"column1_4___{i}_int"] = valor_unitario_int
+                    form_fields[f"column1_5___{i}_int"] = valor_total_int
+                    
+                    # 4. Campos com nomes alternativos mais simples
+                    form_fields[f"qtd{i}"] = quantidade_str_br
+                    form_fields[f"vlr{i}"] = valor_total_str_br
+                    form_fields[f"valor{i}"] = valor_total_str_br
                     
                     # Campos de tabela HTML do Fluig (formato diferente)
                     form_fields[f"col{i}_valorTotal"] = valor_total_str
@@ -1321,9 +1314,9 @@ class FluigIntegration:
                     # ESTRATÉGIA ADICIONAL: Criar arrays de valores para o Fluig
                     if i == 1:  # Apenas na primeira iteração para evitar duplicação
                         # Arrays de valores que o Fluig pode reconhecer
-                        form_fields["valoresItens"] = [valor_total_str]
-                        form_fields["quantidadeItens"] = [quantidade_str]
-                        form_fields["valoresUnitarios"] = [valor_unitario_str]
+                        form_fields["valoresItens"] = [valor_total_str_br]
+                        form_fields["quantidadeItens"] = [quantidade_str_br]
+                        form_fields["valoresUnitarios"] = [valor_unitario_str_br]
                         
                         # JSON de itens (em caso de Fluig reconhecer JSON)
                         form_fields["itensJson"] = json.dumps([{
@@ -1336,6 +1329,16 @@ class FluigIntegration:
                         
                         logging.info(f"💰 Arrays criados: valoresItens={form_fields['valoresItens']}")
                         logging.info(f"💰 JSON de itens: {form_fields['itensJson'][:100]}...")
+                    
+                    logging.info(f"💰 Item {i}: Código={item.servico_codigo or '3301'}")
+                    logging.info(f"💰 Descrição: {descricao[:50]}...")
+                    logging.info(f"💰 Valor Final: R$ {valor_final:.2f} (fonte: {fonte_valor})")
+                    logging.info(f"🧪 FORMATOS TESTADOS:")
+                    logging.info(f"  Brasileiro: qtd={quantidade_str_br}, vlr_unit={valor_unitario_str_br}, vlr_total={valor_total_str_br}")
+                    logging.info(f"  Americano: qtd={quantidade_str_us}, vlr_unit={valor_unitario_str_us}, vlr_total={valor_total_str_us}")
+                    logging.info(f"  Inteiros: qtd={quantidade_int}, vlr_unit={valor_unitario_int}, vlr_total={valor_total_int}")
+                    logging.info(f"🏷️ CAMPOS PRINCIPAIS: column1_3___1, column1_4___1, column1_5___1")
+                    logging.info(f"🔢 Total de campos enviados: {len(form_fields)}")
             else:
                 # Item padrão se não houver itens
                 form_fields["column1_1___1"] = "3301"
