@@ -1277,17 +1277,18 @@ class FluigIntegration:
                     
                     # ESTRATÉGIA SIMPLIFICADA: Apenas os campos essenciais em múltiplos formatos
                     
-                    # ESTRATÉGIA DEFINITIVA: Baseado na imagem, a tabela tem estas colunas:
-                    # Código do item | Nome do item | Projeto | Sub projeto | Valor
-                    # Vamos mapear corretamente respeitando essa estrutura
+                    # CORREÇÃO CRÍTICA: Baseado na análise dos logs e da imagem
+                    # A estrutura visual é: Código | Nome | Projeto | Sub projeto | Valor
+                    # Mas estávamos enviando: Código | Nome | Quantidade | ValorUnitário | ValorTotal
                     
-                    # Coluna 1: Código (já funciona)
-                    # Coluna 2: Nome (já funciona) 
-                    # Coluna 3: Projeto - deve ser texto do projeto, não valor
+                    # MAPEAMENTO CORRETO:
+                    # Coluna 1: Código do item (✅ já funciona)
+                    # Coluna 2: Nome do item (✅ já funciona)
+                    # Coluna 3: PROJETO (deve ser texto, NÃO quantidade!)
                     form_fields[f"column1_3___{i}"] = "SEMPROJETO"
-                    # Coluna 4: Sub projeto - deve ser texto do subprojeto, não valor  
+                    # Coluna 4: SUB PROJETO (deve ser texto, NÃO valor unitário!)  
                     form_fields[f"column1_4___{i}"] = "SEMSUBPROJETO"
-                    # Coluna 5: Valor - DEVE ser o valor monetário
+                    # Coluna 5: VALOR (este é o campo que precisamos acertar!)
                     form_fields[f"column1_5___{i}"] = valor_total_str_br
                     
                     # ESTRATÉGIA CRÍTICA: Tentar TODAS as variações possíveis do campo valor
