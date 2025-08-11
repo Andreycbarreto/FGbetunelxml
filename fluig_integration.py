@@ -1306,26 +1306,37 @@ class FluigIntegration:
                     form_fields[f"valorTotalItem{i}"] = valor_total_str_br
                     form_fields[f"vlrTotalItem{i}"] = valor_total_str_br
                     
-                    # Campos de tabela HTML do Fluig (formato diferente)
-                    form_fields[f"col{i}_valorTotal"] = valor_total_str
-                    form_fields[f"col{i}_valor"] = valor_total_str
-                    form_fields[f"col{i}_vlr"] = valor_total_str
-                    form_fields[f"field_{i}_valorTotal"] = valor_total_str
-                    form_fields[f"field_{i}_valor"] = valor_total_str
-                    form_fields[f"row{i}_valorTotal"] = valor_total_str
-                    form_fields[f"row{i}_valor"] = valor_total_str
+                    # SOLUÇÃO BASEADA NA IMAGEM: Testar múltiplas posições para o valor
+                    # Layout visual: Código | Nome | Projeto | Sub projeto | Valor
+                    # Vamos testar as posições 3, 4, 5, 6 para o valor
                     
-                    # Formato específico do Fluig para tabelas dinâmicas
-                    form_fields[f"tablename_{i}_valorTotal"] = valor_total_str
-                    form_fields[f"tablename_{i}_valor"] = valor_total_str
-                    form_fields[f"item_{i}_valor"] = valor_total_str
-                    form_fields[f"linha_{i}_valor"] = valor_total_str
+                    # Guardar projeto e subprojeto originais
+                    projeto_original = form_fields.get(f"projeto___{i}", "SEMPROJETO")
+                    subprojeto_original = form_fields.get(f"subprojeto___{i}", "SEMSUBPROJETO") 
+                    
+                    # ESTRATÉGIA 1: Valor na posição 3 (projeto vira valor)
+                    form_fields[f"column1_3___{i}_valor"] = valor_total_str_br
+                    
+                    # ESTRATÉGIA 2: Valor na posição 4 (subprojeto vira valor)  
+                    form_fields[f"column1_4___{i}_valor"] = valor_total_str_br
+                    
+                    # ESTRATÉGIA 3: Valor continua na posição 5 mas com formato específico
+                    form_fields[f"column1_5___{i}_valor"] = valor_total_str_br
+                    form_fields[f"column1_5___{i}_vlr"] = valor_total_str_br
+                    
+                    # ESTRATÉGIA 4: Valor na posição 6 (nova coluna)
+                    form_fields[f"column1_6___{i}"] = valor_total_str_br
+                    
+                    # ESTRATÉGIA 5: Campo específico de valor (fora da estrutura column)
+                    form_fields[f"valorItem{i}"] = valor_total_str_br
+                    form_fields[f"valor{i}"] = valor_total_str_br
                     
                     logging.info(f"💰 Item {i}: Código={item.servico_codigo or '3301'}")
                     logging.info(f"💰 Descrição: {descricao[:50]}...")
-                    logging.info(f"💰 Quantidade: {quantidade_str}")
+                    logging.info(f"💰 Quantidade: {quantidade_str_br}")
                     logging.info(f"💰 Valor Final: R$ {valor_final:.2f} (fonte: {fonte_valor})")
-                    logging.info(f"💰 Campos enviados: column1_3___1={quantidade_str}, column1_4___1={valor_unitario_str}, column1_5___1={valor_total_str}")
+                    logging.info(f"💰 Campos enviados: column1_3___1={quantidade_str_br}, column1_4___1={valor_unitario_str_br}, column1_5___1={valor_total_str_br}")
+                    logging.info(f"💰 TESTE COLUNA 6: column1_6___1={valor_total_str_br}")
                     logging.info(f"💰 Total de campos de valor enviados: {len([k for k in form_fields.keys() if 'valor' in k.lower() or 'vlr' in k.lower() or 'preco' in k.lower()])}")
                     
                     # ESTRATÉGIA ADICIONAL: Criar arrays de valores para o Fluig
