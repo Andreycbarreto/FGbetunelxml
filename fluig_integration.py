@@ -782,6 +782,7 @@ class FluigIntegration:
             max_attempts = 3
             timeout = 30  # 30 segundos
             
+            start_proc_resp = None
             for attempt in range(max_attempts):
                 try:
                     logging.info(f"Tentativa {attempt + 1}/{max_attempts} - Timeout: {timeout}s")
@@ -802,6 +803,10 @@ class FluigIntegration:
                     logging.error(f"Erro na tentativa {attempt + 1}: {str(e)}")
                     if attempt == max_attempts - 1:
                         return None
+            
+            if start_proc_resp is None:
+                logging.error("Nenhuma resposta válida foi obtida")
+                return None
             
             logging.info(f"Response status: {start_proc_resp.status_code}")
             logging.info(f"Response text: {start_proc_resp.text}")
@@ -1374,7 +1379,7 @@ class FluigIntegration:
                     logging.info(f"🧪 FORMATOS TESTADOS:")
                     logging.info(f"  Brasileiro: qtd={quantidade_str_br}, vlr_unit={valor_unitario_str_br}, vlr_total={valor_total_str_br}")
                     logging.info(f"  Americano: qtd={quantidade_str_us}, vlr_unit={valor_unitario_str_us}, vlr_total={valor_total_str_us}")
-                    logging.info(f"  Inteiros: qtd={quantidade_int}, vlr_unit={valor_unitario_int}, vlr_total={valor_total_int}")
+                    logging.info(f"  Inteiros: qtd={int(quantidade_final)}, vlr_unit={int(valor_unitario_final)}, vlr_total={int(valor_final)}")
                     logging.info(f"🏷️ CAMPOS PRINCIPAIS: column1_3___1, column1_4___1, column1_5___1")
                     logging.info(f"🔢 Total de campos enviados: {len(form_fields)}")
             else:
@@ -1476,6 +1481,7 @@ class FluigIntegration:
         """
         try:
             from models import Empresa, Filial, User, NFEItem
+            from datetime import datetime
             
             # Verificar se já foi integrado
             if nfe_record.fluig_process_id and nfe_record.fluig_integration_status == 'INTEGRADO':
@@ -1916,50 +1922,6 @@ class FluigIntegration:
         except Exception as e:
             logging.warning(f"Erro ao anexar arquivo ao processo: {str(e)}")
     
-    def create_document_in_ged(self, uploaded_file_name, nfe_record):
-        """
-        Cria documento no GED do Fluig (baseado no exemplo fornecido)
-        
-        Args:
-            uploaded_file_name: Nome do arquivo já enviado
-            nfe_record: Registro NFE
-            
-        Returns:
-            int: ID do documento criado
-        """
-        try:
-            create_doc_payload = {
-                "description": f"{uploaded_file_name} - NFE {nfe_record.numero_nf} - {nfe_record.emitente_nome}",
-                "parentId": self.ged_folder_id,
-                "attachments": [{"fileName": uploaded_file_name}],
-                "documentTypeId": 7,  # Essencial para aparecer na aba de anexos
-                "formData": [
-                    {
-                        "name": "ecm-widgetpartgeneralinformation-utilizaVisualizadorInterno",
-                        "value": False
-                    }
-                ]
-            }
-            
-            logging.info(f"Criando documento no GED para NFE {nfe_record.numero_nf}")
-            response = requests.post(
-                f"{self.fluig_url}/api/public/ecm/document/createDocument",
-                json=create_doc_payload,
-                auth=self.auth,
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                document_id = response.json()['content']['id']
-                logging.info(f"Documento criado no GED com ID: {document_id}")
-                return document_id
-            else:
-                logging.error(f"Erro ao criar documento no GED: {response.status_code} - {response.text}")
-                raise Exception(f"Erro ao criar documento no GED: {response.status_code}")
-                
-        except Exception as e:
-            logging.error(f"Erro ao criar documento no GED: {str(e)}")
-            raise
     
     def start_process_with_v2_api(self, nfe_record, attachment_id, process_name):
         """
