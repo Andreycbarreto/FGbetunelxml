@@ -1105,8 +1105,19 @@ def integrar_fluig(nfe_id):
     def execute_integration():
         with app.app_context():  # Criar contexto da aplicação Flask
             try:
-                result = fluig_integration.integrate_nfe_with_fluig(nfe_id)
-                logging.info(f"🎯 Resultado da integração assíncrona: {result}")
+                # Buscar o registro NFE e o arquivo PDF original
+                nfe_record = NFERecord.query.get(nfe_id)
+                if not nfe_record:
+                    raise ValueError(f"Registro NFE não encontrado: {nfe_id}")
+                
+                # Obter o caminho do arquivo PDF original
+                uploaded_file = UploadedFile.query.get(nfe_record.uploaded_file_id)
+                if not uploaded_file or not uploaded_file.file_path:
+                    raise ValueError(f"Arquivo PDF não encontrado para NFE {nfe_record.numero_nf}")
+                
+                # Usar o método completo que inclui upload do PDF
+                result = fluig_integration.create_workflow_launch(nfe_record, uploaded_file.file_path)
+                logging.info(f"🎯 Resultado da integração COM ANEXO: {result}")
             except Exception as e:
                 logging.error(f"❌ Erro na integração assíncrona: {str(e)}")
                 # Marcar como erro no banco
