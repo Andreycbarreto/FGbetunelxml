@@ -341,19 +341,53 @@ class FluigIntegration:
                 {"parentId": 2, "description": description},  # Pasta secundária
             ])
             
-            # Tentar cada estratégia
+            # Tentar cada estratégia com diferentes abordagens de attachment
             for strategy in strategies:
                 try:
-                    # Payload básico
-                    create_doc_payload = {
+                    # Estratégia 1: Primeiro tentar criar documento SEM attachment
+                    create_doc_payload_no_attach = {
                         "description": strategy["description"],
                         "parentId": strategy["parentId"],
-                        "attachments": [{"fileName": uploaded_file_name}],
                         "documentTypeId": 7,
                         "version": 1,
                         "draft": False,
                         "inheritSecurity": True
                     }
+                    
+                    logging.info(f"Tentando criar documento SEM anexo na pasta {strategy['parentId']}")
+                    
+                    # Fazer a requisição sem attachment
+                    create_doc_resp = requests.post(
+                        f'{self.fluig_url}/api/public/ecm/document/createDocument',
+                        json=create_doc_payload_no_attach,
+                        auth=self.auth,
+                        timeout=30
+                    )
+                    
+                    if create_doc_resp.status_code == 200:
+                        attachment_id = create_doc_resp.json()['content']['id']
+                        logging.info(f"Documento criado SEM anexo na pasta {strategy['parentId']} - ID: {attachment_id}")
+                        
+                        # Agora tentar anexar o arquivo ao documento criado
+                        if self.attach_file_to_document(attachment_id, uploaded_file_name):
+                            logging.info(f"Arquivo anexado com sucesso ao documento {attachment_id}")
+                            return str(attachment_id)
+                        else:
+                            logging.warning(f"Documento criado mas não conseguiu anexar arquivo - ID: {attachment_id}")
+                            return str(attachment_id)  # Retorna mesmo sem anexo
+                    else:
+                        logging.info(f"Falha ao criar documento SEM anexo na pasta {strategy['parentId']}: {create_doc_resp.status_code}")
+                        
+                        # Estratégia 2: Tentar com attachment direto (método original)
+                        create_doc_payload = {
+                            "description": strategy["description"],
+                            "parentId": strategy["parentId"],
+                            "attachments": [{"fileName": uploaded_file_name}],
+                            "documentTypeId": 7,
+                            "version": 1,
+                            "draft": False,
+                            "inheritSecurity": True
+                        }
                     
                     logging.info(f"Tentando criar documento na pasta {strategy['parentId']}")
                     
@@ -388,6 +422,65 @@ class FluigIntegration:
         except Exception as e:
             logging.error(f"Erro geral ao criar documento no GED: {str(e)}")
             raise
+    
+    def attach_file_to_document(self, document_id, uploaded_file_name):
+        """
+        Anexa um arquivo a um documento já criado no GED
+        
+        Args:
+            document_id: ID do documento no GED
+            uploaded_file_name: Nome do arquivo enviado
+            
+        Returns:
+            bool: True se anexou com sucesso, False caso contrário
+        """
+        try:
+            logging.info(f"Tentando anexar arquivo {uploaded_file_name} ao documento {document_id}")
+            
+            # Método 1: Tentar anexar via API de attachments
+            attach_payload = {
+                "documentId": document_id,
+                "fileName": uploaded_file_name,
+                "version": 1
+            }
+            
+            attach_resp = requests.post(
+                f'{self.fluig_url}/api/public/ecm/document/addAttachment',
+                json=attach_payload,
+                auth=self.auth,
+                timeout=30
+            )
+            
+            if attach_resp.status_code == 200:
+                logging.info(f"Arquivo anexado com sucesso via addAttachment")
+                return True
+            else:
+                logging.warning(f"Falha ao anexar via addAttachment: {attach_resp.status_code} - {attach_resp.text}")
+                
+                # Método 2: Tentar atualizar documento com attachment
+                update_payload = {
+                    "documentId": document_id,
+                    "attachments": [{"fileName": uploaded_file_name}],
+                    "version": 2
+                }
+                
+                update_resp = requests.put(
+                    f'{self.fluig_url}/api/public/ecm/document/updateDocument',
+                    json=update_payload,
+                    auth=self.auth,
+                    timeout=30
+                )
+                
+                if update_resp.status_code == 200:
+                    logging.info(f"Arquivo anexado com sucesso via updateDocument")
+                    return True
+                else:
+                    logging.warning(f"Falha ao anexar via updateDocument: {update_resp.status_code} - {update_resp.text}")
+                    return False
+                
+        except Exception as e:
+            logging.error(f"Erro ao anexar arquivo ao documento: {str(e)}")
+            return False
     
     def start_transport_process(self, nfe_record, attachment_id):
         """
