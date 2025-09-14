@@ -1118,6 +1118,23 @@ def integrar_fluig(nfe_id):
                 # Usar o método completo que inclui upload do PDF
                 result = fluig_integration.create_workflow_launch(nfe_record, uploaded_file.file_path)
                 logging.info(f"🎯 Resultado da integração COM ANEXO: {result}")
+                
+                # Se a integração foi bem-sucedida, salvar no banco
+                if result.get('success'):
+                    nfe_record.fluig_process_id = str(result.get('process_id'))
+                    nfe_record.fluig_integration_status = 'INTEGRADO'
+                    from datetime import datetime
+                    nfe_record.fluig_integration_date = datetime.now()
+                    nfe_record.fluig_integration_data = str(result)
+                    db.session.commit()
+                    logging.info(f"✅ Process ID {result.get('process_id')} salvo no banco com sucesso!")
+                else:
+                    # Se houve falha, marcar como erro
+                    nfe_record.fluig_integration_status = 'ERRO'
+                    nfe_record.fluig_integration_data = str(result)
+                    db.session.commit()
+                    logging.error(f"❌ Integração falhou: {result.get('message')}")
+                    
             except Exception as e:
                 logging.error(f"❌ Erro na integração assíncrona: {str(e)}")
                 # Marcar como erro no banco
