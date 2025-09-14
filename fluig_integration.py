@@ -742,16 +742,16 @@ class FluigIntegration:
             }
             
             start_process_payload = {
-                "targetState": 128,
+                "targetState": 59,
                 "targetAssignee": "",
                 "subProcessTargetState": 0,
                 "comment": "Iniciado via API",
                 "formFields": form_fields
             }
             
-            logging.info("Iniciando processo de Importação de Frete...")
+            logging.info("Iniciando processo de Lançamento de Nota Fiscal...")
             start_proc_resp = requests.post(
-                f'{self.fluig_url}/process-management/api/v2/processes/Importa%C3%A7%C3%A3o%20de%20Frete/start',
+                f'{self.fluig_url}/process-management/api/v2/processes/Processo%20de%20Lan%C3%A7amento%20de%20Nota%20Fiscal/start',
                 json=start_process_payload,
                 auth=self.auth
             )
