@@ -409,7 +409,7 @@ class FluigIntegration:
             # Passo 1: Criar documento vazio com draft=true
             create_payload = {
                 "description": description,
-                "parentId": 0,  # Pasta raiz
+                "parentId": 1,  # Pasta 1 (não pode usar raiz)
                 "documentTypeId": 7,
                 "version": 1,
                 "draft": True,  # Importante: draft para poder anexar depois
