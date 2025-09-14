@@ -1,0 +1,187 @@
+import os
+import sys
+import json
+import requests
+from requests_oauthlib import OAuth1
+
+# ====== SELETOR DE ARQUIVO ======
+# Usa Tkinter para abrir uma janela de seleção de arquivo
+try:
+    import tkinter as tk
+    from tkinter import filedialog
+except ImportError:
+    tk = None  # caso esteja rodando em ambiente sem Tkinter (ex.: alguns servidores)
+
+# ========================
+# CONFIGURAÇÕES DO FLUIG
+# ========================
+CONSUMER_KEY = '5639-4421-2098-7812-4'
+CONSUMER_SECRET = 'ff01d132-41af-472b-bf01-b490bcad3ff5dabc9e19-d59b-4eab-bfbc-b4a4dc33a674'
+TOKEN_KEY = '5c0f3881-81eb-40ac-80e1-c8000bd8ecfa'
+TOKEN_SECRET = 'd9828aa1-2e30-4adf-80d7-98f1a48871ab231a11ca-7e33-40cb-89ad-8599c6632d00'
+FLUIG_URL = 'http://cloud.betunel.com.br:8380'
+GED_FOLDER_ID = 2693638
+
+def selecionar_pdf():
+    """
+    Abre um diálogo para o usuário escolher um PDF.
+    Retorna o caminho do arquivo ou None se cancelado.
+    """
+    if tk is None:
+        # fallback sem GUI: pede no terminal
+        print("Tkinter não disponível. Informe o caminho completo do PDF:")
+        path = input("> ").strip('"').strip("'").strip()
+        return path if path else None
+
+    root = tk.Tk()
+    root.withdraw()
+    root.update()
+    file_path = filedialog.askopenfilename(
+        title="Selecione o PDF para enviar",
+        filetypes=[("Arquivos PDF", "*.pdf")],
+    )
+    root.destroy()
+    return file_path
+
+def validar_pdf(path):
+    if not path:
+        print("Operação cancelada pelo usuário.")
+        return False
+    if not os.path.exists(path):
+        print(f"Arquivo não encontrado: {path}")
+        return False
+    if not path.lower().endswith(".pdf"):
+        print("Por favor, selecione um arquivo .pdf válido.")
+        return False
+    return True
+
+def raise_for_status_with_body(resp):
+    try:
+        resp.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        body = resp.text
+        raise requests.exceptions.HTTPError(f"{e}\nResposta do servidor:\n{body}") from None
+
+def main():
+    auth = OAuth1(CONSUMER_KEY, CONSUMER_SECRET, TOKEN_KEY, TOKEN_SECRET)
+
+    # ====== ESCOLHA DO ARQUIVO ======
+    file_path = selecionar_pdf()
+    if not validar_pdf(file_path):
+        sys.exit(1)
+    file_name = os.path.basename(file_path)
+
+    try:
+        # ========================
+        # UPLOAD DO ARQUIVO
+        # ========================
+        with open(file_path, 'rb') as f:
+            files = {'file': (file_name, f)}
+            print("Enviando arquivo...")
+            upload_resp = requests.post(
+                f'{FLUIG_URL}/ecm/upload',
+                files=files,
+                data={"isPublic": "false", "chunked": "false"},
+                auth=auth
+                # sem timeout (aguarda indefinidamente)
+            )
+        raise_for_status_with_body(upload_resp)
+
+        upload_json = upload_resp.json()
+        uploaded_file_name = upload_json['files'][0]['name']
+        print("Arquivo enviado:", uploaded_file_name)
+
+        # ========================
+        # CRIAÇÃO DO DOCUMENTO NO GED
+        # ========================
+        create_doc_payload = {
+            "description": f"{uploaded_file_name} - Enviado via API",
+            "parentId": GED_FOLDER_ID,
+            "attachments": [{"fileName": uploaded_file_name}],
+            "documentTypeId": 7,   # Essencial para aparecer na aba de anexos
+            "internalVisualizer": False,
+        }
+
+        print("Criando documento no GED...")
+        create_doc_resp = requests.post(
+            f'{FLUIG_URL}/api/public/ecm/document/createDocument',
+            json=create_doc_payload,
+            auth=auth
+            # sem timeout
+        )
+        raise_for_status_with_body(create_doc_resp)
+        attachment_id = create_doc_resp.json()['content']['id']
+        print("Documento criado com ID:", attachment_id)
+
+        # ========================
+        # INÍCIO DO PROCESSO
+        # ========================
+        form_fields = {
+            "nome": "Yasmim Silva",
+            "matricula": "0d44ddb10e5a41a3a7a378aa5862694d",
+            "email": "yasmim.silva@betunel.com.br",
+            "Hdt_entrada_nf": "09/06/2025",
+            "dt_entrada_nf": "09/06/2025",
+            "nm_empresa": "BETUNEL",
+            "cod_empresa": "1",
+            "cnpj": "60.546.801/0001-89",
+            "nm_filial": "Jacarei",
+            "cod_filial": "16",
+            "cnpj_filial": "60.546.801/0025-56",
+            "unid_negoc": "SUPPLY E CUSTOS",
+            "cod_un": "0.10.02.01.001",
+            "centro_custo": "1.0.3299 - SUPRIMENTOS",
+            "cod_cc": "1.0.3299",
+            "tp_doc": "Nota fiscal de serviço eletrônica",
+            "numero_NF": "1873477",
+            "serie": "E1",
+            "valor_NF": "3.187,80",
+            "dt_emissao_NF": "12/05/2025",
+            "Hdt_emissao_NF": "12/05/2025",
+            "dt_vencimento_NF": "09/06/2025",
+            "fornecedor": "NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP - 00.147.271/0001-74 - 20.0581",
+            "cod_fornecedor": "20.0581",
+            "fm_pagamento": "DESPACHANTE",
+            "chk_boleto": "NAO",
+            "justificativa": "NFe recebida nesta data.",
+            "destinacao": "PO475_20225 TIE PETROL",
+            "column1_1___1": "02.007.014",
+            "column1_2___1": "CAP 50/70 (CIMENTO ASFALTICO DE PETROLEO 50/70) (BAG)",
+            "projeto___1": "SEMPROJETO",
+            "subprojeto___1": "SEMSUBPROJETO",
+            "identificador": "Empresa: BETUNEL Fornecedor: NEW DEAL ASSESSORIA EM COMERCIO EXTERIOR LTDA EPP - 00.147.271/0001-74 - 20.0581 Numero: 11022 Valor: 3.187,80 Data de Vencimento: 09/06/2025 Forma de Pagamento: DESPACHANTE",
+
+            # Campo oculto para o beforeStateEntry fazer o vínculo
+            "documento_ged": str(attachment_id)
+        }
+
+        start_process_payload = {
+            "targetState": 59,
+            "targetAssignee": "",
+            "subProcessTargetState": 0,
+            "comment": "Iniciado via API",
+            "formFields": form_fields
+        }
+
+        print("Iniciando processo via API v2...")
+        start_proc_resp = requests.post(
+            f'{FLUIG_URL}/process-management/api/v2/processes/Processo%20de%20Lançamento%20de%20Nota%20Fiscal/start',
+            json=start_process_payload,
+            auth=auth
+            # sem timeout
+        )
+        raise_for_status_with_body(start_proc_resp)
+        process_instance_id = start_proc_resp.json()["processInstanceId"]
+        print("Processo criado! ID:", process_instance_id)
+
+    except requests.exceptions.RequestException as e:
+        print("Erro na comunicação com o Fluig:")
+        print(str(e))
+        sys.exit(1)
+    except Exception as ex:
+        print("Erro inesperado:")
+        print(str(ex))
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
