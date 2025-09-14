@@ -708,7 +708,7 @@ class FluigIntegration:
                 "cod_cc": "1.0.3299",
                 "tp_doc": "Nota fiscal de serviço eletrônica",
                 "numero_NF": str(nfe_record.numero_nf) if nfe_record.numero_nf else "N/A",
-                "serie": nfe_record.serie_nf or "E1",
+                "serie": nfe_record.serie or "E1",
                 "valor_NF": f"{nfe_record.valor_total_nf or 0:.2f}".replace('.', ','),
                 "dt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "N/A",
                 "Hdt_emissao_NF": nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else "N/A",
