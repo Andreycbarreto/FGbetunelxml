@@ -110,11 +110,9 @@ class FluigIntegration:
             dict: Resultado da criação do lançamento
         """
         try:
-            # Primeiro, fazer upload do arquivo
-            uploaded_file_name = self.upload_file_to_fluig(file_path, os.path.basename(file_path))
-            
-            # Criar documento no GED primeiro
-            attachment_id = self.create_document_in_ged(uploaded_file_name, nfe_record)
+            # NOVA ABORDAGEM: Upload direto durante criação do documento
+            logging.info("🚀 Iniciando integração com upload direto no GED...")
+            attachment_id = self.create_document_with_direct_upload(file_path, nfe_record)
             
             # Determinar o processo baseado no tipo de operação
             if nfe_record.tipo_operacao == "CT-e (Transporte)":
@@ -304,9 +302,192 @@ class FluigIntegration:
                 'message': f'Erro ao testar pasta: {str(e)}'
             }
     
+    def create_document_with_direct_upload(self, file_path, nfe_record=None):
+        """
+        Cria documento no GED fazendo upload direto durante a criação
+        
+        Args:
+            file_path: Caminho do arquivo no sistema de arquivos local
+            nfe_record: Registro NFE com informações específicas do documento
+            
+        Returns:
+            str: ID do documento criado
+        """
+        try:
+            # Criar descrição específica do NFE
+            if nfe_record:
+                description = f"NFE {nfe_record.numero_nf} - {nfe_record.emitente_nome} - " \
+                             f"Valor: R$ {nfe_record.valor_total_nf or 0:.2f} - " \
+                             f"Data: {nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else 'N/A'} - " \
+                             f"Tipo: {nfe_record.tipo_operacao or 'N/A'}"
+            else:
+                description = f"Documento NFe - Enviado via API"
+
+            # Estratégia: Upload direto via formulário multipart
+            import os
+            file_name = os.path.basename(file_path)
+            
+            # Tentar pastas em ordem de prioridade
+            folder_strategies = [
+                {"parentId": 0, "description": "Pasta raiz"},  # Pasta raiz
+                {"parentId": 1, "description": "Pasta 1"},    # Pasta 1
+                {"parentId": 2, "description": "Pasta 2"}     # Pasta 2
+            ]
+            
+            for strategy in folder_strategies:
+                try:
+                    logging.info(f"Tentando upload direto na pasta {strategy['parentId']} ({strategy['description']})")
+                    
+                    # Preparar dados do formulário
+                    form_data = {
+                        'description': description,
+                        'parentId': str(strategy['parentId']),
+                        'documentTypeId': '7',
+                        'version': '1',
+                        'draft': 'false',
+                        'inheritSecurity': 'true'
+                    }
+                    
+                    # Preparar arquivo
+                    with open(file_path, 'rb') as file_content:
+                        files = {
+                            'file': (file_name, file_content, 'application/pdf'),
+                        }
+                        
+                        # Tentar upload direto via createDocument com arquivo
+                        create_resp = requests.post(
+                            f'{self.fluig_url}/api/public/ecm/document/createDocument',
+                            data=form_data,
+                            files=files,
+                            auth=self.auth,
+                            timeout=60
+                        )
+                        
+                        if create_resp.status_code == 200:
+                            response_data = create_resp.json()
+                            document_id = response_data['content']['id']
+                            logging.info(f"✅ Documento criado com upload direto na pasta {strategy['parentId']} - ID: {document_id}")
+                            return str(document_id)
+                        else:
+                            logging.warning(f"❌ Falha no upload direto na pasta {strategy['parentId']}: {create_resp.status_code} - {create_resp.text}")
+                            continue
+                            
+                except Exception as e:
+                    logging.warning(f"❌ Erro no upload direto na pasta {strategy['parentId']}: {str(e)}")
+                    continue
+            
+            # Se chegou aqui, tentar método alternativo de upload em duas etapas
+            return self.create_document_two_step_upload(file_path, nfe_record)
+            
+        except Exception as e:
+            logging.error(f"Erro geral no upload direto: {str(e)}")
+            raise
+
+    def create_document_two_step_upload(self, file_path, nfe_record=None):
+        """
+        Método alternativo: primeiro cria documento vazio, depois faz upload
+        
+        Args:
+            file_path: Caminho do arquivo no sistema de arquivos local
+            nfe_record: Registro NFE com informações específicas do documento
+            
+        Returns:
+            str: ID do documento criado
+        """
+        try:
+            logging.info("🔄 Tentando método de upload em duas etapas...")
+            
+            # Criar descrição específica do NFE
+            if nfe_record:
+                description = f"NFE {nfe_record.numero_nf} - {nfe_record.emitente_nome} - " \
+                             f"Valor: R$ {nfe_record.valor_total_nf or 0:.2f} - " \
+                             f"Data: {nfe_record.data_emissao.strftime('%d/%m/%Y') if nfe_record.data_emissao else 'N/A'} - " \
+                             f"Tipo: {nfe_record.tipo_operacao or 'N/A'}"
+            else:
+                description = f"Documento NFe - Enviado via API"
+                
+            # Passo 1: Criar documento vazio com draft=true
+            create_payload = {
+                "description": description,
+                "parentId": 0,  # Pasta raiz
+                "documentTypeId": 7,
+                "version": 1,
+                "draft": True,  # Importante: draft para poder anexar depois
+                "inheritSecurity": True
+            }
+            
+            create_resp = requests.post(
+                f'{self.fluig_url}/api/public/ecm/document/createDocument',
+                json=create_payload,
+                auth=self.auth,
+                timeout=30
+            )
+            
+            if create_resp.status_code != 200:
+                raise Exception(f"Falha ao criar documento vazio: {create_resp.status_code} - {create_resp.text}")
+                
+            document_id = create_resp.json()['content']['id']
+            logging.info(f"📄 Documento vazio criado - ID: {document_id}")
+            
+            # Passo 2: Fazer upload do arquivo para o documento criado
+            import os
+            file_name = os.path.basename(file_path)
+            
+            with open(file_path, 'rb') as file_content:
+                files = {
+                    'file': (file_name, file_content, 'application/pdf'),
+                }
+                
+                upload_data = {
+                    'documentId': str(document_id),
+                    'version': '1'
+                }
+                
+                # Tentar API de upload para documento específico
+                upload_resp = requests.post(
+                    f'{self.fluig_url}/api/public/ecm/document/uploadDocument',
+                    data=upload_data,
+                    files=files,
+                    auth=self.auth,
+                    timeout=60
+                )
+                
+                if upload_resp.status_code == 200:
+                    logging.info(f"📎 Arquivo anexado com sucesso ao documento {document_id}")
+                    
+                    # Passo 3: Publicar documento (sair do draft)
+                    publish_payload = {
+                        "documentId": document_id,
+                        "draft": False,
+                        "version": 2
+                    }
+                    
+                    publish_resp = requests.put(
+                        f'{self.fluig_url}/api/public/ecm/document/updateDocument',
+                        json=publish_payload,
+                        auth=self.auth,
+                        timeout=30
+                    )
+                    
+                    if publish_resp.status_code == 200:
+                        logging.info(f"✅ Documento publicado com sucesso - ID: {document_id}")
+                    else:
+                        logging.warning(f"⚠️ Documento criado mas falha ao publicar: {publish_resp.text}")
+                        
+                    return str(document_id)
+                else:
+                    logging.warning(f"❌ Falha ao anexar arquivo: {upload_resp.status_code} - {upload_resp.text}")
+                    # Retorna documento mesmo sem anexo
+                    return str(document_id)
+                    
+        except Exception as e:
+            logging.error(f"Erro no upload em duas etapas: {str(e)}")
+            raise
+
     def create_document_in_ged(self, uploaded_file_name, nfe_record=None):
         """
         Cria um documento no GED do Fluig com informações específicas do NFE
+        MÉTODO LEGADO - Mantido para compatibilidade
         
         Args:
             uploaded_file_name: Nome do arquivo enviado
