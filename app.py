@@ -80,6 +80,37 @@ def brazilian_decimal_filter(value):
     except (ValueError, TypeError):
         return '0,00'
 
+def create_default_admin():
+    """Create default admin user if it doesn't exist."""
+    from models import User, UserRole
+    import uuid
+    
+    try:
+        # Check if admin already exists
+        admin = User.query.filter_by(email='admin@admin.com').first()
+        if admin:
+            logging.info("Default admin user already exists")
+            return
+        
+        # Create default admin
+        admin = User(
+            id=str(uuid.uuid4()),
+            email='admin@admin.com',
+            first_name='Administrador',
+            last_name='Sistema',
+            role=UserRole.ADMIN,
+            auth_method='local',
+            active=True
+        )
+        admin.set_password('admin123')
+        
+        db.session.add(admin)
+        db.session.commit()
+        logging.info("✅ Default admin user created (admin@admin.com / admin123)")
+    except Exception as e:
+        logging.error(f"Error creating default admin: {e}")
+        db.session.rollback()
+
 def init_database():
     """Initialize database tables safely."""
     try:
@@ -88,6 +119,9 @@ def init_database():
             import models  # noqa: F401
             db.create_all()
             logging.info("Database tables created")
+            
+            # Create default admin user
+            create_default_admin()
     except Exception as e:
         logging.warning(f"Could not initialize database on startup: {e}")
         logging.info("Database will be initialized on first request")

@@ -33,6 +33,8 @@ Preferred communication style: Simple, everyday language.
 
 ### Core System Features
 - **User Management**: Roles (ADMIN, USER, VIEWER) and secure authentication.
+- **Auto-Admin Creation**: Default admin user (admin@admin.com / admin123) is automatically created on database initialization.
+- **Database Reset**: Script available (reset_database.py) to completely reset the database and recreate all tables with default admin.
 - **File Management**: Secure upload, queue management, and status tracking.
 - **Data Storage**: NFe data and extracted items stored in PostgreSQL with AI confidence scores.
 - **Fluig Integration**: Automated workflow launch for NFe documents, including process creation, document attachment, and real-time solicitation number capture. Includes intelligent duplicate detection and robust error handling.
