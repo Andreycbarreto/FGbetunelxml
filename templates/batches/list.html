@@ -99,6 +99,14 @@
                                                         <i class="feather-unlock me-1"></i>Reabrir
                                                     </a>
                                                 {% endif %}
+                                                
+                                                <!-- Delete form action -->
+                                                <form action="{{ url_for('batch_delete', batch_id=batch.id) }}" method="post" class="d-inline ms-1">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                            onclick="return confirm('Tem certeza que deseja DELETAR este lote e TODOS os arquivos associados? Esta ação não pode ser desfeita.')">
+                                                        <i class="feather-trash-2 me-1"></i>Excluir
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>

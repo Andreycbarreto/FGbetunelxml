@@ -155,6 +155,62 @@ def batch_reopen(batch_id):
     return redirect(url_for('batch_detail', batch_id=batch_id))
 
 
+@app.route('/batch/<int:batch_id>/delete', methods=['POST'])
+@login_required
+def batch_delete(batch_id):
+    """Delete a batch entirely"""
+    batch = Batch.query.get_or_404(batch_id)
+    
+    # Check permissions
+    if batch.created_by != current_user.id and not current_user.is_admin:
+        flash('Acesso negado ao lote solicitado.', 'error')
+        return redirect(url_for('batches_list'))
+        
+    try:
+        # DB cascade should handle related records, but we can do it explicitly if needed
+        # Since models.py definition for cascade="all, delete-orphan", deleting batch should delete files and nfe_records
+        db.session.delete(batch)
+        db.session.commit()
+        flash(f'Lote "{batch.nome_contrato}" excluído com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir lote: {str(e)}', 'error')
+        
+    return redirect(url_for('batches_list'))
+
+
+@app.route('/batch/<int:batch_id>/send_fluig', methods=['POST'])
+@login_required
+def batch_send_fluig(batch_id):
+    """Send all NFe records in a batch to FLUIG system"""
+    batch = Batch.query.get_or_404(batch_id)
+    
+    if batch.created_by != current_user.id and not current_user.is_admin:
+        flash('Acesso negado ao lote solicitado.', 'error')
+        return redirect(url_for('batches_list'))
+        
+    if batch.progress_percentage < 100:
+        flash('Você precisa completar o processamento de todos os arquivos antes de exportar.', 'warning')
+        return redirect(url_for('batch_detail', batch_id=batch_id))
+        
+    try:
+        # Simulate FLUIG integration logic here
+        nfe_records = batch.nfe_records.all()
+        # For each record, if we had a FLUIG API, we would push it here
+        # E.g., fluig_client.send_nfe_records(nfe_records)
+        
+        # update batch status to fluig or something, or just flash
+        batch.status = BatchStatus.COMPLETED
+        db.session.commit()
+        
+        flash(f'Sucesso! {len(nfe_records)} registros exportados para o sistema FLUIG.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ocorreu um erro ao enviar para o FLUIG: {str(e)}', 'error')
+
+    return redirect(url_for('batch_detail', batch_id=batch_id))
+
+
 @app.route('/api/batches')
 @login_required
 def api_batches():

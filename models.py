@@ -195,7 +195,7 @@ class NFERecord(db.Model):
     
     # Relationships
     uploaded_file = db.relationship('UploadedFile', backref='nfe_records')
-    items = db.relationship('NFEItem', backref='nfe_record', lazy=True)
+    items = db.relationship('NFEItem', backref='nfe_record', lazy=True, cascade='all, delete-orphan')
 
 class NFEItem(db.Model):
     __tablename__ = 'nfe_items'
@@ -332,8 +332,8 @@ class Batch(db.Model):
     
     # Relationships
     creator = db.relationship('User', backref='created_batches')
-    files = db.relationship('UploadedFile', backref='batch', lazy='dynamic')
-    nfe_records = db.relationship('NFERecord', backref='batch', lazy='dynamic')
+    files = db.relationship('UploadedFile', backref='batch', lazy='dynamic', cascade='all, delete-orphan')
+    nfe_records = db.relationship('NFERecord', backref='batch', lazy='dynamic', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<Batch {self.nome_contrato}>'
@@ -342,6 +342,12 @@ class Batch(db.Model):
     def total_files(self):
         """Total number of files in this batch"""
         return self.files.count()
+    
+    @property
+    def get_recent_files(self):
+        """Get up to 10 most recent files"""
+        from models import UploadedFile
+        return self.files.order_by(UploadedFile.created_at.desc()).limit(10).all()
     
     @property
     def processed_files(self):

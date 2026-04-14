@@ -16,7 +16,7 @@
     
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <!-- Navigation -->
     {% if current_user.is_authenticated %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -37,18 +37,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('upload_page') }}">
-                            <i class="feather-upload me-1"></i>Upload
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('batches_list') }}">
-                            <i class="feather-package me-1"></i>Lotes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('processing_queue') }}">
-                            <i class="feather-clock me-1"></i>Processamento
+                            <i class="feather-package me-1"></i>Meus Lotes
                         </a>
                     </li>
                     <li class="nav-item">
@@ -141,22 +131,22 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main class="{% if current_user.is_authenticated %}mt-4{% else %}{% endif %}">
+    <main class="flex-grow-1 {% if current_user.is_authenticated %}mt-4{% else %}{% endif %}" style="padding-bottom: 100px;">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
     {% if current_user.is_authenticated %}
-    <footer class="bg-dark text-white mt-5 py-4">
+    <footer class="bg-dark text-white py-3 border-top border-secondary position-fixed bottom-0 w-100 z-3" style="box-shadow: 0 -4px 10px rgba(0,0,0,0.2);">
         <div class="container">
-            <div class="row">
+            <div class="row align-items-center">
                 <div class="col-md-6">
-                    <h6><i class="feather-file-text me-2"></i>NFe XML Processor</h6>
-                    <p class="text-muted mb-0">Sistema inteligente para processamento de Notas Fiscais Eletrônicas</p>
+                    <h6 class="mb-1"><i class="feather-file-text me-2"></i>NFe XML Processor</h6>
+                    <p class="text-muted mb-0 small">Sistema inteligente para processamento de Notas Fiscais Eletrônicas</p>
                 </div>
-                <div class="col-md-6 text-md-end">
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
                     <small class="text-muted">
-                        © 2025 NFe Processor. Todos os direitos reservados.
+                        &copy; 2026 NFe Processor. Todos os direitos reservados.
                     </small>
                 </div>
             </div>

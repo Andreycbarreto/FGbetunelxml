@@ -24,14 +24,28 @@
                     </a>
                     {% endif %}
                     {% if batch.status.value == 'open' %}
-                    <a href="{{ url_for('batch_close', batch_id=batch.id) }}" class="btn btn-warning">
+                    <a href="{{ url_for('batch_close', batch_id=batch.id) }}" class="btn btn-warning me-2">
                         <i class="feather-lock me-1"></i>Fechar Lote
                     </a>
                     {% elif batch.status.value == 'closed' %}
-                    <a href="{{ url_for('batch_reopen', batch_id=batch.id) }}" class="btn btn-success">
+                    <a href="{{ url_for('batch_reopen', batch_id=batch.id) }}" class="btn btn-success me-2">
                         <i class="feather-unlock me-1"></i>Reabrir Lote
                     </a>
                     {% endif %}
+                    
+                    {% if batch.total_files > 0 and batch.progress_percentage >= 100 and batch.status.value != 'completed' %}
+                    <form action="{{ url_for('batch_send_fluig', batch_id=batch.id) }}" method="post" class="d-inline me-2">
+                        <button type="submit" class="btn btn-info shadow-sm" onclick="return confirm('Deseja processar a exportação de todos esses registros para o FLUIG?')">
+                            <i class="feather-send me-1"></i>Enviar para o FLUIG
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    <form action="{{ url_for('batch_delete', batch_id=batch.id) }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('ATENÇÃO: Deseja realmente excluir este lote e todos os arquivos dele?')">
+                            <i class="feather-trash-2 me-1"></i>Excluir Lote
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -148,6 +162,53 @@
                 </div>
             </div>
 
+            {% if batch.can_be_edited() %}
+            <!-- Universal Upload Section -->
+            <div class="card mb-4 shadow-sm" style="border: 1px solid var(--bs-primary);">
+                <div class="card-header d-flex align-items-center" style="border-bottom: 1px solid var(--bs-primary);">
+                    <i class="feather-upload-cloud me-2 text-primary"></i>
+                    <h6 class="mb-0 text-primary">Adicionar Arquivos ao Lote (PDF ou XML)</h6>
+                </div>
+                <div class="card-body">
+                     <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="universalUploadForm">
+                        <input type="hidden" name="batch_id" value="{{ batch.id }}">
+                        <!-- Auto-detected file type flag for backend, can be removed later when backend detects automatically -->
+                        <div class="upload-area mb-2">
+                            <div class="upload-zone text-center py-4" id="universalUploadZone" style="border: 2px dashed #0d6efd; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; background-color: transparent;">
+                                <div class="upload-content">
+                                    <i class="feather-copy display-4 text-primary mb-2"></i>
+                                    <h5>Arraste arquivos e solte aqui</h5>
+                                    <p class="text-muted small mb-3">O sistema detectará o tipo automaticamente</p>
+                                    <input type="file" name="files" id="universalFileInput" multiple accept=".pdf,.xml" class="d-none">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('universalFileInput').click()">
+                                        <i class="feather-folder me-1"></i>Selecionar Manualmente
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="universalFileList" class="mb-3" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-muted small">Arquivos na Rampa de Envio:</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="clearAllBtn" style="display: none;">
+                                    Limpar Tudo
+                                </button>
+                            </div>
+                            <div class="file-list-container border rounded p-2" id="universalSelectedFiles" style="max-height: 200px; overflow-y: auto; font-size: 0.9rem; background-color: rgba(0,0,0,0.1);">
+                                <!-- Files will be listed here dynamically -->
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success" id="universalUploadBtn" disabled>
+                                <i class="feather-play me-2"></i>Começar o Processamento Imediato
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Files List -->
             <div class="card">
                 <div class="card-header">
@@ -250,9 +311,8 @@
                         <i class="feather-folder display-1 text-muted mb-3"></i>
                         <h5>Nenhum arquivo no lote</h5>
                         <p class="text-muted">
-                            Este lote ainda não possui arquivos. 
-                            <a href="{{ url_for('upload_page') }}">Faça upload de arquivos</a> 
-                            e selecione este lote para organizá-los.
+                            Este lote ainda não possui arquivos. <br/>
+                            Use a área acima para arrastar e processar seus XMLs e PDFs.
                         </p>
                     </div>
                     {% endif %}
@@ -271,6 +331,125 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    // Upload logic
+    const uploadZone = document.getElementById('universalUploadZone');
+    const fileInput = document.getElementById('universalFileInput');
+    const fileList = document.getElementById('universalFileList');
+    const uploadBtn = document.getElementById('universalUploadBtn');
+    const uploadForm = document.getElementById('universalUploadForm');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    
+    // Only initialize if the upload box exists (batch is open)
+    if (uploadZone) {
+        const selectedFiles = [];
+        const containerId = 'universalSelectedFiles';
+
+        uploadZone.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON') return;
+            fileInput.click();
+        });
+
+        uploadZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadZone.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+        });
+
+        uploadZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadZone.style.backgroundColor = 'transparent';
+        });
+
+        uploadZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadZone.style.backgroundColor = 'transparent';
+            const files = Array.from(e.dataTransfer.files);
+            processFiles(files);
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            processFiles(files);
+        });
+
+        clearAllBtn.addEventListener('click', function() {
+            selectedFiles.length = 0;
+            updateFileDisplay();
+        });
+
+        uploadForm.addEventListener('submit', function(e) {
+            if (selectedFiles.length === 0) {
+                e.preventDefault();
+                alert('Selecione pelo menos um arquivo para fazer upload.');
+                return false;
+            }
+            
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            fileInput.files = dt.files;
+            
+            uploadBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Iniciando...`;
+            uploadBtn.disabled = true;
+        });
+
+        function processFiles(files) {
+            const validFiles = files.filter(file => {
+                const name = file.name.toLowerCase();
+                return name.endsWith('.xml') || name.endsWith('.pdf');
+            });
+            
+            if (validFiles.length !== files.length) {
+                alert('Apenas arquivos PDF e XML são aceitos.');
+            }
+            
+            selectedFiles.push(...validFiles);
+            updateFileDisplay();
+        }
+
+        function updateFileDisplay() {
+            if (selectedFiles.length === 0) {
+                fileList.style.display = 'none';
+                clearAllBtn.style.display = 'none';
+                uploadBtn.disabled = true;
+                return;
+            }
+            
+            fileList.style.display = 'block';
+            clearAllBtn.style.display = 'inline-block';
+            const container = document.getElementById(containerId);
+            
+            container.innerHTML = selectedFiles.map((file, index) => `
+                <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                    <div class="d-flex align-items-center flex-grow-1 text-truncate pe-3">
+                        <i class="feather-${file.name.toLowerCase().endsWith('.pdf') ? 'file' : 'code'} text-primary me-2"></i>
+                        <div class="text-truncate">
+                            <div class="fw-semibold text-truncate" style="max-width: 250px;" title="${file.name}">${file.name}</div>
+                            <small class="text-muted">${formatFileSize(file.size)}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="removeUniversalFile(${index})" title="Remover">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+            `).join('');
+            
+            uploadBtn.disabled = false;
+            feather.replace();
+        }
+
+        window.removeUniversalFile = function(index) {
+            selectedFiles.splice(index, 1);
+            updateFileDisplay();
+        };
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    }
 });
 
 // Auto refresh if there are pending files

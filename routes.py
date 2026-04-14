@@ -44,12 +44,15 @@ def make_session_permanent():
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'xml', 'pdf'}
 
-def allowed_file(filename, file_type='xml'):
+def allowed_file(filename, file_type=None):
     """Check if the uploaded file has an allowed extension."""
+    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+    if not file_type:
+        return ext in {'xml', 'pdf'}
     if file_type == 'xml':
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'xml'
+        return ext == 'xml'
     elif file_type == 'pdf':
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'pdf'
+        return ext == 'pdf'
     return False
 
 # Hybrid authentication decorator for both OAuth and local auth
@@ -96,9 +99,9 @@ def index():
     
     total_records = NFERecord.query.filter_by(user_id=current_user.id).count()
     
-    # Get recent files
-    recent_files = UploadedFile.query.filter_by(user_id=current_user.id)\
-        .order_by(desc(UploadedFile.created_at))\
+    # Get recent batches
+    recent_batches = Batch.query.filter_by(created_by=current_user.id)\
+        .order_by(desc(Batch.created_at))\
         .limit(5)\
         .all()
     
@@ -108,7 +111,7 @@ def index():
         'pending_files': pending_files,
         'error_files': error_files,
         'total_records': total_records,
-        'recent_files': recent_files
+        'recent_batches': recent_batches
     }
     
     return render_template('dashboard.html', stats=stats)
@@ -117,13 +120,7 @@ def index():
 @login_required_hybrid
 def upload_page():
     """File upload page with batch selection."""
-    # Get open batches for current user
-    open_batches = Batch.query.filter_by(
-        created_by=current_user.id,
-        status=BatchStatus.OPEN
-    ).order_by(Batch.updated_at.desc()).all()
-    
-    return render_template('upload.html', open_batches=open_batches)
+    return redirect(url_for('batches_list'))
 
 @app.route('/upload', methods=['POST'])
 @login_required_hybrid
@@ -134,7 +131,6 @@ def upload_files():
         return redirect(request.url)
     
     files = request.files.getlist('files')
-    file_type = request.form.get('file_type', 'xml')  # Default to XML
     batch_id = request.form.get('batch_id')  # Optional batch ID
     
     # Validate batch if provided
@@ -160,9 +156,13 @@ def upload_files():
     error_count = 0
     
     for file in files:
-        if file and file.filename and allowed_file(file.filename, file_type):
+        if file and file.filename and allowed_file(file.filename):
             try:
                 filename = secure_filename(file.filename)
+                
+                # Derive file type from extension
+                file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+                
                 # Add timestamp to avoid conflicts
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename = f"{timestamp}_{filename}"
@@ -178,7 +178,7 @@ def upload_files():
                 uploaded_file.original_filename = file.filename
                 uploaded_file.file_path = file_path
                 uploaded_file.file_size = os.path.getsize(file_path)
-                uploaded_file.file_type = file_type
+                uploaded_file.file_type = file_ext
                 uploaded_file.status = ProcessingStatus.PENDING
                 uploaded_file.batch_id = batch.id if batch else None
                 
@@ -186,32 +186,87 @@ def upload_files():
                 db.session.commit()
                 
                 uploaded_count += 1
-                logger.info(f"{file_type.upper()} file uploaded successfully: {filename} by user {current_user.id}")
+                logger.info(f"{file_ext.upper()} file uploaded successfully: {filename} by user {current_user.id}")
                 
             except Exception as e:
                 error_count += 1
                 logger.error(f"Error uploading file {file.filename}: {str(e)}")
         else:
             error_count += 1
-            logger.warning(f"File rejected: {file.filename} (type: {file_type})")
+            logger.warning(f"File rejected: {file.filename} (type not allowed)")
     
     if uploaded_count > 0:
-        flash(f'Successfully uploaded {uploaded_count} file(s)', 'success')
+        flash(f'Enviados com sucesso. Iniciando processamento de {uploaded_count} arquivo(s)...', 'success')
+        
+        # Auto-process all pending files for the current user
+        pending_files = UploadedFile.query.filter_by(
+            user_id=current_user.id,
+            status=ProcessingStatus.PENDING
+        ).all()
+        
+        for pending_file in pending_files:
+            try:
+                pending_file.status = ProcessingStatus.PROCESSING
+                pending_file.processing_started_at = datetime.now()
+                db.session.commit()
+                
+                if pending_file.file_type == 'pdf':
+                    add_pdf_processing_job(
+                        file_id=pending_file.id,
+                        file_path=pending_file.file_path,
+                        original_filename=pending_file.original_filename,
+                        user_id=pending_file.user_id
+                    )
+                else:
+                    # Sync processing for XML (it's fast)
+                    from xml_processor import NFEXMLProcessor
+                    processor = NFEXMLProcessor()
+                    with open(pending_file.file_path, 'r', encoding='utf-8') as f:
+                        xml_content = f.read()
+                    
+                    raw_data = processor.process_xml_file(pending_file.file_path)
+                    
+                    nfe_record = NFERecord(
+                        user_id=pending_file.user_id,
+                        uploaded_file_id=pending_file.id,
+                        **{k: v for k, v in raw_data.items() if k != 'items' and hasattr(NFERecord, k)}
+                    )
+                    nfe_record.raw_xml_data = xml_content
+                    nfe_record.ai_confidence_score = 0.3
+                    nfe_record.ai_processing_notes = 'Automated XML parsing'
+                    nfe_record.batch_id = pending_file.batch_id
+                    
+                    db.session.add(nfe_record)
+                    db.session.flush()
+                    
+                    for item_data in raw_data.get('items', []):
+                        nfe_item = NFEItem(
+                            nfe_record_id=nfe_record.id,
+                            **{k: v for k, v in item_data.items() if hasattr(NFEItem, k)}
+                        )
+                        db.session.add(nfe_item)
+                        
+                    pending_file.status = ProcessingStatus.COMPLETED
+                    pending_file.processing_completed_at = datetime.now()
+                    db.session.commit()
+            except Exception as e:
+                pending_file.status = ProcessingStatus.ERROR
+                pending_file.error_message = str(e)
+                pending_file.processing_completed_at = datetime.now()
+                db.session.commit()
+
     if error_count > 0:
-        flash(f'Failed to upload {error_count} file(s)', 'error')
+        flash(f'Falha ao enviar {error_count} arquivo(s)', 'error')
     
-    return redirect(url_for('processing_queue'))
+    if batch:
+        return redirect(url_for('batch_detail', batch_id=batch.id))
+    return redirect(url_for('batches_list'))
 
 @app.route('/processing')
 @login_required_hybrid
 def processing_queue():
-    """Show processing queue and start processing."""
-    # Get all user's files ordered by status and creation date
-    files = UploadedFile.query.filter_by(user_id=current_user.id)\
-        .order_by(UploadedFile.status.asc(), UploadedFile.created_at.asc())\
-        .all()
-    
-    return render_template('processing.html', files=files)
+    """Show processing queue (Redirect to dashboard)."""
+    return redirect(url_for('index'))
 
 @app.route('/process_all', methods=['POST'])
 @login_required_hybrid
