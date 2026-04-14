@@ -121,6 +121,20 @@ class AsyncPDFProcessor:
                 sleep_time = self.rate_limit_delay - time_since_last_call
                 self.logger.info(f"Rate limiting: waiting {sleep_time:.1f}s before processing {job.original_filename}")
                 time.sleep(sleep_time)
+
+            # Injetar a chave da OpenAI do usuário no ambiente
+            try:
+                from app import app
+                from models import UserSettings
+                with app.app_context():
+                    settings = UserSettings.query.filter_by(user_id=job.user_id).first()
+                    if settings and settings.openai_api_key:
+                        os.environ['OPENAI_API_KEY'] = settings.openai_api_key
+                        self.logger.info(f"Loaded OpenAI API Key for user {job.user_id}")
+                    else:
+                        self.logger.warning(f"No OpenAI API Key found for user {job.user_id}")
+            except Exception as env_e:
+                self.logger.error(f"Error injecting user API key: {str(env_e)}")
             
             # Update database status to processing
             self._update_file_status(job.file_id, 'processing', f'Processing with GPT-4 Vision (attempt {job.retries + 1})')
@@ -203,53 +217,39 @@ class AsyncPDFProcessor:
                 except Exception as format_e:
                     self.logger.error(f"Format detection/processing failed for {job.original_filename}: {str(format_e)}", exc_info=True)
                 
-                # Fallback: Vision processor (working system)
-                self.logger.info(f"Using vision processor for {job.original_filename}")
-                result = self.vision_processor.process_pdf_with_vision(job.file_path)
-                
-                if result['success']:
-                    self.logger.info(f"Vision processing successful for {job.original_filename}")
-                    return result
-                else:
-                    self.logger.warning(f"Vision processing failed for {job.original_filename}, trying multi-agent")
-                
-                # Second attempt: Multi-agent validation system (if available)
-                self.logger.info(f"Attempting enhanced multi-agent processing for {job.original_filename}")
-                multi_agent_success = False
-                
+                # Try enhanced multi-agent processing first for generic PDFs
+                self.logger.info(f"Attempting advanced multi-agent processing for {job.original_filename}")
                 try:
-                    # Try advanced multi-agent processing  
                     from pdf_multi_agent_simple import process_pdf_with_advanced_agents
                     result = process_pdf_with_advanced_agents(job.file_path)
                     
-                    if result.get('success') and result.get('confidence_score', 0) >= 75:
-                        self.logger.info(f"Advanced multi-agent processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f}%)")
-                        multi_agent_success = True
+                    if result.get('success') and result.get('confidence_score', 0) >= 70:
+                        self.logger.info(f"Advanced multi-agent processing successful for {job.original_filename} (confidence: {result.get('confidence_score', 0):.1f}%)")
                         return result
                     else:
-                        self.logger.warning(f"Advanced multi-agent processing had low confidence for {job.original_filename}, trying standard multi-agent")
+                        self.logger.warning(f"Advanced multi-agent processing had low confidence or failed for {job.original_filename}, trying standard multi-agent")
                         
                         # Try standard multi-agent as fallback
                         from pdf_multi_agent_simple import process_pdf_with_multi_agent_validation
                         result = process_pdf_with_multi_agent_validation(job.file_path)
                         
-                        if result.get('success') and result.get('confidence_score', 0) >= 70:
-                            self.logger.info(f"Standard multi-agent processing successful for {job.original_filename} (confidence: {result['confidence_score']:.1f}%)")
-                            multi_agent_success = True
+                        if result.get('success') and result.get('confidence_score', 0) >= 65:
+                            self.logger.info(f"Standard multi-agent processing successful for {job.original_filename} (confidence: {result.get('confidence_score', 0):.1f}%)")
                             return result
                         
                 except Exception as e:
-                    self.logger.warning(f"Multi-agent processing failed for {job.original_filename}: {str(e)}, trying single-agent fallback")
+                    self.logger.error(f"Multi-agent processing error for {job.original_filename}: {str(e)}")
                 
-                # Fallback: Single-agent vision processor
-                self.logger.info(f"Attempting single-agent vision processing for {job.original_filename}")
+                # Final Fallback: Vision processor (basic system)
+                self.logger.info(f"Using basic vision processor fallback for {job.original_filename}")
                 result = self.vision_processor.process_pdf_with_vision(job.file_path)
                 
-                if result['success']:
+                if result.get('success'):
+                    self.logger.info(f"Basic vision processing successful for {job.original_filename}")
                     return result
                 else:
                     error_msg = result.get('error', 'Unknown error')
-                    self.logger.warning(f"Vision processing failed for {job.original_filename} (attempt {attempt + 1}): {error_msg}")
+                    self.logger.warning(f"Basic vision processing failed for {job.original_filename} (attempt {attempt + 1}): {error_msg}")
                     
                     # Check if this is an API-related error that should trigger fallback
                     api_errors = ['502', 'bad gateway', 'timeout', 'rate limit', 'cloudflare', 'connection']
@@ -352,6 +352,17 @@ class AsyncPDFProcessor:
                 
                 # Clean date fields to convert Brazilian format to PostgreSQL compatible ISO format
                 raw_data = clean_date_fields(raw_data)
+                
+                # Convert string dates to datetime objects for SQLAlchemy SQLite driver
+                from datetime import datetime
+                for field in ['data_emissao', 'data_saida_entrada', 'data_vencimento', 'fluig_integration_date']:
+                    val = raw_data.get(field)
+                    if val and isinstance(val, str):
+                        try:
+                            raw_data[field] = datetime.strptime(val[:10], "%Y-%m-%d")
+                        except Exception as e:
+                            self.logger.warning(f"Failed to parse datetime for DB column {field}: {val} - {e}")
+                            raw_data[field] = None
                 
                 # Create NFE record
                 nfe_record = NFERecord()

@@ -152,15 +152,23 @@ window.NFEApp = {
                 this.updateProgressBar(data);
                 
                 // Auto refresh when processing is complete
-                if (data.total_files > 0 && data.processed_files === data.total_files && 
+                if (data.total_files > 0 && 
+                    (data.processed_files + (data.error_files || 0)) === data.total_files && 
                     data.processing_files === 0 && data.pending_files === 0) {
                     
                     const statusElement = document.getElementById('processingStatus');
                     if (statusElement) {
-                        statusElement.innerHTML = `
-                            <i class="feather-check me-2"></i>
-                            Todos os arquivos foram processados - Atualizando página...
-                        `;
+                        if (data.error_files > 0) {
+                            statusElement.innerHTML = `
+                                <i class="feather-alert-triangle me-2 text-danger"></i>
+                                Processamento finalizado com ${data.error_files} erro(s) - Atualizando página...
+                            `;
+                        } else {
+                            statusElement.innerHTML = `
+                                <i class="feather-check me-2"></i>
+                                Todos os arquivos foram processados - Atualizando página...
+                            `;
+                        }
                     }
                     
                     setTimeout(() => {

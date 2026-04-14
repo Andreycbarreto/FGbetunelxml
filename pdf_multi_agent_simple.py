@@ -17,8 +17,15 @@ class MultiAgentPDFProcessor:
     """Simplified multi-agent processor for PDF NFe documents"""
     
     def __init__(self):
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self._client = None
         self.vision_processor = PDFVisionProcessor()
+        
+    @property
+    def client(self):
+        if not self._client:
+            self._client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        return self._client
+        
         
     def process_pdf_file(self, pdf_path: str) -> Dict[str, Any]:
         """Process PDF file with multi-agent validation"""

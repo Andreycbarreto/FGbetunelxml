@@ -566,11 +566,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="feather-pause me-2"></i>
                     ${data.pending_files} arquivo(s) aguardando processamento
                 `;
-            } else if (total > 0 && processed === total) {
-                processingStatus.innerHTML = `
-                    <i class="feather-check me-2"></i>
-                    Todos os arquivos foram processados - Atualizando página...
-                `;
+            } else if (total > 0 && (processed + data.error_files) === total) {
+                if (data.error_files > 0) {
+                    processingStatus.innerHTML = `
+                        <i class="feather-alert-triangle me-2 text-danger"></i>
+                        Processamento finalizado com ${data.error_files} erro(s).
+                    `;
+                } else {
+                    processingStatus.innerHTML = `
+                        <i class="feather-check me-2 text-success"></i>
+                        Todos os arquivos foram processados.
+                    `;
+                }
                 
                 // Auto refresh page after 2 seconds when processing is complete
                 setTimeout(() => {

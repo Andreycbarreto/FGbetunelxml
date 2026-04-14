@@ -15,7 +15,7 @@ class SimplePDFProcessor:
     """Simple processor for NFe PDF files."""
     
     def __init__(self):
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.client = None
         self.logger = logging.getLogger(__name__)
     
     def process_pdf_to_nfe_data(self, file_path: str) -> Dict[str, Any]:
@@ -174,6 +174,10 @@ class SimplePDFProcessor:
         """
         
         try:
+            if not self.client:
+                from openai import OpenAI
+                self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), timeout=60.0)
+
             response = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],

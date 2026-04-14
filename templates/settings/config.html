@@ -4,44 +4,14 @@
 
 {% block content %}
 <style>
-/* Força visibilidade para todos os textos */
-.config-section * {
-    color: #212529 !important;
-}
 
-.config-section h4 {
-    color: #212529 !important;
-    font-weight: 700 !important;
-}
-
-.config-section .description {
-    color: #6c757d !important;
-}
-
-.config-section .form-label {
-    color: #212529 !important;
-    font-weight: 700 !important;
-}
-.settings-card {
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border: none;
-    margin-bottom: 2rem;
-}
-
-.settings-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 15px 15px 0 0;
-}
 
 .config-section {
-    background: #ffffff;
+    background-color: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
     padding: 1.5rem;
     margin-bottom: 2rem;
-    border: 1px solid #dee2e6;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--bs-border-color);
 }
 
 .status-indicator {
@@ -53,12 +23,12 @@
 }
 
 .status-configured {
-    background-color: #28a745;
+    background-color: var(--bs-success);
     animation: pulse 2s infinite;
 }
 
 .status-not-configured {
-    background-color: #dc3545;
+    background-color: var(--bs-danger);
 }
 
 @keyframes pulse {
@@ -67,100 +37,14 @@
     100% { opacity: 1; }
 }
 
-.form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.btn-primary {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    border: none;
-}
-
-.btn-primary:hover {
-    background: linear-gradient(45deg, #5a6fd8, #6a4190);
-}
-
-.btn-test {
-    background: linear-gradient(45deg, #28a745, #20c997);
-    border: none;
-}
-
-.btn-test:hover {
-    background: linear-gradient(45deg, #218838, #1a9f7a);
-}
-
-.btn-clear {
-    background: linear-gradient(45deg, #dc3545, #e74c3c);
-    border: none;
-}
-
-.btn-clear:hover {
-    background: linear-gradient(45deg, #c82333, #c0392b);
-}
-
-.form-label {
-    font-weight: 600;
-    color: #212529;
-    margin-bottom: 0.5rem;
-}
-
-.config-section h4 {
-    color: #212529;
-    font-weight: 600;
-}
-
-.description {
-    color: #6c757d;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-}
-
-.form-control {
-    font-size: 0.9rem;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-    padding: 0.75rem 1rem;
-}
-
-.form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.btn-outline-secondary {
-    border-color: #dee2e6;
-    color: #6c757d;
-}
-
-.btn-outline-secondary:hover {
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
-    color: #495057;
-}
-
-.loading {
-    display: none;
-}
-
 .config-icon {
     font-size: 2rem;
     margin-bottom: 1rem;
 }
 
-.config-icon.text-primary {
-    color: #667eea !important;
+.loading {
+    display: none;
 }
-
-.config-icon.text-info {
-    color: #17a2b8 !important;
-}
-
-.config-icon.text-warning {
-    color: #ffc107 !important;
-}
-
-
 
 .test-result {
     margin-top: 1rem;
@@ -170,40 +54,36 @@
 }
 
 .test-success {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
+    background-color: rgba(25, 135, 84, 0.2);
+    border: 1px solid var(--bs-success);
+    color: var(--bs-success);
 }
 
 .test-error {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
+    background-color: rgba(220, 53, 69, 0.2);
+    border: 1px solid var(--bs-danger);
+    color: var(--bs-danger);
 }
 </style>
 
 <div class="container py-4">
     <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="settings-card">
-                <div class="card-header settings-header text-center py-4">
-                    <h1 class="h3 mb-0">
-                        <i class="feather-settings me-2"></i>
-                        Configurações do Sistema
-                    </h1>
-                    <p class="mb-0 mt-2 opacity-75">
-                        Gerencie suas chaves de API e configurações
-                    </p>
-                </div>
-            </div>
+    <div class="row mb-5 mt-3">
+        <div class="col-12 text-center">
+            <h1 class="h2 mb-2">
+                <i class="feather-settings me-2"></i>
+                Configurações do Sistema
+            </h1>
+            <p class="text-muted">
+                Gerencie suas chaves de API e configurações
+            </p>
         </div>
     </div>
 
     <form method="POST" id="configForm">
         <div class="row">
             <!-- OpenAI Configuration -->
-            <div class="col-md-6">
+            <div class="col-md-8 offset-md-2">
                 <div class="config-section">
                     <div class="text-center">
                         <i class="feather-cpu config-icon text-primary"></i>
@@ -231,11 +111,11 @@
                     </div>
                     
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-test btn-sm" onclick="testarOpenAI()">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="testarOpenAI()">
                             <i class="feather-check-circle me-1"></i>Testar
                         </button>
                         <a href="{{ url_for('limpar_configuracao', config_type='openai') }}" 
-                           class="btn btn-clear btn-sm"
+                           class="btn btn-outline-danger btn-sm"
                            onclick="return confirm('Tem certeza que deseja limpar a configuração OpenAI?')">
                             <i class="feather-trash-2 me-1"></i>Limpar
                         </a>
@@ -245,90 +125,6 @@
                 </div>
             </div>
 
-            <!-- Twitter/X Configuration -->
-            <div class="col-md-6">
-                <div class="config-section">
-                    <div class="text-center">
-                        <i class="feather-twitter config-icon text-info"></i>
-                        <h4 class="mb-3">
-                            <span class="status-indicator {% if settings.has_twitter_config %}status-configured{% else %}status-not-configured{% endif %}"></span>
-                            Twitter/X API
-                        </h4>
-                        <p class="description">
-                            Configure as credenciais da API do Twitter/X
-                        </p>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="consumer_key" class="form-label fw-bold">
-                            <i class="feather-key me-2"></i>Consumer Key
-                        </label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" name="consumer_key" id="consumer_key" 
-                                   value="{{ settings.consumer_key or '' }}"
-                                   placeholder="Insira Consumer Key">
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('consumer_key')" title="Mostrar/Ocultar">
-                                <i class="feather-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="consumer_secret" class="form-label fw-bold">
-                            <i class="feather-lock me-2"></i>Consumer Secret
-                        </label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" name="consumer_secret" id="consumer_secret" 
-                                   value="{{ settings.consumer_secret or '' }}"
-                                   placeholder="Insira Consumer Secret">
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('consumer_secret')" title="Mostrar/Ocultar">
-                                <i class="feather-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="token_key" class="form-label fw-bold">
-                            <i class="feather-key me-2"></i>Token Key
-                        </label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" name="token_key" id="token_key" 
-                                   value="{{ settings.token_key or '' }}"
-                                   placeholder="Insira Token Key">
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('token_key')" title="Mostrar/Ocultar">
-                                <i class="feather-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="token_secret" class="form-label fw-bold">
-                            <i class="feather-lock me-2"></i>Token Secret
-                        </label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" name="token_secret" id="token_secret" 
-                                   value="{{ settings.token_secret or '' }}"
-                                   placeholder="Insira Token Secret">
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('token_secret')" title="Mostrar/Ocultar">
-                                <i class="feather-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-test btn-sm" onclick="testarTwitter()">
-                            <i class="feather-check-circle me-1"></i>Testar
-                        </button>
-                        <a href="{{ url_for('limpar_configuracao', config_type='twitter') }}" 
-                           class="btn btn-clear btn-sm"
-                           onclick="return confirm('Tem certeza que deseja limpar a configuração Twitter/X?')">
-                            <i class="feather-trash-2 me-1"></i>Limpar
-                        </a>
-                    </div>
-                    
-                    <div class="test-result" id="twitter-result"></div>
-                </div>
-            </div>
         </div>
 
         <div class="row">
@@ -369,15 +165,81 @@
                         </div>
                     </div>
                     
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="consumer_key" class="form-label fw-bold">
+                                    <i class="feather-key me-2"></i>Consumer Key
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" name="consumer_key" id="consumer_key" 
+                                           value="{{ settings.consumer_key or '' }}"
+                                           placeholder="Insira Consumer Key">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('consumer_key')" title="Mostrar/Ocultar">
+                                        <i class="feather-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="consumer_secret" class="form-label fw-bold">
+                                    <i class="feather-lock me-2"></i>Consumer Secret
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" name="consumer_secret" id="consumer_secret" 
+                                           value="{{ settings.consumer_secret or '' }}"
+                                           placeholder="Insira Consumer Secret">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('consumer_secret')" title="Mostrar/Ocultar">
+                                        <i class="feather-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="token_key" class="form-label fw-bold">
+                                    <i class="feather-key me-2"></i>Token Key
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" name="token_key" id="token_key" 
+                                           value="{{ settings.token_key or '' }}"
+                                           placeholder="Insira Token Key">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('token_key')" title="Mostrar/Ocultar">
+                                        <i class="feather-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="token_secret" class="form-label fw-bold">
+                                    <i class="feather-lock me-2"></i>Token Secret
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" name="token_secret" id="token_secret" 
+                                           value="{{ settings.token_secret or '' }}"
+                                           placeholder="Insira Token Secret">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('token_secret')" title="Mostrar/Ocultar">
+                                        <i class="feather-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="d-flex gap-2 justify-content-center">
-                        <button type="button" class="btn btn-test btn-sm" onclick="testarFluig()">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="testarFluig()">
                             <i class="feather-check-circle me-1"></i>Testar Conexão
                         </button>
                         <a href="{{ url_for('fluig_debug') }}" class="btn btn-outline-warning btn-sm">
                             <i class="feather-folder-plus me-1"></i>Descobrir Pastas
                         </a>
                         <a href="{{ url_for('limpar_configuracao', config_type='fluig') }}" 
-                           class="btn btn-clear btn-sm"
+                           class="btn btn-outline-danger btn-sm"
                            onclick="return confirm('Tem certeza que deseja limpar a configuração Fluig?')">
                             <i class="feather-trash-2 me-1"></i>Limpar
                         </a>
@@ -461,9 +323,7 @@ function testarOpenAI() {
         });
 }
 
-function testarTwitter() {
-    showTestResult('twitter-result', false, 'Teste do Twitter/X não implementado ainda');
-}
+
 
 function testarFluig() {
     fetch('/configuracoes/testar-fluig')

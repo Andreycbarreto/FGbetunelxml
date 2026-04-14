@@ -16,7 +16,14 @@ class TaxValidationAgent:
     """Specialized agent for validating Brazilian tax data extraction"""
     
     def __init__(self):
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        # We'll initialize the client lazily to support dynamic API key loading
+        self._client = None
+        
+    @property
+    def client(self):
+        if not self._client:
+            self._client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        return self._client
         
         # Define Brazilian tax rules and patterns
         self.tax_rules = {

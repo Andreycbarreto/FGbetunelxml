@@ -17,7 +17,7 @@ class NFSeProcessor:
     """Processador especializado para documentos NFS-e"""
     
     def __init__(self):
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.client = None
         self.logger = logging.getLogger(__name__)
         
     def detect_nfse_format(self, text_content: str) -> bool:
@@ -188,6 +188,10 @@ IMPORTANTE:
 """
 
         try:
+            if not self.client:
+                from openai import OpenAI
+                self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), timeout=60.0)
+
             response = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[

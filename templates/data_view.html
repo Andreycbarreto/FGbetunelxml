@@ -179,7 +179,7 @@
     <!-- Statistics Cards -->
     <div class="row g-4 mb-4">
         {% set total_records = records.total %}
-        {% set total_value = records.items | sum(attribute='valor_total_nf') | default(0) %}
+        {% set total_value = records.items | rejectattr('valor_total_nf', 'none') | sum(attribute='valor_total_nf') | default(0) %}
         {% set avg_confidence = 0.7 %}
         
         <div class="col-sm-6 col-lg-3">

@@ -297,17 +297,25 @@ def apply_advanced_tax_table_reading(base64_image: str, current_data: Dict[str, 
         
         # Apply corrections to current data
         corrected_data = current_data.copy()
+        
+        # Ensure 'data' dict exists
+        if 'data' not in corrected_data:
+            corrected_data['data'] = {}
+            
         mapped_taxes = result.get('mapped_taxes', {})
         
         # Reset all tax values to prevent incorrect carryover
         tax_fields = ['valor_icms', 'valor_ipi', 'valor_pis', 'valor_cofins', 
                      'valor_issqn', 'valor_ir', 'valor_inss', 'valor_csll']
         for field in tax_fields:
-            corrected_data[field] = 0.0
-        
+            if field in corrected_data.get('data', {}):
+                corrected_data['data'][field] = 0.0
+            elif field in corrected_data:  # Clean up old root values if they exist
+                corrected_data[field] = 0.0
+                
         # Apply new tax mappings
         for field_name, value in mapped_taxes.items():
-            corrected_data[field_name] = value
+            corrected_data['data'][field_name] = value
             logger.info(f"Advanced tax mapping: {field_name} = R$ {value}")
         
         # Update processing notes

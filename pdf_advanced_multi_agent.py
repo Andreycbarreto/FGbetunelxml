@@ -394,6 +394,10 @@ class AdvancedMultiAgentProcessor:
         # Start with vision result as base
         final_result = vision_result.copy()
         
+        # Ensure 'data' dict exists
+        if 'data' not in final_result:
+            final_result['data'] = {}
+            
         # Apply tax corrections if validation was successful
         if validation_result.get('validation_status') != 'rejected':
             corrected_taxes = validation_result.get('corrected_taxes', {})
@@ -415,12 +419,12 @@ class AdvancedMultiAgentProcessor:
                     if tax_key in corrected_taxes.get('taxes', {}):
                         tax_info = corrected_taxes['taxes'][tax_key]
                         if tax_info.get('found') and tax_info.get('value', 0) > 0:
-                            final_result[field_name] = tax_info['value']
+                            final_result['data'][field_name] = tax_info['value']
         
         # Apply item corrections
         corrected_items = validation_result.get('corrected_items', item_analysis)
         if corrected_items.get('items'):
-            final_result['items'] = corrected_items['items']
+            final_result['data']['items'] = corrected_items['items']
             
             # Enhance item data with service-specific fields
             enhanced_items = []
@@ -460,7 +464,7 @@ class AdvancedMultiAgentProcessor:
                 
                 enhanced_items.append(enhanced_item)
             
-            final_result['items'] = enhanced_items
+            final_result['data']['items'] = enhanced_items
         
         # Update confidence score based on validation
         final_confidence = validation_result.get('final_confidence', 

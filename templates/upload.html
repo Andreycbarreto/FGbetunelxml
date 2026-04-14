@@ -520,6 +520,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
             
+            // Sincronizar o array do JS com o input de arquivo nativo do HTML
+            // Isso garante que arquivos arrastados (drag-drop) sejam realmente enviados pro backend
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            fileInput.files = dt.files;
+            
             // Show loading state
             const fileType = fileExtension === '.xml' ? 'XML' : 'PDF';
             uploadBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Fazendo Upload ${fileType}...`;

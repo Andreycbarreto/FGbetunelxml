@@ -21,12 +21,17 @@ class PDFVisionProcessor:
     """Advanced PDF processor using GPT-4 Vision for NFe analysis."""
     
     def __init__(self):
-        self.client = OpenAI(
-            api_key=os.environ.get("OPENAI_API_KEY"),
-            timeout=60.0  # 60 second timeout
-        )
+        self._client = None
         self.logger = logging.getLogger(__name__)
         self._current_image_base64 = None  # Store current image for tax extraction
+        
+    @property
+    def client(self):
+        if not self._client:
+            from openai import OpenAI
+            api_key = os.environ.get("OPENAI_API_KEY")
+            self._client = OpenAI(api_key=api_key, timeout=60.0)
+        return self._client
     
     def process_pdf_with_vision(self, file_path: str) -> Dict[str, Any]:
         """
