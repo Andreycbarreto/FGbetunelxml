@@ -1,3 +1,6 @@
+import os
+os.environ.setdefault("OPENAI_API_KEY", "dummy_startup_key")
+os.environ.setdefault("REPL_ID", "local_development")
 from app import app
 import routes  # noqa: F401
 

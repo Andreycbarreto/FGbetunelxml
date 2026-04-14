@@ -1,0 +1,50 @@
+[2026-04-13 13:31:41 +0000] [183] [INFO] Starting gunicorn 23.0.0
+[2026-04-13 13:31:41 +0000] [183] [INFO] Listening at: http://0.0.0.0:5000 (183)
+[2026-04-13 13:31:41 +0000] [183] [INFO] Using worker: sync
+[2026-04-13 13:31:41 +0000] [202] [INFO] Booting worker with pid: 202
+[2026-04-13 13:31:42 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:42 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:42 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:42 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:42 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:42 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:42 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:42 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:43 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:43 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:43 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:43 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:44 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:44 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:44 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:44 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:44 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:45 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:45 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:45 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:45 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:46 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:46 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:46 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:46 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:46 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:47 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:47 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:47 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:47 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:47 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:48 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:48 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:48 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:48 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:48 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:49 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:49 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:49 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:49 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:49 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:50 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:50 +0000] [183] [INFO] Handling signal: winch
+[2026-04-13 13:31:50 +0000] [183] [INFO] Handling signal: winch
+INFO:async_pdf_processor:PDF processing worker started
+INFO:async_pdf_processor:Async PDF processor started

@@ -25,7 +25,7 @@
                     </a>
                     
                     {% if not current_user.is_authenticated %}
-                    <a href="{{ url_for('replit_auth.login') }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary">
                         <i class="feather-log-in me-2"></i>Fazer Login
                     </a>
                     {% endif %}

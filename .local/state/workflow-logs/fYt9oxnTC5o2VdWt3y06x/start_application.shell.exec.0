@@ -1,0 +1,99 @@
+[2026-04-09 15:17:06 +0000] [167] [INFO] Starting gunicorn 23.0.0
+[2026-04-09 15:17:06 +0000] [167] [INFO] Listening at: http://0.0.0.0:5000 (167)
+[2026-04-09 15:17:06 +0000] [167] [INFO] Using worker: sync
+[2026-04-09 15:17:06 +0000] [179] [INFO] Booting worker with pid: 179
+[2026-04-09 15:17:06 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:06 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:06 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:06 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:06 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:07 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:07 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:07 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:07 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:07 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:08 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:08 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:08 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:09 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:09 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:09 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:09 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:09 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:10 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:10 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:10 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:10 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:10 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:11 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:11 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:11 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:11 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:11 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:12 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:12 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:12 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:12 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:12 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:13 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:13 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:13 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:13 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:13 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:14 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:14 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:14 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:14 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:14 +0000] [167] [INFO] Handling signal: winch
+[2026-04-09 15:17:15 +0000] [167] [INFO] Handling signal: winch
+INFO:async_pdf_processor:PDF processing worker started
+INFO:async_pdf_processor:Async PDF processor started
+INFO:root:Database tables created
+INFO:root:Default admin user already exists
+[2026-04-09 15:17:44 +0000] [167] [INFO] Handling signal: winch
+ERROR:app:Exception on /data [GET]
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes.py", line 61, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes.py", line 624, in data_view
+    return render_template('data_view.html', records=records)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/runner/workspace/templates/data_view.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/runner/workspace/templates/base.html", line 145, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/templates/data_view.html", line 182, in block 'content'
+    {% set total_value = records.items | sum(attribute='valor_total_nf') | default(0) %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/async_utils.py", line 48, in wrapper
+    return normal_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/filters.py", line 1336, in sync_do_sum
+    return sum(iterable, start)  # type: ignore[no-any-return, call-overload]
+           ^^^^^^^^^^^^^^^^^^^^
+TypeError: unsupported operand type(s) for +: 'decimal.Decimal' and 'NoneType'
+[2026-04-09 16:28:58 +0000] [167] [INFO] Handling signal: winch
